@@ -6,13 +6,16 @@ function Run {
     if ($LASTEXITCODE -ne 0) { throw "$command failed ($LASTEXITCODE)" }
 }
 try {
+    $pnpmCommand = Get-Command pnpm.cmd -ErrorAction SilentlyContinue
+    $pnpmExe = if ($pnpmCommand) { $pnpmCommand.Source } else { Join-Path $env:USERPROFILE '.cache\codex-runtimes\codex-primary-runtime\dependencies\bin\fallback\pnpm.cmd' }
+    if (-not (Test-Path -LiteralPath $pnpmExe)) { throw 'pnpm not found. Install Node.js 24 and pnpm, then retry.' }
     Run git @('rev-parse','--is-inside-work-tree')
     if ((& git branch --show-current) -ne 'main') { throw 'Switch to main before updating.' }
     Run git @('remote','get-url','origin')
     Run git @('status','--short')
     Write-Host 'Building viewer from the root layout and building editor...'
-    Run pnpm @('build:viewer','--','--use-project-layout')
-    Run pnpm @('build')
+    Run $pnpmExe @('build:viewer','--','--use-project-layout')
+    Run $pnpmExe @('build')
     Run git @('status','--short')
     Write-Host 'Review changes above. Existing staged files will be included.'
     if ((Read-Host 'Stage all non-ignored changes and continue? Type YES') -cne 'YES') { return }
