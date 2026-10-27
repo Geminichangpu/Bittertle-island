@@ -4,7 +4,7 @@
 
 ## 首次准备
 
-1. 使用 Node.js 24 和 pnpm 10.19.0，运行 `pnpm install --frozen-lockfile`、`pnpm build:viewer -- --use-project-layout`、`pnpm build`，并在浏览器实际检查编辑器和只读网页。也可通过 `node scripts/serve.mjs dist-viewer 4173` 预览，只读页必须通过 HTTP 访问。
+1. 在 Windows 安装 Node.js 24 LTS 并加入 PATH，重新打开终端后运行 `npm install -g pnpm@10.19.0` 安装 pnpm。然后在项目目录运行 `pnpm install --frozen-lockfile`、`pnpm build:viewer -- --use-project-layout`、`pnpm build`，并在浏览器实际检查编辑器和只读网页。也可通过 `node scripts/serve.mjs dist-viewer 4173` 预览，只读页必须通过 HTTP 访问。更新脚本使用系统 Node.js 和 pnpm，不依赖 Codex 缓存。
 2. `art_source/blender/` 和 `assets/textures/` 中的制作贴图原件被忽略，仍保留在原目录；请另做完整备份。制作贴图的 JSON、Markdown、文本来源说明保留在 Git 中；网页使用的贴图在 `src/assets/textures/`，与 `src/`、根布局和示例 JSON 一并提交。生成的 `public/viewer-template/` 不提交，需要在构建编辑器前运行 `pnpm build:viewer` 生成；模板中的历史文件不会被自动删除。`dist/` 和 `dist-viewer/` 也不提交。
 3. 检查待提交文件，特别是大文件和敏感内容。GitHub 对超过 50 MiB 的普通 Git 文件发出警告，对超过 100 MiB 的文件拒绝推送。运行 GLB 不统一使用 LFS；若以后确实需要 LFS，先选定具体文件，配置 Git LFS 并确保 Actions checkout 使用 `lfs: true`，构建时必须拿到真实文件而不是指针。LFS 有存储和带宽配额。
 4. 在 GitHub 创建空仓库（不要预先添加 README）。验证通过后在 PowerShell 中执行：
