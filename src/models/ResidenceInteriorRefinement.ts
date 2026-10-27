@@ -1,6 +1,6 @@
 import * as T from 'three';
 import {loadAbortableGLB} from './loadAbortableGLB';
-import residenceUrl from '../assets/models/residence-interior-refined-v1.glb?url';
+import residenceUrl from '../assets/models-optimized/residence-interior-meshopt-lossless.glb?url';
 import type {InteriorRoom} from '../interiors/room-kit';
 
 function releaseAsset(root:T.Object3D){

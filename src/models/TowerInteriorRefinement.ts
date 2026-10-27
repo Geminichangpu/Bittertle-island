@@ -1,11 +1,11 @@
 import * as T from 'three';
 import {loadAbortableGLB} from './loadAbortableGLB';
 import type {TowerFloor} from '../interiors/tower';
-import lobbyUrl from '../assets/models/tower-lobby-interior-refined-v1.glb?url';
-import hecateUrl from '../assets/models/tower-hecate-interior-refined-v1.glb?url';
-import hebeUrl from '../assets/models/tower-hebe-interior-refined-v1.glb?url';
-import dollyUrl from '../assets/models/tower-dolly-interior-refined-v1.glb?url';
-import ownerUrl from '../assets/models/tower-owner-interior-refined-v1.glb?url';
+import lobbyUrl from '../assets/models-optimized/tower-lobby-interior-meshopt-lossless.glb?url';
+import hecateUrl from '../assets/models-optimized/tower-hecate-interior-meshopt-lossless.glb?url';
+import hebeUrl from '../assets/models-optimized/tower-hebe-interior-meshopt-lossless.glb?url';
+import dollyUrl from '../assets/models-optimized/tower-dolly-interior-meshopt-lossless.glb?url';
+import ownerUrl from '../assets/models-optimized/tower-owner-interior-meshopt-lossless.glb?url';
 const urls:Record<TowerFloor,string>={lobby:lobbyUrl,hecate:hecateUrl,hebe:hebeUrl,dolly:dollyUrl,owner:ownerUrl};
 import type {InteriorRoom} from '../interiors/room-kit';
 
