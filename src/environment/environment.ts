@@ -136,7 +136,8 @@ export function makeEnvironment(p:Project,terrainGeometry:T.BufferGeometry,onRea
  }
  for(let i=0;i<9;i++){
   const a=i*2.4,x=-129+Math.cos(a)*(3+i*.5),z=21+Math.sin(a)*(3+i*.4),y=ground(x,z);if(p.terrain.campus&&inside([x,z],p.terrain.islet))continue;if(y===undefined||blocked(obstacles,x,z,5)||roadClearance(x,z)<4)continue;
-  rock([x,y-1,z],[3.5+i%3,7+i%4*2,2.8],i%2?'#8a8c84':'#aaa698',a);metrics.rocks++;
+  // Sink the exposed peak blades into the slope and keep their silhouette low.
+  rock([x,y-3.2,z],[3.5+i%3,4.5+i%4*1.1,2.8],i%2?'#8a8c84':'#aaa698',a);metrics.rocks++;
  }
  for(let i=0;i<140;i++){const x=(rnd()-.5)*600,z=(rnd()-.5)*460;if(isLand(p.terrain,x,z)||coastDistance(p.terrain,[x,z])<17)continue;b.box([x,-.035,z],[1+rnd()*3,.015,.08],'#87d1e0',-.08);}
 

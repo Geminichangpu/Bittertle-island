@@ -3,7 +3,11 @@ import {InteractionAudio} from './audio';
 import type {InteractionSpec} from './config';
 import {useEnvironment} from '../environment/time-state';
 
-type Part={mesh:T.InstancedMesh;index:number;base:T.Matrix4;toLocal:T.Matrix4;toMesh:T.Matrix4};
+type Part={mesh:T.Mesh;index:number|undefined;base:T.Matrix4;toLocal:T.Matrix4;toMesh:T.Matrix4;autoUpdate:boolean};
+function setPart(part:Part,matrix:T.Matrix4,restore=false){
+ if(part.mesh instanceof T.InstancedMesh){part.mesh.setMatrixAt(part.index!,matrix);part.mesh.instanceMatrix.needsUpdate=true;}
+ else {part.mesh.matrix.copy(matrix);matrix.decompose(part.mesh.position,part.mesh.quaternion,part.mesh.scale);part.mesh.matrixAutoUpdate=restore?part.autoUpdate:false;part.mesh.matrixWorldNeedsUpdate=true;}
+}
 type Entry={spec:InteractionSpec;key:string;anchor:T.Object3D;parts:Part[];group:T.Group;material:T.MeshBasicMaterial;light?:T.PointLight;start:number;last:number};
 const lightState=new Map<string,boolean>(); // Visitor state, independent of environment presets and project layout.
 export type InteractionStatus={hint:string;message:string;muted:boolean;lights:boolean};
@@ -23,12 +27,13 @@ export class InteractionManager {
     const entry:Entry={spec,key:source.namespace+':'+spec.id,anchor:source.root,parts:[],group:new T.Group(),material:new T.MeshBasicMaterial({color:spec.effect==='steam'?'#e9f5f3':spec.effect==='ripple'?'#c2f4ec':'#ffe9a0',transparent:true,opacity:0,depthWrite:false,side:T.DoubleSide}),start:-1,last:-Infinity};
     const at=new T.Vector3(...spec.at),half=new T.Vector3(...spec.size).multiplyScalar(.5),bounds=new T.Box3(at.clone().sub(half),at.clone().add(half));
     source.root.traverse(node=>{
-     if(!(node instanceof T.InstancedMesh)||node.userData.noCollision||node.userData.interactionEffect)return;
-     const toLocal=inverse.clone().multiply(node.matrixWorld),toMesh=toLocal.clone().invert();
-     for(let i=0;i<node.count;i++){
-      const base=new T.Matrix4();node.getMatrixAt(i,base);const authored=toLocal.clone().multiply(base);node.geometry.computeBoundingBox();const box=node.geometry.boundingBox!.clone().applyMatrix4(authored),p=box.getCenter(new T.Vector3()),scale=box.getSize(new T.Vector3());
+     if(!(node instanceof T.Mesh)||node.userData.noCollision||node.userData.interactionEffect)return;
+     const instanced=node instanceof T.InstancedMesh;
+     const toLocal=inverse.clone().multiply(instanced?node.matrixWorld:node.parent!.matrixWorld),toMesh=toLocal.clone().invert();
+     for(let i=0;i<(instanced?node.count:1);i++){
+      const base=new T.Matrix4();if(instanced)(node as T.InstancedMesh).getMatrixAt(i,base);else base.copy(node.matrix);const authored=toLocal.clone().multiply(base);node.geometry.computeBoundingBox();const box=node.geometry.boundingBox!.clone().applyMatrix4(authored),p=box.getCenter(new T.Vector3()),scale=box.getSize(new T.Vector3());
       if(!bounds.containsPoint(p)||Math.abs(scale.x)>spec.size[0]*1.8||Math.abs(scale.y)>spec.size[1]*1.8||Math.abs(scale.z)>spec.size[2]*1.8)continue;
-      entry.parts.push({mesh:node,index:i,base,toLocal,toMesh});this.lookup.set(node.uuid+':'+i,entry);
+      const index=instanced?i:undefined;entry.parts.push({mesh:node,index,base,toLocal,toMesh,autoUpdate:node.matrixAutoUpdate});this.lookup.set(node.uuid+':'+index,entry);
      }
     });
     // Targets refer to existing instances, never invisible hit boxes through walls.
@@ -95,7 +100,7 @@ export class InteractionManager {
     const rotation=new T.Matrix4();if(spec.effect==='turn')rotation.makeRotationY(Math.PI*2*(u*u*(3-2*u)));else rotation.makeRotationZ(Math.sin(u*Math.PI*6)*.08*(1-u));
     motion.makeTranslation(...pivot.toArray()).multiply(rotation).multiply(new T.Matrix4().makeTranslation(...pivot.clone().negate().toArray()));
    }
-   if(['slide','sway','turn'].includes(spec.effect)){const changed=new Set<T.InstancedMesh>();for(const p of entry.parts){p.mesh.setMatrixAt(p.index,p.toMesh.clone().multiply(motion).multiply(p.toLocal).multiply(p.base));p.mesh.instanceMatrix.needsUpdate=true;changed.add(p.mesh);}for(const mesh of changed)mesh.computeBoundingSphere();}
+   if(['slide','sway','turn'].includes(spec.effect)){const changed=new Set<T.InstancedMesh>();for(const p of entry.parts){setPart(p,p.toMesh.clone().multiply(motion).multiply(p.toLocal).multiply(p.base));if(p.mesh instanceof T.InstancedMesh)changed.add(p.mesh);}for(const mesh of changed)mesh.computeBoundingSphere();}
    const fx=entry.group.children.filter(n=>n instanceof T.Mesh);entry.material.opacity=amount*(spec.effect==='steam'?.35:.8);
    fx.forEach((node,i)=>{
     node.visible=true;const a=i*2.4;
@@ -108,7 +113,7 @@ export class InteractionManager {
  }
  private restore(entry:Entry){
   if(entry.start<0)return;entry.start=-1;
-  const changed=new Set<T.InstancedMesh>();for(const p of entry.parts){p.mesh.setMatrixAt(p.index,p.base);p.mesh.instanceMatrix.needsUpdate=true;changed.add(p.mesh);}for(const mesh of changed)mesh.computeBoundingSphere();
+  const changed=new Set<T.InstancedMesh>();for(const p of entry.parts){setPart(p,p.base,true);if(p.mesh instanceof T.InstancedMesh)changed.add(p.mesh);}for(const mesh of changed)mesh.computeBoundingSphere();
   entry.group.children.forEach(n=>{if(n instanceof T.Mesh)n.visible=false;});entry.material.opacity=0;this.shadows();
  }
  private publish(){const target=this.pick(),hint=target?(target.spec.night&&useEnvironment.getState().mode!=='night'?'':`点击 / E · ${target.spec.label}`):'',state:InteractionStatus={hint,message:this.message,muted:this.audio.muted,lights:this.entries.some(e=>e.spec.effect==='light')},key=JSON.stringify(state);if(key!==this.lastStatus){this.lastStatus=key;this.host.dispatchEvent(new CustomEvent('island-interaction',{detail:state}));}}

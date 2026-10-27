@@ -26,7 +26,7 @@ export class CompoundController{
  readonly scene=new T.Scene();readonly camera=new T.PerspectiveCamera(70,1,.05,1800);
  readonly renderer:T.WebGLRenderer;readonly scheduler:DemandRenderer;readonly exploration:ExplorationController;readonly world:CompoundWorld;
  readonly bounds=new T.Box3();readonly locations:{id:string;name:string;at:T.Vector3;target:T.Vector3}[]=[];
- private lighting:IslandLighting;private resize:ResizeObserver;private unsubscribe:()=>void;private active=true;
+ private lighting:IslandLighting;private resize:ResizeObserver;private unsubscribe:()=>void;private active=true;private stopRefinementVisit?:()=>void;private startRefinementVisit?:()=>void;
  constructor(readonly host:HTMLElement,readonly island:SceneController,readonly id:CompoundId,onState:(s:ExplorationState)=>void,onAction:(h:Hotspot)=>void,onExit:()=>void){
   const members=compoundMembers(island.project,id);if(!members.length)throw new Error('当前布局没有这个建筑群');
   for(const o of members){const node=island.node(o.id);if(node){node.updateWorldMatrix(true,true);this.bounds.union(new T.Box3().setFromObject(node));}}
@@ -71,8 +71,11 @@ export class CompoundController{
   const start=first.at.clone();if(id==='base_group'){const outward=start.clone().sub(first.target);outward.y=0;outward.normalize().multiplyScalar(5*unit);const yard=this.world.spawn(start.clone().add(outward),.36*person,3.1*person);if(yard)start.copy(yard);}
   this.scheduler=new DemandRenderer(()=>{this.exploration?.update(performance.now());this.interactions?.update(performance.now());this.lighting.beforeDraw();this.renderer.render(this.scene,this.camera);host.dataset.frames=String(this.scheduler.frames+1);if(this.exploration?.needsFrame||this.interactions?.animating)this.scheduler.requestRender();});
   this.exploration=new ExplorationController(this.renderer.domElement,this.camera,this.world,{spawn:start,target:first.target.clone(),radius:.36*person,height:3.1*person,eye:2.9*person,step:.55*unit,speed:4.2*person,points},this.scheduler.requestRender,onState,onAction,onExit);
-  const sources=members.flatMap(o=>{const original=island.node(o.id);if(!original)return [];let root:T.Object3D|undefined;this.scene.traverse(n=>{if(n.userData.objectId===o.id&&n.parent?.userData.objectId!==o.id)root=n;});if(!root)return [];return [{root,namespace:'outside:'+o.id,specs:outdoorInteractions(o.templateId,o.params.width,o.params.depth,o.params.wallHeight)}];});
-  this.interactions=new InteractionManager(this.renderer.domElement,this.camera,this.scene,host,this.scheduler.requestRender,()=>this.exploration.active,()=>this.lighting.invalidate(),sources);
+  const findClone=(objectId:string)=>{let root:T.Object3D|undefined;this.scene.traverse(n=>{if(n.userData.objectId===objectId&&n.parent?.userData.objectId!==objectId)root=n;});return root;};
+  const bindInteractions=(muted?:boolean)=>{const sources=members.flatMap(o=>{const root=findClone(o.id);return root?[{root,namespace:'outside:'+o.id,specs:outdoorInteractions(o.templateId,o.params.width,o.params.depth,o.params.wallHeight)}]:[];});this.interactions=new InteractionManager(this.renderer.domElement,this.camera,this.scene,host,this.scheduler.requestRender,()=>this.exploration.active,()=>this.lighting.invalidate(),sources);if(muted!==undefined)this.interactions.setMuted(muted);};
+  bindInteractions();
+  const onRefined=(objectId:string)=>{if(!this.active)return;const root=findClone(objectId),source=island.node(objectId),object=members.find(o=>o.id===objectId);if(!root||!source||!object)return;const rebind=outdoorInteractions(object.templateId,object.params.width,object.params.depth,object.params.wallHeight).length>0,muted=this.interactions.audio.muted;if(rebind)this.interactions.dispose();for(const child of [...root.children]){child.traverse(n=>{if(n instanceof T.InstancedMesh)n.dispose();});child.removeFromParent();}for(const child of source.children)root.add(child.clone(true));if(rebind)bindInteractions(muted);this.lighting.invalidate();this.scheduler.requestRender();};
+  this.startRefinementVisit=()=>{this.stopRefinementVisit=island.refinement.startVisit(members.map(o=>o.id),onRefined);};this.startRefinementVisit();
   this.resize=new ResizeObserver(()=>this.resizeViewport());this.resize.observe(host);document.addEventListener('visibilitychange',this.visibility);this.renderer.domElement.addEventListener('webglcontextlost',this.lost);
   this.unsubscribe=useEnvironment.subscribe(()=>this.environment());this.environment();this.resizeViewport();this.exploration.start();
  }
@@ -80,10 +83,10 @@ export class CompoundController{
  resizeViewport(){const w=this.host.clientWidth,h=this.host.clientHeight;if(!w||!h)return;this.renderer.setSize(w,h);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();this.scheduler.requestRender();}
  visibility=()=>{if(document.hidden)this.exploration.pause();this.scheduler.setVisible(this.active&&!document.hidden);};
  lost=(e:Event)=>{e.preventDefault();this.setActive(false);this.host.dispatchEvent(new CustomEvent('compound-error',{detail:'漫游画面已中断，请返回沙盘后重新进入。'}));};
- setActive(value:boolean){this.active=value;this.interactions?.setActive(value);this.exploration.pause();if(!value&&this.exploration.locked)document.exitPointerLock();this.exploration.active=value;this.visibility();if(value)this.scheduler.requestRender();}
+ setActive(value:boolean){this.active=value;this.interactions?.setActive(value);this.exploration.pause();if(!value&&this.exploration.locked)document.exitPointerLock();this.exploration.active=value;if(value){this.startRefinementVisit?.();this.scheduler.requestRender();}else{this.stopRefinementVisit?.();this.stopRefinementVisit=undefined;}this.visibility();}
  moveTo(id:string){const place=this.locations.find(l=>l.id===id);if(!place)return;this.exploration.stop();this.exploration.config.spawn.copy(place.at);this.exploration.config.target.copy(place.target);this.exploration.start();void this.exploration.capturePointer();}
  interiorFor(id:string){return INTERIORS.find(i=>i.id===id)?.id as InteriorId|undefined;}
- dispose(){this.interactions.dispose();this.exploration.dispose();this.scheduler.dispose();this.unsubscribe();this.resize.disconnect();document.removeEventListener('visibilitychange',this.visibility);this.renderer.domElement.removeEventListener('webglcontextlost',this.lost);this.lighting.dispose();this.scene.traverse(n=>{if(n instanceof T.InstancedMesh)n.dispose();});this.renderer.dispose();this.renderer.forceContextLoss();this.renderer.domElement.remove();}
+ dispose(){this.active=false;this.stopRefinementVisit?.();this.interactions.dispose();this.exploration.dispose();this.scheduler.dispose();this.unsubscribe();this.resize.disconnect();document.removeEventListener('visibilitychange',this.visibility);this.renderer.domElement.removeEventListener('webglcontextlost',this.lost);this.lighting.dispose();this.scene.traverse(n=>{if(n instanceof T.InstancedMesh)n.dispose();});this.renderer.dispose();this.renderer.forceContextLoss();this.renderer.domElement.remove();}
 }
 
 

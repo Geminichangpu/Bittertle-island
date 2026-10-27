@@ -12,7 +12,11 @@ export function shrineCoastRock(p:Project,terrain:T.BufferGeometry,material:T.Me
   a.fromBufferAttribute(pos,index?index.getX(i):i);b.fromBufferAttribute(pos,index?index.getX(i+1):i+1);c.fromBufferAttribute(pos,index?index.getX(i+2):i+2);
   const x=(a.x+b.x+c.x)/3,z=(a.z+b.z+c.z)/3;
   if(x<sx-65||x>sx+45||z<sz-48||z>sz+48)continue;
-  normal.crossVectors(edge.subVectors(b,a),c.clone().sub(a)).normalize();
+  normal.crossVectors(edge.subVectors(b,a),c.clone().sub(a));
+  // Some terrain boundary triangles collapse to a line; they have no usable
+  // normal and cannot contribute visible area to the cliff overlay.
+  if(normal.lengthSq()<1e-12)continue;
+  normal.normalize();
   // Leave the level green plateau, grounds and gentler grassy banks untouched.
   if(Math.abs(normal.y)>.8||Math.max(a.y,b.y,c.y)<1)continue;
   const tangent=new T.Vector2(-normal.z,normal.x).normalize();

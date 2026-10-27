@@ -1,10 +1,5 @@
-import {ScenicRefinement} from '../models/ScenicRefinement';
-import {hasRefinedModel} from '../models/refined-objects';
+import {RefinementManager} from '../models/RefinementManager';
 import {EnvironmentManager} from '../environment/EnvironmentManager';
-import {LighthouseRefinement} from '../models/LighthouseRefinement';
-import {FeihuaRefinement} from '../models/FeihuaRefinement';
-import {TreehouseRefinement} from '../models/TreehouseRefinement';
-import {ExteriorSetRefinement} from '../models/ExteriorSetRefinement';
 import {makeEnvironment,disposeEnvironment,seaMaterial,finishAuthoredNature} from '../environment/environment';
 import {markerTargetId} from '../data/marker-target';
 import * as T from 'three';
@@ -16,12 +11,9 @@ import {terrainGeometry,sampleHeight,updateTerrainHeights} from '../terrain/terr
 import type {Terrain} from '../data/model';
 import {makeMesh,disposeObjectCaches,pruneMaterials,disposeObjectInstances} from '../generators/objects';
 export class SceneController {
- refinement:LighthouseRefinement;
- feihuaRefinement:FeihuaRefinement;
- treehouseRefinement:TreehouseRefinement;
- exteriorSetRefinement:ExteriorSetRefinement;
- scenicRefinement:ScenicRefinement;
+ refinement!:RefinementManager;
  private overview=false;
+ private removeDiagnostics?:()=>void;private disposed=false;
  scene=new T.Scene(); renderer:T.WebGLRenderer; camera:T.OrthographicCamera|T.PerspectiveCamera; controls:OrbitControls; scheduler:DemandRenderer;
  atmosphere:EnvironmentManager;lighting:IslandLighting;private quality?:'low'|'standard';private objectSignature='';
  environment=new T.Group();private environmentSignature='';
@@ -35,10 +27,11 @@ export class SceneController {
   this.terrain=new T.Mesh(terrainGeometry(project.terrain,!!project.environment),new T.MeshStandardMaterial({vertexColors:true,flatShading:false,side:T.DoubleSide}));this.terrain.castShadow=true;this.terrain.receiveShadow=true;this.scene.add(this.terrain,this.objects,this.labels);
   this.scene.add(this.regions);this.scheduler=new DemandRenderer(()=>this.draw());this.controls=this.newControls();this.syncObjects();this.syncEnvironment();this.syncLabels();this.syncRegions();this.preset('all');
   this.resize=new ResizeObserver(()=>this.resizeViewport());this.resize.observe(host);this.intersection=new IntersectionObserver(entries=>{this.inViewport=entries[0].isIntersecting;this.updateVisibility();});this.intersection.observe(host);document.addEventListener('visibilitychange',this.updateVisibility);this.setQuality(project.settings.quality);
-  this.renderer.domElement.addEventListener('webglcontextlost',this.contextLost);this.atmosphere=new EnvironmentManager(this);this.updateMeteorView();this.refinement=new LighthouseRefinement(this);this.refinement.sync();this.feihuaRefinement=new FeihuaRefinement(this);this.feihuaRefinement.sync();this.treehouseRefinement=new TreehouseRefinement(this);this.treehouseRefinement.sync();this.exteriorSetRefinement=new ExteriorSetRefinement(this);this.exteriorSetRefinement.sync();this.scenicRefinement=new ScenicRefinement(this);this.scenicRefinement.sync();
+  this.renderer.domElement.addEventListener('webglcontextlost',this.contextLost);this.atmosphere=new EnvironmentManager(this);this.updateMeteorView();this.refinement=new RefinementManager(this);this.refinement.refresh();
+  if(import.meta.env.DEV&&new URLSearchParams(location.search).has('diagnostics'))void import('../dev/diagnostics').then(({installDiagnostics})=>{if(!this.disposed)this.removeDiagnostics=installDiagnostics(this);});
  }
  contextLost=(e:Event)=>{e.preventDefault();this.scheduler.setVisible(false);this.atmosphere.meteors.setVisible(false);this.host.dispatchEvent(new CustomEvent('scene-error',{detail:'WebGL 上下文已丢失。请刷新页面重试；本地存档仍保留。'}));};
- newControls(){const c=new OrbitControls(this.camera,this.renderer.domElement);c.enableDamping=false;c.minDistance=30;c.maxDistance=650;c.minZoom=.45;c.maxZoom=8;c.maxTargetRadius=this.project.terrain.size*.6;c.maxPolarAngle=Math.PI/2-.06;c.addEventListener('change',()=>{this.updateMeteorView();this.requestRender();});return c;}
+ newControls(){const c=new OrbitControls(this.camera,this.renderer.domElement);c.enableDamping=false;c.minDistance=30;c.maxDistance=650;c.minZoom=.45;c.maxZoom=8;c.maxTargetRadius=this.project.terrain.size*.6;c.maxPolarAngle=Math.PI/2-.06;c.addEventListener('change',()=>{this.updateMeteorView();this.refinement?.refresh();this.requestRender();});return c;}
  private updateMeteorView(){
   if(!this.controls)return;
   const size=this.project.terrain.size,target=this.controls.target,offset=this.camera.position.clone().sub(target);
@@ -49,7 +42,7 @@ export class SceneController {
  }
  requestRender=()=>this.scheduler.requestRender();
  invalidateShadows(){this.lighting.invalidate();this.atmosphere?.updateLights();}
- setActive(active:boolean){this.active=active;this.controls.enabled=active;this.updateVisibility();}
+ setActive(active:boolean){this.active=active;this.controls.enabled=active;this.refinement?.setSuspended(!active);this.updateVisibility();}
  updateVisibility=()=>{const visible=this.active&&!document.hidden&&this.inViewport;this.scheduler.setVisible(visible);this.atmosphere?.meteors.setVisible(visible);};
  resizeViewport(){const w=this.host.clientWidth,h=this.host.clientHeight;if(!w||!h)return;this.renderer.setSize(w,h);if(this.camera instanceof T.OrthographicCamera){const extent=Math.max(180,170*h/w);this.camera.left=-extent*w/h;this.camera.right=extent*w/h;this.camera.top=extent;this.camera.bottom=-extent;}else this.camera.aspect=w/h;this.camera.updateProjectionMatrix();this.requestRender();}
  draw(){this.lighting.beforeDraw();this.renderer.render(this.scene,this.camera);const now=performance.now(),delta=now-this.lastFrame;this.lastFrame=now;this.stats={frames:this.scheduler.frames+1,calls:this.renderer.info.render.calls,triangles:this.renderer.info.render.triangles,geometries:this.renderer.info.memory.geometries,textures:this.renderer.info.memory.textures,fps:delta<250?Math.round(1000/delta):0,pending:false};this.onStats({...this.stats});}
@@ -59,16 +52,15 @@ export class SceneController {
  updateLabelPositions(){for(const sprite of this.labels.children){const marker=this.project.markers.find(m=>m.id===sprite.userData.markerId);if(!marker)continue;const bounds=this.markerBounds(marker);if(bounds){const center=bounds.getCenter(new T.Vector3());sprite.position.set(center.x,bounds.max.y+5,center.z);}else{const at=this.markerPosition(marker);sprite.position.set(at[0],Math.max(at[1],sampleHeight(this.project.terrain,at[0],at[2]))+14,at[2]);}}}
  syncObjects(){
   this.refinement?.restore();
-  this.feihuaRefinement?.restore();this.treehouseRefinement?.restore();this.exteriorSetRefinement?.restore();this.scenicRefinement?.restore();
   const signature=JSON.stringify([this.project.objects,this.project.groups]);if(signature!==this.objectSignature){this.objectSignature=signature;this.invalidateShadows();}
   const removed=new Map(this.objectNodes),oldGroups=this.groupNodes;this.groupNodes=new Map();
   for(const g of this.project.groups||[]){const root=oldGroups.get(g.id)||new T.Group();root.userData.groupId=g.id;root.position.fromArray(g.position);root.rotation.set(...g.rotation);root.scale.fromArray(g.scale);this.groupNodes.set(g.id,root);this.objects.add(root);}
   for(const o of this.project.objects){let mesh=this.objectNodes.get(o.id);const signature=JSON.stringify([o.templateId,o.params]);
-   if(!mesh||mesh.userData.signature!==signature){if(mesh){mesh.removeFromParent();disposeObjectInstances(mesh);}mesh=hasRefinedModel(o)?new T.Group():makeMesh(o);mesh.userData.objectId=o.id;shadowSurfaces(mesh);mesh.userData.signature=signature;this.objectNodes.set(o.id,mesh);}
+   if(!mesh||mesh.userData.signature!==signature){if(mesh){mesh.removeFromParent();disposeObjectInstances(mesh);}mesh=makeMesh(o);mesh.userData.objectId=o.id;shadowSurfaces(mesh);mesh.userData.signature=signature;this.objectNodes.set(o.id,mesh);}
    (o.parentId?this.groupNodes.get(o.parentId)!:this.objects).add(mesh);mesh.position.fromArray(o.position);mesh.rotation.set(...o.rotation);mesh.scale.fromArray(o.scale);
    removed.delete(o.id);
   }
-  removed.forEach((mesh,id)=>{mesh.removeFromParent();disposeObjectInstances(mesh);this.objectNodes.delete(id);});oldGroups.forEach((g,id)=>{if(!this.groupNodes.has(id))g.removeFromParent();});this.objects.updateMatrixWorld(true);pruneMaterials(this.objects);this.atmosphere?.refresh();this.refinement?.sync();this.feihuaRefinement?.sync();this.treehouseRefinement?.sync();this.exteriorSetRefinement?.sync();this.scenicRefinement?.sync();this.requestRender();
+  removed.forEach((mesh,id)=>{mesh.removeFromParent();disposeObjectInstances(mesh);this.objectNodes.delete(id);});oldGroups.forEach((g,id)=>{if(!this.groupNodes.has(id))g.removeFromParent();});this.objects.updateMatrixWorld(true);pruneMaterials(this.objects);this.atmosphere?.refresh();this.refinement?.refresh();this.requestRender();
  }
  syncEnvironment(){const signature=JSON.stringify([this.project.environment,this.project.terrain,this.project.objects,this.project.groups]);if(signature===this.environmentSignature)return;this.environmentSignature=signature;disposeEnvironment(this.environment);this.environment=makeEnvironment(this.project,this.terrain.geometry,()=>{this.invalidateShadows();this.requestRender();});finishAuthoredNature(this.objects,this.environment);shadowSurfaces(this.environment);this.scene.add(this.environment);this.atmosphere?.refresh();this.invalidateShadows();}
  clearLabels(){this.labels.traverse(n=>{if(n instanceof T.Sprite){n.material.map?.dispose();n.material.dispose();}});this.labels.clear();}
@@ -93,7 +85,7 @@ export class SceneController {
  restoreView(v:CameraPreset){this.overview=false;this.atmosphere?.meteors.setOverview(false);if(v.perspective!==(this.camera instanceof T.PerspectiveCamera))this.toggleProjection();this.camera.position.fromArray(v.position);this.controls.target.fromArray(v.target);this.camera.zoom=v.zoom;this.camera.updateProjectionMatrix();this.overview=true;this.controls.update();this.updateMeteorView();this.requestRender();}
  setQuality(q:'low'|'standard'){if(this.quality===q)return;this.quality=q;this.lighting.setQuality(q);this.renderer.setPixelRatio(Math.min(devicePixelRatio,q==='low'?1:1.5));this.resizeViewport();}
  capturePNG(longEdge=1920,hideLabels=true,helpers:T.Object3D[]=[]){const ratio=this.host.clientWidth/this.host.clientHeight,w=ratio>=1?longEdge:Math.round(longEdge*ratio),h=ratio>=1?Math.round(longEdge/ratio):longEdge;const pixelRatio=this.renderer.getPixelRatio(),hidden=[...helpers,this.regions,...(hideLabels?[this.labels]:[])],states=hidden.map(n=>n.visible);try{hidden.forEach(n=>n.visible=false);this.renderer.setPixelRatio(1);this.renderer.setSize(w,h,false);this.scheduler.renderNow();return this.renderer.domElement.toDataURL('image/png');}finally{hidden.forEach((n,i)=>n.visible=states[i]);this.renderer.setPixelRatio(pixelRatio);this.resizeViewport();}}
- dispose(){this.refinement.dispose();this.feihuaRefinement.dispose();this.treehouseRefinement.dispose();this.exteriorSetRefinement.dispose();this.scenicRefinement.dispose();this.atmosphere.dispose();this.scheduler.dispose();this.lighting.dispose();this.resize.disconnect();this.intersection.disconnect();document.removeEventListener('visibilitychange',this.updateVisibility);this.controls.dispose();disposeEnvironment(this.environment);this.clearLabels();this.clearRegions();this.scene.traverse(n=>{if(n instanceof T.Mesh&&!n.userData.objectId){n.geometry.dispose();if(Array.isArray(n.material))n.material.forEach(m=>m.dispose());else n.material.dispose();}});disposeObjectInstances(this.objects);disposeObjectCaches();this.renderer.dispose();this.renderer.domElement.remove();}
+ dispose(){this.disposed=true;this.removeDiagnostics?.();this.refinement.dispose();this.atmosphere.dispose();this.scheduler.dispose();this.lighting.dispose();this.resize.disconnect();this.intersection.disconnect();document.removeEventListener('visibilitychange',this.updateVisibility);this.controls.dispose();disposeEnvironment(this.environment);this.clearLabels();this.clearRegions();this.scene.traverse(n=>{if(n instanceof T.Mesh&&!n.userData.objectId){n.geometry.dispose();if(Array.isArray(n.material))n.material.forEach(m=>m.dispose());else n.material.dispose();}});disposeObjectInstances(this.objects);disposeObjectCaches();this.renderer.dispose();this.renderer.domElement.remove();}
 }
 
 

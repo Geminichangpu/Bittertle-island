@@ -14,7 +14,7 @@ import {EnvironmentControls} from './EnvironmentControls';
 const idle:ExplorationState={active:false,locked:false,hint:'',target:'',message:''};
 export function InteriorPreview({island,buildingId,onClose,returnToCompound=false}:{island:SceneController;buildingId:InteriorId;onClose:()=>void;returnToCompound?:boolean}){
  const host=useRef<HTMLDivElement>(null),controller=useRef<InteriorController|null>(null);
- const [error,setError]=useState(''),[modelReady,setModelReady]=useState(false),[views,setViews]=useState<RoomView[]>([]),[view,setView]=useState('reference');
+ const [error,setError]=useState(''),[modelReady,setModelReady]=useState(false),[views,setViews]=useState<RoomView[]>([]),[view,setView]=useState('reference'),[attempt,setAttempt]=useState(0);
  const [floor,setFloor]=useState<TowerFloor>('lobby'),[liftOpen,setLiftOpen]=useState(false);
  const [walk,setWalk]=useState<ExplorationState>(idle),[detail,setDetail]=useState<Hotspot|null>(null);
  const isTower=buildingId==='landmark_liuli',floorLabel=TOWER_FLOORS.find(f=>f.id===floor)!.label;
@@ -29,7 +29,7 @@ export function InteriorPreview({island,buildingId,onClose,returnToCompound=fals
   setWalk(idle);setDetail(null);
   try{if(!object)throw new Error('当前布局没有这栋建筑');s=new InteriorController(element,object,island.project.settings.quality,floor);setView('reference');setError('');controller.current=s;setViews(s.views);if(import.meta.env.DEV)(window as any).__interior=s;}catch(e){setError(String(e));}
   return()=>{element.removeEventListener('interior-error',onError);element.removeEventListener('interior-model-ready',onModelReady);element.removeEventListener('exploration-state',onWalk);element.removeEventListener('exploration-action',onAction);s?.dispose();controller.current=null;if(import.meta.env.DEV)delete (window as any).__interior;if(!returnToCompound)island.setActive(true);};
- },[island,buildingId,floor]);
+ },[island,buildingId,floor,attempt]);
  return <section className="interior-preview" role="dialog" aria-modal="true" aria-label={definition.name+'室内'}>
   <div ref={host} className="interior-canvas" data-building-id={buildingId}/>
   <div className="interior-heading"><span className="pill">M8–M9 / ISLAND LIFE</span><h1>{definition.name}{isTower&&' · '+floorLabel}</h1><p>{walk.active?'WASD 移动 · 鼠标观察 · Shift 加速 · E 查看 · ESC 退出':'拖动观察 · 滚轮缩放 · '+(views.find(v=>v.id===view)?.label||'独立室内预览')}</p></div>
@@ -41,7 +41,7 @@ export function InteriorPreview({island,buildingId,onClose,returnToCompound=fals
   {detail&&<div className="walk-detail" role="dialog" aria-label="物件说明"><h2>{detail.label}</h2><p>{detail.description}</p><button autoFocus onClick={()=>{setDetail(null);void controller.current?.exploration.capturePointer();}}>继续探索</button></div>}
   <div className="interior-actions">{views.map(v=><button key={v.id} aria-pressed={view===v.id} onClick={()=>{controller.current?.view(v.id);setView(v.id);}}>{v.label}</button>)}<button onClick={()=>{const url=controller.current?.capture();if(url){const a=document.createElement('a');a.href=url;a.download=definition.name+'-'+(isTower?floorLabel+'-':'')+(views.find(v=>v.id===view)?.label||'室内')+'.png';a.click();}}}>室内截图</button></div>
   {!modelReady&&!error&&<div className="loading" role="status">正在加载精修室内…</div>}
-  {error&&<div className="error" role="alert">{error}</div>}
+  {error&&<div className="error" role="alert">{error}<button onClick={()=>setAttempt(n=>n+1)}>重试室内模型</button></div>}
  </section>;
 }
 

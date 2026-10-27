@@ -1,5 +1,5 @@
 import * as T from 'three';
-import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {loadAbortableGLB} from './loadAbortableGLB';
 import type {TowerFloor} from '../interiors/tower';
 import lobbyUrl from '../assets/models/tower-lobby-interior-refined-v1.glb?url';
 import hecateUrl from '../assets/models/tower-hecate-interior-refined-v1.glb?url';
@@ -20,9 +20,9 @@ function releaseAsset(root:T.Object3D){
 export class TowerInteriorRefinement extends EventTarget {
  enabled=true;
  status:'idle'|'loading'|'ready'|'error'='idle';
- private disposed=false;private asset?:T.Group;private mounted=false;
+ private disposed=false;private controller=new AbortController();private asset?:T.Group;private mounted=false;
  private replacements:{target:T.Group;original:T.Object3D[];group:T.Group}[]=[];
- private instances:T.InstancedMesh[]=[];
+ private instances:T.Mesh[]=[];
  private lampMaterials=new Set<T.MeshStandardMaterial>();
  constructor(private room:InteriorRoom,private floor:TowerFloor,private onChange:()=>void){super();}
  get active(){return this.mounted;}
@@ -46,7 +46,7 @@ export class TowerInteriorRefinement extends EventTarget {
  private async load(){
   this.status='loading';this.dispatchEvent(new Event('change'));
   try{
-   const {scene}=await new GLTFLoader().loadAsync(urls[this.floor]);
+   const {scene}=await loadAbortableGLB(urls[this.floor],this.controller.signal);
    if(this.disposed){releaseAsset(scene);return;}this.asset=scene;scene.updateMatrixWorld(true);
    const furniture=this.room.root.children.find(n=>n instanceof T.Group&&n!==this.room.walls&&n!==this.room.lid&&n!==this.room.scenery) as T.Group;
    const targets:Record<string,T.Group>={furniture,walls:this.room.walls,ceiling:this.room.lid};
@@ -65,7 +65,7 @@ export class TowerInteriorRefinement extends EventTarget {
      return m;
     };
     const material=Array.isArray(node.material)?node.material.map(mapMaterial):mapMaterial(node.material);
-    const mesh=new T.InstancedMesh(geometry,material,1);mesh.name=node.name;mesh.userData={...node.userData};mesh.setMatrixAt(0,new T.Matrix4());mesh.instanceMatrix.needsUpdate=true;mesh.computeBoundingBox();mesh.computeBoundingSphere();mesh.castShadow=material!==this.room.glass;mesh.receiveShadow=true;groups[category].add(mesh);this.instances.push(mesh);
+    const mesh=new T.Mesh(geometry,material);mesh.name=node.name;mesh.userData={...node.userData};geometry.computeBoundingBox();geometry.computeBoundingSphere();mesh.castShadow=material!==this.room.glass;mesh.receiveShadow=true;groups[category].add(mesh);this.instances.push(mesh);
    });
    this.replacements=Object.entries(targets).map(([category,target])=>({target,original:target.children.filter(n=>!(n instanceof T.Mesh&&n.geometry.userData.preserveNativeLabel)),group:groups[category]}));
    this.status='ready';this.swap(this.enabled);this.onChange();this.syncLighting();this.dispatchEvent(new Event('change'));
@@ -74,8 +74,8 @@ export class TowerInteriorRefinement extends EventTarget {
   }
  }
  dispose(){
-  this.disposed=true;this.swap(false);
-  for(const mesh of this.instances){mesh.dispose();mesh.geometry.dispose();}this.instances=[];
+  this.disposed=true;this.controller.abort();this.swap(false);
+  for(const mesh of this.instances)mesh.geometry.dispose();this.instances=[];
   if(this.asset)releaseAsset(this.asset);this.asset=undefined;this.replacements=[];this.lampMaterials.clear();
  }
 }

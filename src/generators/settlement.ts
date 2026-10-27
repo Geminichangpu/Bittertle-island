@@ -5,6 +5,10 @@ import {crownGeometry,leafSprigGeometry,boulderGeometry} from '../environment/na
 type V=[number,number,number];
 const wood='#785333',dark='#493728',paper='#eee3cd',roof='#485460',gold='#c3a35c',stone='#979f91';
 
+// Roof quads collapse at the ridge. Reuse a neighboring normal from the same
+// quad for zero-area vertices without moving the geometry or changing its UVs.
+function repairRoofNormals(geometry:T.BufferGeometry){const normal=geometry.getAttribute('normal');for(let i=0;i<normal.count;i++){if(Math.hypot(normal.getX(i),normal.getY(i),normal.getZ(i))>.01)continue;const start=i-i%4;for(const offset of [0,3,1,2]){const j=start+offset,x=normal.getX(j),y=normal.getY(j),z=normal.getZ(j);if(Math.hypot(x,y,z)>.01){normal.setXYZ(i,x,y,z);break;}}}normal.needsUpdate=true;}
+
 export function makeSettlement(o:IslandObject,cache:Cache){
  const b=new Builder(cache);
  const leaf=(p:V,s:V,color='#799757')=>b.emit('settlement:leaf',crownGeometry,color,p,s);
@@ -18,7 +22,7 @@ export function makeSettlement(o:IslandObject,cache:Cache){
    const hx=w/2*(1-.72*t),hz=d/2*(1-t),corners=[[-hx,-hz],[hx,-hz],[hx,hz],[-hx,hz]],a=corners[side],c=corners[(side+1)%4];
    return [x+a[0]+(c[0]-a[0])*u,y+rise*(1-(1-t)**.84)+.5*(1-t)**6*(Math.abs(u-.5)*2)**3,z+a[1]+(c[1]-a[1])*u];
   };
-  b.emit(`settlement:hip:${x}:${y}:${z}:${w}:${d}`,()=>{const v:number[]=[],uv:number[]=[],idx:number[]=[];for(let side=0;side<4;side++)for(let j=0;j<12;j++)for(let k=0;k<16;k++){const start=v.length/3;for(const [t,u] of [[j/12,k/16],[(j+1)/12,k/16],[(j+1)/12,(k+1)/16],[j/12,(k+1)/16]]){v.push(...rim(t,side,u));uv.push(u*4,t*3);}idx.push(start,start+1,start+2,start,start+2,start+3);}const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(v,3));g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();return g;},roof,[0,0,0]);
+  b.emit(`settlement:hip:${x}:${y}:${z}:${w}:${d}`,()=>{const v:number[]=[],uv:number[]=[],idx:number[]=[];for(let side=0;side<4;side++)for(let j=0;j<12;j++)for(let k=0;k<16;k++){const start=v.length/3;for(const [t,u] of [[j/12,k/16],[(j+1)/12,k/16],[(j+1)/12,(k+1)/16],[j/12,(k+1)/16]]){v.push(...rim(t,side,u));uv.push(u*4,t*3);}idx.push(start,start+1,start+2,start,start+2,start+3);}const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(v,3));g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();repairRoofNormals(g);return g;},roof,[0,0,0]);
   for(let side=0;side<4;side++){
    const count=Math.ceil((side%2?d:w)/.6);
    for(let k=0;k<=count;k++)for(let j=0;j<8;j++){const a=rim(j/8,side,k/count),c=rim((j+1)/8,side,k/count);a[1]+=.045;c[1]+=.045;b.cylinder(a,c,.06,roof,6);}

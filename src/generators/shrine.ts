@@ -94,7 +94,10 @@ export class Builder {
  }}
  lattice(x:number,y:number,z:number,w:number,h:number,angle=0){this.scoped([x,y,z],angle,()=>{this.litBox([0,0,0],[w,h,.12],paper);for(let i=0;i<=Math.round(w/.55);i++)this.box([-w/2+i*w/Math.round(w/.55),0,.08],[.065,h,.08],wood);for(let j=0;j<=Math.round(h/.68);j++)this.box([0,-h/2+j*h/Math.round(h/.68),.09],[w,.065,.08],wood);});}
  lantern(x:number,z:number,scale=1){this.scoped([x,0,z],0,()=>{this.box([0,.2,0],[1.35*scale,.4*scale,1.35*scale],stone);this.box([0,1.1*scale,0],[.55*scale,1.8*scale,.55*scale],stone);this.box([0,2.05*scale,0],[1.3*scale,.22*scale,1.3*scale],stone);this.litBox([0,2.5*scale,0],[.85*scale,.8*scale,.85*scale],'#e0c78d','lamp');for(const x of [-.47,.47])for(const z of [-.47,.47])this.box([x*scale,2.5*scale,z*scale],[.16*scale,.85*scale,.16*scale],stone);this.emit('shrine:lanternroof',()=>new T.ConeGeometry(1,1,4),stone,[0,3.15*scale,0],[1.25*scale,.6*scale,1.25*scale],new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),Math.PI/4));this.ball([0,3.6*scale,0],[.22*scale,.3*scale,.22*scale],stone);});}
- finish(){const root=new T.Group();for(const {g,m,matrices} of this.buckets.values()){const mesh=new T.InstancedMesh(g,m,matrices.length);matrices.forEach((matrix,i)=>mesh.setMatrixAt(i,matrix));mesh.instanceMatrix.needsUpdate=true;mesh.computeBoundingBox();mesh.computeBoundingSphere();root.add(mesh);}return root;}
+ finish(){const root=new T.Group();for(const {g,m,matrices} of this.buckets.values()){
+  if(matrices.length===1){const mesh=new T.Mesh(g,m);mesh.matrix.copy(matrices[0]);mesh.matrix.decompose(mesh.position,mesh.quaternion,mesh.scale);mesh.matrixAutoUpdate=false;root.add(mesh);continue;}
+  const mesh=new T.InstancedMesh(g,m,matrices.length);matrices.forEach((matrix,i)=>mesh.setMatrixAt(i,matrix));mesh.instanceMatrix.needsUpdate=true;mesh.computeBoundingBox();mesh.computeBoundingSphere();root.add(mesh);
+ }return root;}
 }
 
 export function makeShrineMesh(o:IslandObject,cache:Cache){

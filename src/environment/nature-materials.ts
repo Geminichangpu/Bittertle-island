@@ -10,7 +10,13 @@ export function createNatureMaterials(onReady:()=>void){
  function map(kind:NatureKind,channel:'color'|'rough'|'normal'){
   const key=kind+'-'+channel;
   if(!textures.has(key)){
-   const texture=loader.load(files['../assets/textures/island-nature/'+key+'.jpg'],()=>{if(alive)onReady();else texture.dispose();});
+   // A complete neutral texture avoids WebGL sampling an incomplete image as
+   // black while the network is slow or after a request fails. Material clones
+   // share this Texture, so the real image appears everywhere once decoded.
+   const canvas=document.createElement('canvas');canvas.width=canvas.height=1;
+   const ctx=canvas.getContext('2d')!;ctx.fillStyle=channel==='normal'?'rgb(128,128,255)':'white';ctx.fillRect(0,0,1,1);
+   const texture=new T.CanvasTexture(canvas);
+   loader.load(files['../assets/textures/island-nature/'+key+'.jpg'],loaded=>{if(alive){texture.image=loaded.image;texture.needsUpdate=true;onReady();}loaded.dispose();},undefined,()=>{if(alive)onReady();});
    texture.wrapS=texture.wrapT=T.RepeatWrapping;texture.anisotropy=4;
    texture.colorSpace=channel==='color'?T.SRGBColorSpace:T.NoColorSpace;
    if(kind==='bark')texture.repeat.set(1,2);
