@@ -1,0 +1,2 @@
+.compound-preview .interior-actions{max-width:calc(100% - 24px);flex-wrap:wrap;justify-content:center}.compound-preview .interior-heading p{max-width:62vw}.compound-preview .walk-toolbar{top:120px}
+@media(max-width:700px){.compound-preview .walk-toolbar{top:230px}.compound-preview .interior-actions{width:calc(100% - 24px);gap:4px}.compound-preview .interior-actions button{font-size:11px;padding:7px}.compound-preview .walk-hint{bottom:155px}.compound-preview .walk-touch{bottom:210px}}

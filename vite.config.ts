@@ -1,0 +1,2 @@
+import { defineConfig } from 'vite';
+export default defineConfig(({mode})=>({base:'./',server:{watch:{ignored:['**/reports/**','**/dist-viewer/**','**/releases/**','**/public/viewer-template/**']}},publicDir:mode==='viewer'?false:'public',build:{outDir:mode==='viewer'?'dist-viewer':'dist',chunkSizeWarningLimit:750,rollupOptions:{output:{manualChunks:{three:['three','three/addons/controls/OrbitControls.js'],react:['react','react-dom/client']}}}},define:{__VIEWER__:JSON.stringify(mode==='viewer')}}));

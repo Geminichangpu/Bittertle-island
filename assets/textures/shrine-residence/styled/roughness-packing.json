@@ -1,0 +1,17 @@
+{
+  "assets": [
+    "rough_linen",
+    "Paper001",
+    "dark_rock",
+    "Tatami002",
+    "fine_grained_wood",
+    "grey_plaster",
+    "dark_wood"
+  ],
+  "channels": {
+    "R": "unused white",
+    "G": "roughness clamped 0.56..0.97",
+    "B": "metallic zero"
+  },
+  "purpose": "Direct glTF-compatible image nodes"
+}

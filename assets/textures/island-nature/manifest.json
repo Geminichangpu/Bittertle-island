@@ -1,0 +1,62 @@
+[
+  {
+    "kind": "gravel",
+    "asset": "gravel_road",
+    "provider": "Poly Haven",
+    "license": "CC0",
+    "source": "https://polyhaven.com/a/gravel_road",
+    "maps": [
+      "color",
+      "rough",
+      "normal"
+    ],
+    "originalResolution": "1K",
+    "webResolution": "1K",
+    "derivation": "color saturation 0.72, contrast 0.87; JPEG quality 90; OpenGL normals"
+  },
+  {
+    "kind": "bark",
+    "asset": "japanese_cedar_bark",
+    "provider": "Poly Haven",
+    "license": "CC0",
+    "source": "https://polyhaven.com/a/japanese_cedar_bark",
+    "maps": [
+      "color",
+      "rough",
+      "normal"
+    ],
+    "originalResolution": "1K",
+    "webResolution": "1K",
+    "derivation": "color saturation 0.72, contrast 0.87; JPEG quality 90; OpenGL normals"
+  },
+  {
+    "kind": "rock",
+    "asset": "rock_boulder_dry",
+    "provider": "Poly Haven",
+    "license": "CC0",
+    "source": "https://polyhaven.com/a/rock_boulder_dry",
+    "maps": [
+      "color",
+      "rough",
+      "normal"
+    ],
+    "originalResolution": "1K",
+    "webResolution": "1K",
+    "derivation": "color saturation 0.72, contrast 0.87; JPEG quality 90; OpenGL normals"
+  },
+  {
+    "kind": "paving",
+    "asset": "PavingStones036",
+    "provider": "ambientCG",
+    "license": "CC0",
+    "source": "https://ambientcg.com/view?id=PavingStones036",
+    "maps": [
+      "color",
+      "rough",
+      "normal"
+    ],
+    "originalResolution": "1K",
+    "webResolution": "1K",
+    "derivation": "color saturation 0.72, contrast 0.87; JPEG quality 90; OpenGL normals"
+  }
+]

@@ -1,0 +1,7 @@
+import {upgradeM3} from '../data/m3-upgrade';
+import {useEditor} from '../editor/store';
+import {loadProject,saveProject} from './database';
+let timer:ReturnType<typeof setTimeout>|undefined,queue=Promise.resolve(),lastQueued=-1;
+export async function initializeStorage(){try{const p=await loadProject();if(p){const needsUpgrade=p.environment?.revision!==1||!p.terrain.campus;useEditor.getState().hydrate(upgradeM3(p));if(needsUpgrade)await saveNow();}else useEditor.setState({ready:true,saveStatus:'项目布局 · 尚未保存'});}catch(e){useEditor.setState({ready:true,storageBlocked:true,saveStatus:'读取失败 · 已暂停写入',error:`本地工程读取失败，未覆盖存档：${e}。已暂停自动写入；请导入有效 JSON后再保存。`});}}
+export function saveNow(force=true){clearTimeout(timer);const s=useEditor.getState();if(!s.ready)return queue;if(s.storageBlocked){useEditor.setState({saveStatus:'读取失败 · 已暂停写入'});return queue;}if(!force&&lastQueued===s.revision)return queue;const revision=s.revision,project=structuredClone(s.project);lastQueued=revision;useEditor.setState({saveStatus:'保存中…'});queue=queue.then(async()=>{try{await saveProject(project);if(useEditor.getState().revision===revision)useEditor.setState({saveStatus:'已保存 · 本机'});}catch(e){lastQueued=-1;useEditor.setState({saveStatus:'保存失败',error:`保存失败：${e}。请立即导出 JSON 备份。`});}});return queue;}
+export function startAutosave(){return useEditor.subscribe((s,old)=>{if(s.ready&&s.revision!==old.revision){clearTimeout(timer);timer=setTimeout(()=>void saveNow(false),600);}});}

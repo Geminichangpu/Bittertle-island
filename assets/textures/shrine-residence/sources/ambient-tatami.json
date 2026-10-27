@@ -1,0 +1,1112 @@
+{
+  "searchQuery": {
+    "forceSpecificAssetId": false,
+    "category": [],
+    "assetId": [],
+    "dataType": [
+      "Material"
+    ],
+    "creationMethod": null,
+    "queryString": "tatami",
+    "sort": "Popular",
+    "createdUsingAssetId": null,
+    "basedOnAssetId": null,
+    "variationsOfAssetId": null,
+    "limit": 8,
+    "offset": 0
+  },
+  "numberOfResults": 6,
+  "currentPageHttp": "https://ambientcg.com/api/v2/full_json?type=material&q=tatami&sort=popular&limit=8&include=statisticsData%2ClabelData%2CpreviewData%2CtechnicalData%2CfileData",
+  "foundAssets": [
+    {
+      "assetId": "Tatami001",
+      "releaseDate": "2023-10-18 18:00:00",
+      "earlyReleaseDate": "2023-09-29 08:34:00",
+      "dataType": "Material",
+      "creationMethod": "PBRProcedural",
+      "category": null,
+      "downloadCount": 12958,
+      "downloadCountMonth": 1641,
+      "downloadCountWeek": 467,
+      "popularityScore": 3.3048252608330824,
+      "tags": [
+        "1",
+        "beige",
+        "floor",
+        "tatami",
+        "yellow"
+      ],
+      "dataTypeName": "Material",
+      "dataTypeDescription": "A photo texture with PBR maps.",
+      "creationMethodName": "Height field photogrammetry",
+      "creationMethodDescription": "Displacement generated using photogrammetry.",
+      "displayName": "Tatami 001",
+      "customDisplayName": "",
+      "description": "",
+      "displayCategory": "Tatami",
+      "shortLink": "https://ambientcg.com/a/Tatami001",
+      "dimensionX": 250,
+      "dimensionY": 250,
+      "dimensionZ": 0,
+      "createdUsing": [],
+      "basedOnThis": [],
+      "variations": [],
+      "nextVariationAssetId": null,
+      "previousVariationAssetId": null,
+      "nextAssetId": null,
+      "previousAssetId": null,
+      "downloadFolders": {
+        "default": {
+          "title": "default",
+          "downloadFiletypeCategories": {
+            "zip": {
+              "title": "zip",
+              "downloads": [
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami001_1K-JPG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami001_1K-JPG.zip",
+                  "fileName": "Tatami001_1K-JPG.zip",
+                  "size": 8841181,
+                  "filetype": "zip",
+                  "attribute": "1K-JPG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami001_2K-JPG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami001_2K-JPG.zip",
+                  "fileName": "Tatami001_2K-JPG.zip",
+                  "size": 30737748,
+                  "filetype": "zip",
+                  "attribute": "2K-JPG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami001_4K-JPG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami001_4K-JPG.zip",
+                  "fileName": "Tatami001_4K-JPG.zip",
+                  "size": 116024046,
+                  "filetype": "zip",
+                  "attribute": "4K-JPG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami001_8K-JPG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami001_8K-JPG.zip",
+                  "fileName": "Tatami001_8K-JPG.zip",
+                  "size": 489498014,
+                  "filetype": "zip",
+                  "attribute": "8K-JPG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami001_1K-PNG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami001_1K-PNG.zip",
+                  "fileName": "Tatami001_1K-PNG.zip",
+                  "size": 17504660,
+                  "filetype": "zip",
+                  "attribute": "1K-PNG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami001_2K-PNG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami001_2K-PNG.zip",
+                  "fileName": "Tatami001_2K-PNG.zip",
+                  "size": 63805646,
+                  "filetype": "zip",
+                  "attribute": "2K-PNG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami001_4K-PNG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami001_4K-PNG.zip",
+                  "fileName": "Tatami001_4K-PNG.zip",
+                  "size": 246572187,
+                  "filetype": "zip",
+                  "attribute": "4K-PNG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami001_8K-PNG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami001_8K-PNG.zip",
+                  "fileName": "Tatami001_8K-PNG.zip",
+                  "size": 996169455,
+                  "filetype": "zip",
+                  "attribute": "8K-PNG",
+                  "zipContent": []
+                }
+              ]
+            }
+          }
+        }
+      },
+      "previewLinks": [
+        {
+          "url": "https://releases.pbr.one/main/material-shading.html#normal_type=directx&color_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami001/Tatami001_SQ_Color.jpg?68040&displacement_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami001/Tatami001_SQ_Displacement.jpg?57083&normal_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami001/Tatami001_SQ_NormalDX.jpg?64625&roughness_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami001/Tatami001_SQ_Roughness.jpg?96122&ambientocclusion_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami001/Tatami001_SQ_AmbientOcclusion.jpg?86980",
+          "name": {
+            "id": 4,
+            "slug": "pbr-one-material-shading",
+            "title": "3D Preview",
+            "description": "description"
+          },
+          "displayName": "",
+          "iconName": ""
+        },
+        {
+          "url": "https://releases.pbr.one/main/texture-tiling.html#texture_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami001/Tatami001_SQ_Color.jpg?27796,https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami001/Tatami001_SQ_Displacement.jpg?65916,https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami001/Tatami001_SQ_NormalDX.jpg?59680,https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami001/Tatami001_SQ_Roughness.jpg?90148,https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami001/Tatami001_SQ_AmbientOcclusion.jpg?83563&texture_name=Color,Displacement,Normal,Roughness,Ambient Occlusion",
+          "name": {
+            "id": 3,
+            "slug": "pbr-one-material-maps",
+            "title": "Tiling Preview",
+            "description": "description"
+          },
+          "displayName": "",
+          "iconName": ""
+        }
+      ],
+      "previewType": "Default",
+      "maps": [
+        "color",
+        "displacement",
+        "normal",
+        "roughness",
+        "ambient-occlusion"
+      ],
+      "hasUsd": false,
+      "previewImage": {
+        "64-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/64-PNG/Tatami001.png",
+        "128-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/128-PNG/Tatami001.png",
+        "256-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/256-PNG/Tatami001.png",
+        "512-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/512-PNG/Tatami001.png",
+        "1024-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/1024-PNG/Tatami001.png",
+        "2048-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/2048-PNG/Tatami001.png",
+        "64-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/64-JPG-FFFFFF/Tatami001.jpg",
+        "128-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/128-JPG-FFFFFF/Tatami001.jpg",
+        "256-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/256-JPG-FFFFFF/Tatami001.jpg",
+        "512-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/512-JPG-FFFFFF/Tatami001.jpg",
+        "1024-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/1024-JPG-FFFFFF/Tatami001.jpg",
+        "2048-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/2048-JPG-FFFFFF/Tatami001.jpg",
+        "64-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/64-JPG-242424/Tatami001.jpg",
+        "128-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/128-JPG-242424/Tatami001.jpg",
+        "256-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/256-JPG-242424/Tatami001.jpg",
+        "512-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/512-JPG-242424/Tatami001.jpg",
+        "1024-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/1024-JPG-242424/Tatami001.jpg",
+        "2048-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/2048-JPG-242424/Tatami001.jpg",
+        "64-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/64-WEBP/Tatami001.webp",
+        "128-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/128-WEBP/Tatami001.webp",
+        "256-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/256-WEBP/Tatami001.webp",
+        "512-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/512-WEBP/Tatami001.webp",
+        "1024-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/1024-WEBP/Tatami001.webp",
+        "2048-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/2048-WEBP/Tatami001.webp"
+      }
+    },
+    {
+      "assetId": "Tatami004",
+      "releaseDate": "2023-10-18 18:00:00",
+      "earlyReleaseDate": "2023-09-29 08:34:00",
+      "dataType": "Material",
+      "creationMethod": "PBRProcedural",
+      "category": null,
+      "downloadCount": 11489,
+      "downloadCountMonth": 1343,
+      "downloadCountWeek": 340,
+      "popularityScore": 3.0435358405395343,
+      "tags": [
+        "4",
+        "beige",
+        "floor",
+        "mat",
+        "pattern",
+        "tatami",
+        "yellow"
+      ],
+      "dataTypeName": "Material",
+      "dataTypeDescription": "A photo texture with PBR maps.",
+      "creationMethodName": "Height field photogrammetry",
+      "creationMethodDescription": "Displacement generated using photogrammetry.",
+      "displayName": "Tatami 004",
+      "customDisplayName": "",
+      "description": "",
+      "displayCategory": "Tatami",
+      "shortLink": "https://ambientcg.com/a/Tatami004",
+      "dimensionX": 250,
+      "dimensionY": 250,
+      "dimensionZ": 0,
+      "createdUsing": [],
+      "basedOnThis": [],
+      "variations": [],
+      "nextVariationAssetId": null,
+      "previousVariationAssetId": null,
+      "nextAssetId": null,
+      "previousAssetId": null,
+      "downloadFolders": {
+        "default": {
+          "title": "default",
+          "downloadFiletypeCategories": {
+            "zip": {
+              "title": "zip",
+              "downloads": [
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami004_1K-JPG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami004_1K-JPG.zip",
+                  "fileName": "Tatami004_1K-JPG.zip",
+                  "size": 8014506,
+                  "filetype": "zip",
+                  "attribute": "1K-JPG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami004_2K-JPG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami004_2K-JPG.zip",
+                  "fileName": "Tatami004_2K-JPG.zip",
+                  "size": 28115403,
+                  "filetype": "zip",
+                  "attribute": "2K-JPG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami004_4K-JPG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami004_4K-JPG.zip",
+                  "fileName": "Tatami004_4K-JPG.zip",
+                  "size": 106832211,
+                  "filetype": "zip",
+                  "attribute": "4K-JPG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami004_8K-JPG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami004_8K-JPG.zip",
+                  "fileName": "Tatami004_8K-JPG.zip",
+                  "size": 446269357,
+                  "filetype": "zip",
+                  "attribute": "8K-JPG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami004_1K-PNG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami004_1K-PNG.zip",
+                  "fileName": "Tatami004_1K-PNG.zip",
+                  "size": 16990541,
+                  "filetype": "zip",
+                  "attribute": "1K-PNG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami004_2K-PNG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami004_2K-PNG.zip",
+                  "fileName": "Tatami004_2K-PNG.zip",
+                  "size": 63415319,
+                  "filetype": "zip",
+                  "attribute": "2K-PNG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami004_4K-PNG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami004_4K-PNG.zip",
+                  "fileName": "Tatami004_4K-PNG.zip",
+                  "size": 243672723,
+                  "filetype": "zip",
+                  "attribute": "4K-PNG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami004_8K-PNG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami004_8K-PNG.zip",
+                  "fileName": "Tatami004_8K-PNG.zip",
+                  "size": 974631680,
+                  "filetype": "zip",
+                  "attribute": "8K-PNG",
+                  "zipContent": []
+                }
+              ]
+            }
+          }
+        }
+      },
+      "previewLinks": [
+        {
+          "url": "https://releases.pbr.one/main/material-shading.html#normal_type=directx&color_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami004/Tatami004_SQ_Color.jpg?76526&displacement_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami004/Tatami004_SQ_Displacement.jpg?71372&normal_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami004/Tatami004_SQ_NormalDX.jpg?16423&roughness_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami004/Tatami004_SQ_Roughness.jpg?6441&ambientocclusion_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami004/Tatami004_SQ_AmbientOcclusion.jpg?58917",
+          "name": {
+            "id": 4,
+            "slug": "pbr-one-material-shading",
+            "title": "3D Preview",
+            "description": "description"
+          },
+          "displayName": "",
+          "iconName": ""
+        },
+        {
+          "url": "https://releases.pbr.one/main/texture-tiling.html#texture_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami004/Tatami004_SQ_Color.jpg?49709,https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami004/Tatami004_SQ_Displacement.jpg?1363,https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami004/Tatami004_SQ_NormalDX.jpg?16999,https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami004/Tatami004_SQ_Roughness.jpg?54573,https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami004/Tatami004_SQ_AmbientOcclusion.jpg?68670&texture_name=Color,Displacement,Normal,Roughness,Ambient Occlusion",
+          "name": {
+            "id": 3,
+            "slug": "pbr-one-material-maps",
+            "title": "Tiling Preview",
+            "description": "description"
+          },
+          "displayName": "",
+          "iconName": ""
+        }
+      ],
+      "previewType": "Default",
+      "maps": [
+        "color",
+        "displacement",
+        "normal",
+        "roughness",
+        "ambient-occlusion"
+      ],
+      "hasUsd": false,
+      "previewImage": {
+        "64-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/64-PNG/Tatami004.png",
+        "128-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/128-PNG/Tatami004.png",
+        "256-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/256-PNG/Tatami004.png",
+        "512-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/512-PNG/Tatami004.png",
+        "1024-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/1024-PNG/Tatami004.png",
+        "2048-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/2048-PNG/Tatami004.png",
+        "64-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/64-JPG-FFFFFF/Tatami004.jpg",
+        "128-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/128-JPG-FFFFFF/Tatami004.jpg",
+        "256-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/256-JPG-FFFFFF/Tatami004.jpg",
+        "512-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/512-JPG-FFFFFF/Tatami004.jpg",
+        "1024-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/1024-JPG-FFFFFF/Tatami004.jpg",
+        "2048-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/2048-JPG-FFFFFF/Tatami004.jpg",
+        "64-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/64-JPG-242424/Tatami004.jpg",
+        "128-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/128-JPG-242424/Tatami004.jpg",
+        "256-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/256-JPG-242424/Tatami004.jpg",
+        "512-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/512-JPG-242424/Tatami004.jpg",
+        "1024-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/1024-JPG-242424/Tatami004.jpg",
+        "2048-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/2048-JPG-242424/Tatami004.jpg",
+        "64-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/64-WEBP/Tatami004.webp",
+        "128-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/128-WEBP/Tatami004.webp",
+        "256-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/256-WEBP/Tatami004.webp",
+        "512-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/512-WEBP/Tatami004.webp",
+        "1024-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/1024-WEBP/Tatami004.webp",
+        "2048-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/2048-WEBP/Tatami004.webp"
+      }
+    },
+    {
+      "assetId": "Tatami003",
+      "releaseDate": "2023-10-18 18:00:00",
+      "earlyReleaseDate": "2023-09-29 08:34:00",
+      "dataType": "Material",
+      "creationMethod": "PBRProcedural",
+      "category": null,
+      "downloadCount": 10205,
+      "downloadCountMonth": 1201,
+      "downloadCountWeek": 319,
+      "popularityScore": 2.815152167525977,
+      "tags": [
+        "3",
+        "brown",
+        "floor",
+        "tatami"
+      ],
+      "dataTypeName": "Material",
+      "dataTypeDescription": "A photo texture with PBR maps.",
+      "creationMethodName": "Height field photogrammetry",
+      "creationMethodDescription": "Displacement generated using photogrammetry.",
+      "displayName": "Tatami 003",
+      "customDisplayName": "",
+      "description": "",
+      "displayCategory": "Tatami",
+      "shortLink": "https://ambientcg.com/a/Tatami003",
+      "dimensionX": 250,
+      "dimensionY": 250,
+      "dimensionZ": 0,
+      "createdUsing": [],
+      "basedOnThis": [],
+      "variations": [],
+      "nextVariationAssetId": null,
+      "previousVariationAssetId": null,
+      "nextAssetId": null,
+      "previousAssetId": null,
+      "downloadFolders": {
+        "default": {
+          "title": "default",
+          "downloadFiletypeCategories": {
+            "zip": {
+              "title": "zip",
+              "downloads": [
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami003_1K-JPG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami003_1K-JPG.zip",
+                  "fileName": "Tatami003_1K-JPG.zip",
+                  "size": 8866141,
+                  "filetype": "zip",
+                  "attribute": "1K-JPG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami003_2K-JPG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami003_2K-JPG.zip",
+                  "fileName": "Tatami003_2K-JPG.zip",
+                  "size": 31091759,
+                  "filetype": "zip",
+                  "attribute": "2K-JPG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami003_4K-JPG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami003_4K-JPG.zip",
+                  "fileName": "Tatami003_4K-JPG.zip",
+                  "size": 118602048,
+                  "filetype": "zip",
+                  "attribute": "4K-JPG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami003_8K-JPG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami003_8K-JPG.zip",
+                  "fileName": "Tatami003_8K-JPG.zip",
+                  "size": 493939366,
+                  "filetype": "zip",
+                  "attribute": "8K-JPG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami003_1K-PNG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami003_1K-PNG.zip",
+                  "fileName": "Tatami003_1K-PNG.zip",
+                  "size": 17733029,
+                  "filetype": "zip",
+                  "attribute": "1K-PNG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami003_2K-PNG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami003_2K-PNG.zip",
+                  "fileName": "Tatami003_2K-PNG.zip",
+                  "size": 64668453,
+                  "filetype": "zip",
+                  "attribute": "2K-PNG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami003_4K-PNG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami003_4K-PNG.zip",
+                  "fileName": "Tatami003_4K-PNG.zip",
+                  "size": 249804681,
+                  "filetype": "zip",
+                  "attribute": "4K-PNG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami003_8K-PNG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami003_8K-PNG.zip",
+                  "fileName": "Tatami003_8K-PNG.zip",
+                  "size": 997213830,
+                  "filetype": "zip",
+                  "attribute": "8K-PNG",
+                  "zipContent": []
+                }
+              ]
+            }
+          }
+        }
+      },
+      "previewLinks": [
+        {
+          "url": "https://releases.pbr.one/main/material-shading.html#normal_type=directx&color_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami003/Tatami003_SQ_Color.jpg?44738&displacement_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami003/Tatami003_SQ_Displacement.jpg?78864&normal_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami003/Tatami003_SQ_NormalDX.jpg?77910&roughness_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami003/Tatami003_SQ_Roughness.jpg?92693&ambientocclusion_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami003/Tatami003_SQ_AmbientOcclusion.jpg?85523",
+          "name": {
+            "id": 4,
+            "slug": "pbr-one-material-shading",
+            "title": "3D Preview",
+            "description": "description"
+          },
+          "displayName": "",
+          "iconName": ""
+        },
+        {
+          "url": "https://releases.pbr.one/main/texture-tiling.html#texture_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami003/Tatami003_SQ_Color.jpg?48948,https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami003/Tatami003_SQ_Displacement.jpg?60439,https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami003/Tatami003_SQ_NormalDX.jpg?44649,https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami003/Tatami003_SQ_Roughness.jpg?31298,https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami003/Tatami003_SQ_AmbientOcclusion.jpg?78988&texture_name=Color,Displacement,Normal,Roughness,Ambient Occlusion",
+          "name": {
+            "id": 3,
+            "slug": "pbr-one-material-maps",
+            "title": "Tiling Preview",
+            "description": "description"
+          },
+          "displayName": "",
+          "iconName": ""
+        }
+      ],
+      "previewType": "Default",
+      "maps": [
+        "color",
+        "displacement",
+        "normal",
+        "roughness",
+        "ambient-occlusion"
+      ],
+      "hasUsd": false,
+      "previewImage": {
+        "64-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/64-PNG/Tatami003.png",
+        "128-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/128-PNG/Tatami003.png",
+        "256-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/256-PNG/Tatami003.png",
+        "512-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/512-PNG/Tatami003.png",
+        "1024-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/1024-PNG/Tatami003.png",
+        "2048-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/2048-PNG/Tatami003.png",
+        "64-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/64-JPG-FFFFFF/Tatami003.jpg",
+        "128-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/128-JPG-FFFFFF/Tatami003.jpg",
+        "256-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/256-JPG-FFFFFF/Tatami003.jpg",
+        "512-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/512-JPG-FFFFFF/Tatami003.jpg",
+        "1024-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/1024-JPG-FFFFFF/Tatami003.jpg",
+        "2048-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/2048-JPG-FFFFFF/Tatami003.jpg",
+        "64-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/64-JPG-242424/Tatami003.jpg",
+        "128-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/128-JPG-242424/Tatami003.jpg",
+        "256-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/256-JPG-242424/Tatami003.jpg",
+        "512-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/512-JPG-242424/Tatami003.jpg",
+        "1024-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/1024-JPG-242424/Tatami003.jpg",
+        "2048-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/2048-JPG-242424/Tatami003.jpg",
+        "64-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/64-WEBP/Tatami003.webp",
+        "128-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/128-WEBP/Tatami003.webp",
+        "256-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/256-WEBP/Tatami003.webp",
+        "512-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/512-WEBP/Tatami003.webp",
+        "1024-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/1024-WEBP/Tatami003.webp",
+        "2048-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/2048-WEBP/Tatami003.webp"
+      }
+    },
+    {
+      "assetId": "Tatami005",
+      "releaseDate": "2023-10-18 18:00:00",
+      "earlyReleaseDate": "2023-09-29 08:34:00",
+      "dataType": "Material",
+      "creationMethod": "PBRProcedural",
+      "category": null,
+      "downloadCount": 10099,
+      "downloadCountMonth": 1112,
+      "downloadCountWeek": 303,
+      "popularityScore": 2.796298063679063,
+      "tags": [
+        "5",
+        "beige",
+        "floor",
+        "mat",
+        "pattern",
+        "tatami",
+        "yellow"
+      ],
+      "dataTypeName": "Material",
+      "dataTypeDescription": "A photo texture with PBR maps.",
+      "creationMethodName": "Height field photogrammetry",
+      "creationMethodDescription": "Displacement generated using photogrammetry.",
+      "displayName": "Tatami 005",
+      "customDisplayName": "",
+      "description": "",
+      "displayCategory": "Tatami",
+      "shortLink": "https://ambientcg.com/a/Tatami005",
+      "dimensionX": 250,
+      "dimensionY": 250,
+      "dimensionZ": 0,
+      "createdUsing": [],
+      "basedOnThis": [],
+      "variations": [],
+      "nextVariationAssetId": null,
+      "previousVariationAssetId": null,
+      "nextAssetId": null,
+      "previousAssetId": null,
+      "downloadFolders": {
+        "default": {
+          "title": "default",
+          "downloadFiletypeCategories": {
+            "zip": {
+              "title": "zip",
+              "downloads": [
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami005_1K-JPG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami005_1K-JPG.zip",
+                  "fileName": "Tatami005_1K-JPG.zip",
+                  "size": 8044679,
+                  "filetype": "zip",
+                  "attribute": "1K-JPG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami005_2K-JPG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami005_2K-JPG.zip",
+                  "fileName": "Tatami005_2K-JPG.zip",
+                  "size": 28308805,
+                  "filetype": "zip",
+                  "attribute": "2K-JPG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami005_4K-JPG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami005_4K-JPG.zip",
+                  "fileName": "Tatami005_4K-JPG.zip",
+                  "size": 107923311,
+                  "filetype": "zip",
+                  "attribute": "4K-JPG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami005_8K-JPG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami005_8K-JPG.zip",
+                  "fileName": "Tatami005_8K-JPG.zip",
+                  "size": 451538349,
+                  "filetype": "zip",
+                  "attribute": "8K-JPG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami005_1K-PNG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami005_1K-PNG.zip",
+                  "fileName": "Tatami005_1K-PNG.zip",
+                  "size": 16966768,
+                  "filetype": "zip",
+                  "attribute": "1K-PNG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami005_2K-PNG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami005_2K-PNG.zip",
+                  "fileName": "Tatami005_2K-PNG.zip",
+                  "size": 63411959,
+                  "filetype": "zip",
+                  "attribute": "2K-PNG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami005_4K-PNG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami005_4K-PNG.zip",
+                  "fileName": "Tatami005_4K-PNG.zip",
+                  "size": 244451251,
+                  "filetype": "zip",
+                  "attribute": "4K-PNG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami005_8K-PNG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami005_8K-PNG.zip",
+                  "fileName": "Tatami005_8K-PNG.zip",
+                  "size": 979480864,
+                  "filetype": "zip",
+                  "attribute": "8K-PNG",
+                  "zipContent": []
+                }
+              ]
+            }
+          }
+        }
+      },
+      "previewLinks": [
+        {
+          "url": "https://releases.pbr.one/main/material-shading.html#normal_type=directx&color_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami005/Tatami005_SQ_Color.jpg?93034&displacement_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami005/Tatami005_SQ_Displacement.jpg?36967&normal_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami005/Tatami005_SQ_NormalDX.jpg?25489&roughness_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami005/Tatami005_SQ_Roughness.jpg?85272&ambientocclusion_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami005/Tatami005_SQ_AmbientOcclusion.jpg?51513",
+          "name": {
+            "id": 4,
+            "slug": "pbr-one-material-shading",
+            "title": "3D Preview",
+            "description": "description"
+          },
+          "displayName": "",
+          "iconName": ""
+        },
+        {
+          "url": "https://releases.pbr.one/main/texture-tiling.html#texture_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami005/Tatami005_SQ_Color.jpg?87231,https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami005/Tatami005_SQ_Displacement.jpg?69491,https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami005/Tatami005_SQ_NormalDX.jpg?67459,https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami005/Tatami005_SQ_Roughness.jpg?62965,https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami005/Tatami005_SQ_AmbientOcclusion.jpg?6053&texture_name=Color,Displacement,Normal,Roughness,Ambient Occlusion",
+          "name": {
+            "id": 3,
+            "slug": "pbr-one-material-maps",
+            "title": "Tiling Preview",
+            "description": "description"
+          },
+          "displayName": "",
+          "iconName": ""
+        }
+      ],
+      "previewType": "Default",
+      "maps": [
+        "color",
+        "displacement",
+        "normal",
+        "roughness",
+        "ambient-occlusion"
+      ],
+      "hasUsd": false,
+      "previewImage": {
+        "64-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/64-PNG/Tatami005.png",
+        "128-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/128-PNG/Tatami005.png",
+        "256-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/256-PNG/Tatami005.png",
+        "512-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/512-PNG/Tatami005.png",
+        "1024-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/1024-PNG/Tatami005.png",
+        "2048-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/2048-PNG/Tatami005.png",
+        "64-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/64-JPG-FFFFFF/Tatami005.jpg",
+        "128-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/128-JPG-FFFFFF/Tatami005.jpg",
+        "256-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/256-JPG-FFFFFF/Tatami005.jpg",
+        "512-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/512-JPG-FFFFFF/Tatami005.jpg",
+        "1024-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/1024-JPG-FFFFFF/Tatami005.jpg",
+        "2048-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/2048-JPG-FFFFFF/Tatami005.jpg",
+        "64-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/64-JPG-242424/Tatami005.jpg",
+        "128-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/128-JPG-242424/Tatami005.jpg",
+        "256-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/256-JPG-242424/Tatami005.jpg",
+        "512-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/512-JPG-242424/Tatami005.jpg",
+        "1024-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/1024-JPG-242424/Tatami005.jpg",
+        "2048-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/2048-JPG-242424/Tatami005.jpg",
+        "64-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/64-WEBP/Tatami005.webp",
+        "128-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/128-WEBP/Tatami005.webp",
+        "256-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/256-WEBP/Tatami005.webp",
+        "512-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/512-WEBP/Tatami005.webp",
+        "1024-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/1024-WEBP/Tatami005.webp",
+        "2048-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/2048-WEBP/Tatami005.webp"
+      }
+    },
+    {
+      "assetId": "Tatami006",
+      "releaseDate": "2023-10-18 18:00:00",
+      "earlyReleaseDate": "2023-09-29 08:34:00",
+      "dataType": "Material",
+      "creationMethod": "PBRProcedural",
+      "category": null,
+      "downloadCount": 9249,
+      "downloadCountMonth": 1119,
+      "downloadCountWeek": 288,
+      "popularityScore": 2.645109495095322,
+      "tags": [
+        "6",
+        "beige",
+        "floor",
+        "mat",
+        "pattern",
+        "tatami",
+        "yellow"
+      ],
+      "dataTypeName": "Material",
+      "dataTypeDescription": "A photo texture with PBR maps.",
+      "creationMethodName": "Height field photogrammetry",
+      "creationMethodDescription": "Displacement generated using photogrammetry.",
+      "displayName": "Tatami 006",
+      "customDisplayName": "",
+      "description": "",
+      "displayCategory": "Tatami",
+      "shortLink": "https://ambientcg.com/a/Tatami006",
+      "dimensionX": 250,
+      "dimensionY": 250,
+      "dimensionZ": 0,
+      "createdUsing": [],
+      "basedOnThis": [],
+      "variations": [],
+      "nextVariationAssetId": null,
+      "previousVariationAssetId": null,
+      "nextAssetId": null,
+      "previousAssetId": null,
+      "downloadFolders": {
+        "default": {
+          "title": "default",
+          "downloadFiletypeCategories": {
+            "zip": {
+              "title": "zip",
+              "downloads": [
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami006_1K-JPG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami006_1K-JPG.zip",
+                  "fileName": "Tatami006_1K-JPG.zip",
+                  "size": 8089575,
+                  "filetype": "zip",
+                  "attribute": "1K-JPG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami006_2K-JPG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami006_2K-JPG.zip",
+                  "fileName": "Tatami006_2K-JPG.zip",
+                  "size": 28382765,
+                  "filetype": "zip",
+                  "attribute": "2K-JPG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami006_4K-JPG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami006_4K-JPG.zip",
+                  "fileName": "Tatami006_4K-JPG.zip",
+                  "size": 107333541,
+                  "filetype": "zip",
+                  "attribute": "4K-JPG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami006_8K-JPG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami006_8K-JPG.zip",
+                  "fileName": "Tatami006_8K-JPG.zip",
+                  "size": 448758856,
+                  "filetype": "zip",
+                  "attribute": "8K-JPG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami006_1K-PNG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami006_1K-PNG.zip",
+                  "fileName": "Tatami006_1K-PNG.zip",
+                  "size": 17060913,
+                  "filetype": "zip",
+                  "attribute": "1K-PNG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami006_2K-PNG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami006_2K-PNG.zip",
+                  "fileName": "Tatami006_2K-PNG.zip",
+                  "size": 63368067,
+                  "filetype": "zip",
+                  "attribute": "2K-PNG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami006_4K-PNG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami006_4K-PNG.zip",
+                  "fileName": "Tatami006_4K-PNG.zip",
+                  "size": 243251926,
+                  "filetype": "zip",
+                  "attribute": "4K-PNG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami006_8K-PNG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami006_8K-PNG.zip",
+                  "fileName": "Tatami006_8K-PNG.zip",
+                  "size": 975686418,
+                  "filetype": "zip",
+                  "attribute": "8K-PNG",
+                  "zipContent": []
+                }
+              ]
+            }
+          }
+        }
+      },
+      "previewLinks": [
+        {
+          "url": "https://releases.pbr.one/main/material-shading.html#normal_type=directx&color_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami006/Tatami006_SQ_Color.jpg?81710&displacement_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami006/Tatami006_SQ_Displacement.jpg?86725&normal_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami006/Tatami006_SQ_NormalDX.jpg?55318&roughness_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami006/Tatami006_SQ_Roughness.jpg?27524&ambientocclusion_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami006/Tatami006_SQ_AmbientOcclusion.jpg?67170",
+          "name": {
+            "id": 4,
+            "slug": "pbr-one-material-shading",
+            "title": "3D Preview",
+            "description": "description"
+          },
+          "displayName": "",
+          "iconName": ""
+        },
+        {
+          "url": "https://releases.pbr.one/main/texture-tiling.html#texture_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami006/Tatami006_SQ_Color.jpg?43705,https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami006/Tatami006_SQ_Displacement.jpg?65626,https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami006/Tatami006_SQ_NormalDX.jpg?35599,https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami006/Tatami006_SQ_Roughness.jpg?37085,https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami006/Tatami006_SQ_AmbientOcclusion.jpg?21239&texture_name=Color,Displacement,Normal,Roughness,Ambient Occlusion",
+          "name": {
+            "id": 3,
+            "slug": "pbr-one-material-maps",
+            "title": "Tiling Preview",
+            "description": "description"
+          },
+          "displayName": "",
+          "iconName": ""
+        }
+      ],
+      "previewType": "Default",
+      "maps": [
+        "color",
+        "displacement",
+        "normal",
+        "roughness",
+        "ambient-occlusion"
+      ],
+      "hasUsd": false,
+      "previewImage": {
+        "64-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/64-PNG/Tatami006.png",
+        "128-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/128-PNG/Tatami006.png",
+        "256-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/256-PNG/Tatami006.png",
+        "512-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/512-PNG/Tatami006.png",
+        "1024-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/1024-PNG/Tatami006.png",
+        "2048-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/2048-PNG/Tatami006.png",
+        "64-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/64-JPG-FFFFFF/Tatami006.jpg",
+        "128-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/128-JPG-FFFFFF/Tatami006.jpg",
+        "256-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/256-JPG-FFFFFF/Tatami006.jpg",
+        "512-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/512-JPG-FFFFFF/Tatami006.jpg",
+        "1024-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/1024-JPG-FFFFFF/Tatami006.jpg",
+        "2048-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/2048-JPG-FFFFFF/Tatami006.jpg",
+        "64-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/64-JPG-242424/Tatami006.jpg",
+        "128-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/128-JPG-242424/Tatami006.jpg",
+        "256-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/256-JPG-242424/Tatami006.jpg",
+        "512-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/512-JPG-242424/Tatami006.jpg",
+        "1024-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/1024-JPG-242424/Tatami006.jpg",
+        "2048-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/2048-JPG-242424/Tatami006.jpg",
+        "64-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/64-WEBP/Tatami006.webp",
+        "128-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/128-WEBP/Tatami006.webp",
+        "256-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/256-WEBP/Tatami006.webp",
+        "512-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/512-WEBP/Tatami006.webp",
+        "1024-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/1024-WEBP/Tatami006.webp",
+        "2048-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/2048-WEBP/Tatami006.webp"
+      }
+    },
+    {
+      "assetId": "Tatami002",
+      "releaseDate": "2023-10-18 18:00:00",
+      "earlyReleaseDate": "2023-09-29 08:34:00",
+      "dataType": "Material",
+      "creationMethod": "PBRProcedural",
+      "category": null,
+      "downloadCount": 8790,
+      "downloadCountMonth": 1154,
+      "downloadCountWeek": 300,
+      "popularityScore": 2.5634676680601016,
+      "tags": [
+        "2",
+        "floor",
+        "green",
+        "tatami"
+      ],
+      "dataTypeName": "Material",
+      "dataTypeDescription": "A photo texture with PBR maps.",
+      "creationMethodName": "Height field photogrammetry",
+      "creationMethodDescription": "Displacement generated using photogrammetry.",
+      "displayName": "Tatami 002",
+      "customDisplayName": "",
+      "description": "",
+      "displayCategory": "Tatami",
+      "shortLink": "https://ambientcg.com/a/Tatami002",
+      "dimensionX": 250,
+      "dimensionY": 250,
+      "dimensionZ": 0,
+      "createdUsing": [],
+      "basedOnThis": [],
+      "variations": [],
+      "nextVariationAssetId": null,
+      "previousVariationAssetId": null,
+      "nextAssetId": null,
+      "previousAssetId": null,
+      "downloadFolders": {
+        "default": {
+          "title": "default",
+          "downloadFiletypeCategories": {
+            "zip": {
+              "title": "zip",
+              "downloads": [
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami002_1K-JPG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami002_1K-JPG.zip",
+                  "fileName": "Tatami002_1K-JPG.zip",
+                  "size": 8975735,
+                  "filetype": "zip",
+                  "attribute": "1K-JPG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami002_2K-JPG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami002_2K-JPG.zip",
+                  "fileName": "Tatami002_2K-JPG.zip",
+                  "size": 31322110,
+                  "filetype": "zip",
+                  "attribute": "2K-JPG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami002_4K-JPG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami002_4K-JPG.zip",
+                  "fileName": "Tatami002_4K-JPG.zip",
+                  "size": 118538144,
+                  "filetype": "zip",
+                  "attribute": "4K-JPG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami002_8K-JPG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami002_8K-JPG.zip",
+                  "fileName": "Tatami002_8K-JPG.zip",
+                  "size": 498327962,
+                  "filetype": "zip",
+                  "attribute": "8K-JPG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami002_1K-PNG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami002_1K-PNG.zip",
+                  "fileName": "Tatami002_1K-PNG.zip",
+                  "size": 17670291,
+                  "filetype": "zip",
+                  "attribute": "1K-PNG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami002_2K-PNG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami002_2K-PNG.zip",
+                  "fileName": "Tatami002_2K-PNG.zip",
+                  "size": 64527442,
+                  "filetype": "zip",
+                  "attribute": "2K-PNG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami002_4K-PNG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami002_4K-PNG.zip",
+                  "fileName": "Tatami002_4K-PNG.zip",
+                  "size": 248559338,
+                  "filetype": "zip",
+                  "attribute": "4K-PNG",
+                  "zipContent": []
+                },
+                {
+                  "fullDownloadPath": "https://ambientcg.com/get?file=Tatami002_8K-PNG.zip",
+                  "downloadLink": "https://ambientcg.com/get?file=Tatami002_8K-PNG.zip",
+                  "fileName": "Tatami002_8K-PNG.zip",
+                  "size": 998406874,
+                  "filetype": "zip",
+                  "attribute": "8K-PNG",
+                  "zipContent": []
+                }
+              ]
+            }
+          }
+        }
+      },
+      "previewLinks": [
+        {
+          "url": "https://releases.pbr.one/main/material-shading.html#normal_type=directx&color_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami002/Tatami002_SQ_Color.jpg?1312&displacement_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami002/Tatami002_SQ_Displacement.jpg?43394&normal_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami002/Tatami002_SQ_NormalDX.jpg?7460&roughness_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami002/Tatami002_SQ_Roughness.jpg?35567&ambientocclusion_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami002/Tatami002_SQ_AmbientOcclusion.jpg?8926",
+          "name": {
+            "id": 4,
+            "slug": "pbr-one-material-shading",
+            "title": "3D Preview",
+            "description": "description"
+          },
+          "displayName": "",
+          "iconName": ""
+        },
+        {
+          "url": "https://releases.pbr.one/main/texture-tiling.html#texture_url=https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami002/Tatami002_SQ_Color.jpg?13884,https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami002/Tatami002_SQ_Displacement.jpg?40199,https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami002/Tatami002_SQ_NormalDX.jpg?65306,https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami002/Tatami002_SQ_Roughness.jpg?4750,https://f003.backblazeb2.com/file/ambientCG-Web/media/surface-preview/Tatami002/Tatami002_SQ_AmbientOcclusion.jpg?24954&texture_name=Color,Displacement,Normal,Roughness,Ambient Occlusion",
+          "name": {
+            "id": 3,
+            "slug": "pbr-one-material-maps",
+            "title": "Tiling Preview",
+            "description": "description"
+          },
+          "displayName": "",
+          "iconName": ""
+        }
+      ],
+      "previewType": "Default",
+      "maps": [
+        "color",
+        "displacement",
+        "normal",
+        "roughness",
+        "ambient-occlusion"
+      ],
+      "hasUsd": false,
+      "previewImage": {
+        "64-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/64-PNG/Tatami002.png",
+        "128-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/128-PNG/Tatami002.png",
+        "256-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/256-PNG/Tatami002.png",
+        "512-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/512-PNG/Tatami002.png",
+        "1024-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/1024-PNG/Tatami002.png",
+        "2048-PNG": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/2048-PNG/Tatami002.png",
+        "64-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/64-JPG-FFFFFF/Tatami002.jpg",
+        "128-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/128-JPG-FFFFFF/Tatami002.jpg",
+        "256-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/256-JPG-FFFFFF/Tatami002.jpg",
+        "512-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/512-JPG-FFFFFF/Tatami002.jpg",
+        "1024-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/1024-JPG-FFFFFF/Tatami002.jpg",
+        "2048-JPG-FFFFFF": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/2048-JPG-FFFFFF/Tatami002.jpg",
+        "64-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/64-JPG-242424/Tatami002.jpg",
+        "128-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/128-JPG-242424/Tatami002.jpg",
+        "256-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/256-JPG-242424/Tatami002.jpg",
+        "512-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/512-JPG-242424/Tatami002.jpg",
+        "1024-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/1024-JPG-242424/Tatami002.jpg",
+        "2048-JPG-242424": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/2048-JPG-242424/Tatami002.jpg",
+        "64-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/64-WEBP/Tatami002.webp",
+        "128-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/128-WEBP/Tatami002.webp",
+        "256-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/256-WEBP/Tatami002.webp",
+        "512-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/512-WEBP/Tatami002.webp",
+        "1024-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/1024-WEBP/Tatami002.webp",
+        "2048-WEBP": "https://acg-media.struffelproductions.com/file/ambientCG-Web/media/thumbnail/2048-WEBP/Tatami002.webp"
+      }
+    }
+  ]
+}

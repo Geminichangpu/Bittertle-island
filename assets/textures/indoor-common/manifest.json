@@ -1,0 +1,236 @@
+{
+  "assets": [
+    {
+      "usage": "木梁、门框、家具与收边",
+      "maps": {
+        "baseColor": {
+          "path": "../shrine-residence/fine_grained_wood/fine_grained_wood_col_1k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/fine_grained_wood/fine_grained_wood_col_1k.jpg"
+        },
+        "normal": {
+          "path": "../shrine-residence/fine_grained_wood/fine_grained_wood_nor_gl_1k.png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/fine_grained_wood/fine_grained_wood_nor_gl_1k.png"
+        },
+        "roughness": {
+          "path": "../shrine-residence/fine_grained_wood/fine_grained_wood_rough_1k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/fine_grained_wood/fine_grained_wood_rough_1k.jpg"
+        }
+      },
+      "id": "fine_grained_wood",
+      "resolution": "1K",
+      "source": "https://polyhaven.com/a/fine_grained_wood",
+      "provider": "Poly Haven",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://polyhaven.com/license"
+    },
+    {
+      "usage": "缘侧地板、木质下裙",
+      "maps": {
+        "baseColor": {
+          "path": "../shrine-residence/dark_wood/dark_wood_diff_1k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/dark_wood/dark_wood_diff_1k.jpg"
+        },
+        "normal": {
+          "path": "../shrine-residence/dark_wood/dark_wood_nor_gl_1k.png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/dark_wood/dark_wood_nor_gl_1k.png"
+        },
+        "roughness": {
+          "path": "../shrine-residence/dark_wood/dark_wood_rough_1k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/dark_wood/dark_wood_rough_1k.jpg"
+        }
+      },
+      "id": "dark_wood",
+      "resolution": "1K",
+      "source": "https://polyhaven.com/a/dark_wood",
+      "provider": "Poly Haven",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://polyhaven.com/license"
+    },
+    {
+      "usage": "坐垫、寝具、织物包边",
+      "maps": {
+        "baseColor": {
+          "path": "../shrine-residence/rough_linen/rough_linen_diff_1k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rough_linen/rough_linen_diff_1k.jpg"
+        },
+        "normal": {
+          "path": "../shrine-residence/rough_linen/rough_linen_nor_gl_1k.png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/rough_linen/rough_linen_nor_gl_1k.png"
+        },
+        "roughness": {
+          "path": "../shrine-residence/rough_linen/rough_linen_rough_1k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rough_linen/rough_linen_rough_1k.jpg"
+        }
+      },
+      "id": "rough_linen",
+      "resolution": "1K",
+      "source": "https://polyhaven.com/a/rough_linen",
+      "provider": "Poly Haven",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://polyhaven.com/license"
+    },
+    {
+      "usage": "室内浅色抹灰墙",
+      "maps": {
+        "baseColor": {
+          "path": "../shrine-residence/grey_plaster/grey_plaster_diff_1k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/grey_plaster/grey_plaster_diff_1k.jpg"
+        },
+        "normal": {
+          "path": "../shrine-residence/grey_plaster/grey_plaster_nor_gl_1k.png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/grey_plaster/grey_plaster_nor_gl_1k.png"
+        },
+        "roughness": {
+          "path": "../shrine-residence/grey_plaster/grey_plaster_rough_1k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/grey_plaster/grey_plaster_rough_1k.jpg"
+        }
+      },
+      "id": "grey_plaster",
+      "resolution": "1K",
+      "source": "https://polyhaven.com/a/grey_plaster",
+      "provider": "Poly Haven",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://polyhaven.com/license"
+    },
+    {
+      "usage": "庭院石灯与踏石",
+      "maps": {
+        "baseColor": {
+          "path": "../shrine-residence/dark_rock/dark_rock_diff_1k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/dark_rock/dark_rock_diff_1k.jpg"
+        },
+        "normal": {
+          "path": "../shrine-residence/dark_rock/dark_rock_nor_gl_1k.png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/dark_rock/dark_rock_nor_gl_1k.png"
+        },
+        "roughness": {
+          "path": "../shrine-residence/dark_rock/dark_rock_rough_1k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/dark_rock/dark_rock_rough_1k.jpg"
+        }
+      },
+      "id": "dark_rock",
+      "resolution": "1K",
+      "source": "https://polyhaven.com/a/dark_rock",
+      "provider": "Poly Haven",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://polyhaven.com/license"
+    },
+    {
+      "usage": "障子和纸、灯罩与挂轴",
+      "maps": {
+        "baseColor": {
+          "path": "../shrine-residence/Paper001/Paper001_1K-JPG_Color.jpg",
+          "url": "https://ambientcg.com/get?file=Paper001_1K-JPG.zip"
+        },
+        "normal": {
+          "path": "../shrine-residence/Paper001/Paper001_1K-JPG_NormalGL.jpg",
+          "url": "https://ambientcg.com/get?file=Paper001_1K-JPG.zip"
+        },
+        "roughness": {
+          "path": "../shrine-residence/Paper001/Paper001_1K-JPG_Roughness.jpg",
+          "url": "https://ambientcg.com/get?file=Paper001_1K-JPG.zip"
+        }
+      },
+      "id": "Paper001",
+      "resolution": "1K",
+      "source": "https://ambientcg.com/a/Paper001",
+      "provider": "ambientCG",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://docs.ambientcg.com/license/"
+    },
+    {
+      "usage": "榻榻米草编面",
+      "maps": {
+        "baseColor": {
+          "path": "../shrine-residence/Tatami002/Tatami002_1K-JPG_Color.jpg",
+          "url": "https://ambientcg.com/get?file=Tatami002_1K-JPG.zip"
+        },
+        "normal": {
+          "path": "../shrine-residence/Tatami002/Tatami002_1K-JPG_NormalGL.jpg",
+          "url": "https://ambientcg.com/get?file=Tatami002_1K-JPG.zip"
+        },
+        "roughness": {
+          "path": "../shrine-residence/Tatami002/Tatami002_1K-JPG_Roughness.jpg",
+          "url": "https://ambientcg.com/get?file=Tatami002_1K-JPG.zip"
+        }
+      },
+      "id": "Tatami002",
+      "resolution": "1K",
+      "source": "https://ambientcg.com/a/Tatami002",
+      "provider": "ambientCG",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://docs.ambientcg.com/license/"
+    },
+    {
+      "source": "https://polyhaven.com/a/marble_01",
+      "maps": {
+        "baseColor": {
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/marble_01/marble_01_diff_1k.jpg",
+          "path": "marble_01/marble_01_diff_1k.jpg"
+        },
+        "roughness": {
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/marble_01/marble_01_rough_1k.jpg",
+          "path": "marble_01/marble_01_rough_1k.jpg"
+        },
+        "normal": {
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/marble_01/marble_01_nor_gl_1k.png",
+          "path": "marble_01/marble_01_nor_gl_1k.png"
+        }
+      },
+      "licenseUrl": "https://polyhaven.com/license",
+      "usage": "琉璃塔石材、皮革与软包；绯华楼紫色织物",
+      "id": "marble_01",
+      "license": "CC0-1.0",
+      "resolution": "1K",
+      "provider": "Poly Haven"
+    },
+    {
+      "source": "https://polyhaven.com/a/leather_white",
+      "maps": {
+        "baseColor": {
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/leather_white/leather_white_diff_1k.jpg",
+          "path": "leather_white/leather_white_diff_1k.jpg"
+        },
+        "roughness": {
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/leather_white/leather_white_rough_1k.jpg",
+          "path": "leather_white/leather_white_rough_1k.jpg"
+        },
+        "normal": {
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/leather_white/leather_white_nor_gl_1k.png",
+          "path": "leather_white/leather_white_nor_gl_1k.png"
+        }
+      },
+      "licenseUrl": "https://polyhaven.com/license",
+      "usage": "琉璃塔石材、皮革与软包；绯华楼紫色织物",
+      "id": "leather_white",
+      "license": "CC0-1.0",
+      "resolution": "1K",
+      "provider": "Poly Haven"
+    },
+    {
+      "source": "https://polyhaven.com/a/velour_velvet",
+      "maps": {
+        "baseColor": {
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/velour_velvet/velour_velvet_diff_1k.jpg",
+          "path": "velour_velvet/velour_velvet_diff_1k.jpg"
+        },
+        "roughness": {
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/velour_velvet/velour_velvet_rough_1k.jpg",
+          "path": "velour_velvet/velour_velvet_rough_1k.jpg"
+        },
+        "normal": {
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/1k/velour_velvet/velour_velvet_nor_gl_1k.png",
+          "path": "velour_velvet/velour_velvet_nor_gl_1k.png"
+        }
+      },
+      "licenseUrl": "https://polyhaven.com/license",
+      "usage": "琉璃塔石材、皮革与软包；绯华楼紫色织物",
+      "id": "velour_velvet",
+      "license": "CC0-1.0",
+      "resolution": "1K",
+      "provider": "Poly Haven"
+    }
+  ],
+  "downloadDate": "2026-10-26",
+  "scope": "All other interiors; shared source textures"
+}

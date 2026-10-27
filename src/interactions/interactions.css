@@ -1,0 +1,8 @@
+.interaction-hud{padding:0;background:none;border:0;box-shadow:none;width:auto;height:auto;min-width:0;position:absolute;left:18px;bottom:104px;z-index:5;max-width:min(410px,calc(100% - 36px));pointer-events:none;color:#f6f5ed}
+.interaction-tools{display:flex;gap:6px;pointer-events:auto}.interaction-tools button{padding:6px 10px;background:#faf7eae8;color:#234c47;border:1px solid #cbd4c6;border-radius:7px;font-size:12px}
+.interaction-tip{margin:7px 0 0;padding:8px 11px;border-radius:8px;background:#173f39dc;font-size:13px;line-height:1.5;min-height:20px}
+@media(max-width:700px){.interaction-hud{bottom:168px;left:10px;max-width:calc(100% - 20px)}.interaction-tip{font-size:12px;max-width:300px}.interaction-tools button{padding:5px 8px}}
+
+@media(pointer:coarse){.interaction-hud{bottom:360px;max-width:260px}.interaction-tools{flex-wrap:wrap}}
+
+.interaction-response{display:block;font-size:12px;opacity:.85;margin-top:4px}

@@ -1,0 +1,21 @@
+node_modules/
+dist/
+dist-viewer/
+public/viewer-template/
+.browser-profile/
+reports/
+releases/
+*.log
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
+# Editable masters remain on this computer; keep a separate backup.
+art_source/blender/
+# Original production textures stay local; keep provenance and license notes.
+assets/textures/**/*
+!assets/textures/**/
+!assets/textures/**/*.json
+!assets/textures/**/*.md
+!assets/textures/**/*.txt
+*.blend1
+*.blend2

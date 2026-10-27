@@ -1,0 +1,199 @@
+{
+  "materials": [
+    {
+      "material": "SR_916340_fine_grained_wood_surface",
+      "asset": "fine_grained_wood",
+      "source": "https://polyhaven.com/a/fine_grained_wood",
+      "license": "CC0-1.0"
+    },
+    {
+      "material": "SR_b58b5b_fine_grained_wood_surface",
+      "asset": "fine_grained_wood",
+      "source": "https://polyhaven.com/a/fine_grained_wood",
+      "license": "CC0-1.0"
+    },
+    {
+      "material": "SR_493126_fine_grained_wood_surface",
+      "asset": "fine_grained_wood",
+      "source": "https://polyhaven.com/a/fine_grained_wood",
+      "license": "CC0-1.0"
+    },
+    {
+      "material": "SR_956c49_dark_wood_surface",
+      "asset": "dark_wood",
+      "source": "https://polyhaven.com/a/dark_wood",
+      "license": "CC0-1.0"
+    },
+    {
+      "material": "SR_e5d9b6_Paper001_surface",
+      "asset": "Paper001",
+      "source": "https://ambientcg.com/a/Paper001",
+      "license": "CC0-1.0"
+    },
+    {
+      "material": "SR_c7c1ab_grey_plaster_surface",
+      "asset": "grey_plaster",
+      "source": "https://polyhaven.com/a/grey_plaster",
+      "license": "CC0-1.0"
+    },
+    {
+      "material": "SR_ddd6c4_rough_linen_surface",
+      "asset": "rough_linen",
+      "source": "https://polyhaven.com/a/rough_linen",
+      "license": "CC0-1.0"
+    },
+    {
+      "material": "SR_ebe4d2_rough_linen_surface",
+      "asset": "rough_linen",
+      "source": "https://polyhaven.com/a/rough_linen",
+      "license": "CC0-1.0"
+    },
+    {
+      "material": "SR_7d8171_rough_linen_surface",
+      "asset": "rough_linen",
+      "source": "https://polyhaven.com/a/rough_linen",
+      "license": "CC0-1.0"
+    },
+    {
+      "material": "SR_b4ab95_rough_linen_surface",
+      "asset": "rough_linen",
+      "source": "https://polyhaven.com/a/rough_linen",
+      "license": "CC0-1.0"
+    },
+    {
+      "material": "SR_85887e_dark_rock_surface",
+      "asset": "dark_rock",
+      "source": "https://polyhaven.com/a/dark_rock",
+      "license": "CC0-1.0"
+    },
+    {
+      "material": "SR_666e67_dark_rock_surface",
+      "asset": "dark_rock",
+      "source": "https://polyhaven.com/a/dark_rock",
+      "license": "CC0-1.0"
+    },
+    {
+      "material": "SR_f3e8cc_Paper001_lamp",
+      "asset": "Paper001",
+      "source": "https://ambientcg.com/a/Paper001",
+      "license": "CC0-1.0"
+    },
+    {
+      "material": "SR_d0c18b_Tatami002_surface",
+      "asset": "Tatami002",
+      "source": "https://ambientcg.com/a/Tatami002",
+      "license": "CC0-1.0"
+    },
+    {
+      "material": "SR_b8ae7c_Tatami002_surface",
+      "asset": "Tatami002",
+      "source": "https://ambientcg.com/a/Tatami002",
+      "license": "CC0-1.0"
+    },
+    {
+      "material": "SR_607c7d_rough_linen_surface",
+      "asset": "rough_linen",
+      "source": "https://polyhaven.com/a/rough_linen",
+      "license": "CC0-1.0"
+    }
+  ],
+  "derivedImages": [
+    {
+      "path": "styled/SR_fine_grained_wood_916340.png",
+      "sourceAsset": "fine_grained_wood",
+      "tint": "#916340",
+      "operation": "Reduced luminance contrast and baked palette tint; original detail retained"
+    },
+    {
+      "path": "styled/SR_fine_grained_wood_b58b5b.png",
+      "sourceAsset": "fine_grained_wood",
+      "tint": "#b58b5b",
+      "operation": "Reduced luminance contrast and baked palette tint; original detail retained"
+    },
+    {
+      "path": "styled/SR_fine_grained_wood_493126.png",
+      "sourceAsset": "fine_grained_wood",
+      "tint": "#493126",
+      "operation": "Reduced luminance contrast and baked palette tint; original detail retained"
+    },
+    {
+      "path": "styled/SR_dark_wood_956c49.png",
+      "sourceAsset": "dark_wood",
+      "tint": "#956c49",
+      "operation": "Reduced luminance contrast and baked palette tint; original detail retained"
+    },
+    {
+      "path": "styled/SR_Paper001_e5d9b6.png",
+      "sourceAsset": "Paper001",
+      "tint": "#e5d9b6",
+      "operation": "Reduced luminance contrast and baked palette tint; original detail retained"
+    },
+    {
+      "path": "styled/SR_grey_plaster_c7c1ab.png",
+      "sourceAsset": "grey_plaster",
+      "tint": "#c7c1ab",
+      "operation": "Reduced luminance contrast and baked palette tint; original detail retained"
+    },
+    {
+      "path": "styled/SR_rough_linen_ddd6c4.png",
+      "sourceAsset": "rough_linen",
+      "tint": "#ddd6c4",
+      "operation": "Reduced luminance contrast and baked palette tint; original detail retained"
+    },
+    {
+      "path": "styled/SR_rough_linen_ebe4d2.png",
+      "sourceAsset": "rough_linen",
+      "tint": "#ebe4d2",
+      "operation": "Reduced luminance contrast and baked palette tint; original detail retained"
+    },
+    {
+      "path": "styled/SR_rough_linen_7d8171.png",
+      "sourceAsset": "rough_linen",
+      "tint": "#7d8171",
+      "operation": "Reduced luminance contrast and baked palette tint; original detail retained"
+    },
+    {
+      "path": "styled/SR_rough_linen_b4ab95.png",
+      "sourceAsset": "rough_linen",
+      "tint": "#b4ab95",
+      "operation": "Reduced luminance contrast and baked palette tint; original detail retained"
+    },
+    {
+      "path": "styled/SR_dark_rock_85887e.png",
+      "sourceAsset": "dark_rock",
+      "tint": "#85887e",
+      "operation": "Reduced luminance contrast and baked palette tint; original detail retained"
+    },
+    {
+      "path": "styled/SR_dark_rock_666e67.png",
+      "sourceAsset": "dark_rock",
+      "tint": "#666e67",
+      "operation": "Reduced luminance contrast and baked palette tint; original detail retained"
+    },
+    {
+      "path": "styled/SR_Paper001_f3e8cc.png",
+      "sourceAsset": "Paper001",
+      "tint": "#f3e8cc",
+      "operation": "Reduced luminance contrast and baked palette tint; original detail retained"
+    },
+    {
+      "path": "styled/SR_Tatami002_d0c18b.png",
+      "sourceAsset": "Tatami002",
+      "tint": "#d0c18b",
+      "operation": "Reduced luminance contrast and baked palette tint; original detail retained"
+    },
+    {
+      "path": "styled/SR_Tatami002_b8ae7c.png",
+      "sourceAsset": "Tatami002",
+      "tint": "#b8ae7c",
+      "operation": "Reduced luminance contrast and baked palette tint; original detail retained"
+    },
+    {
+      "path": "styled/SR_rough_linen_607c7d.png",
+      "sourceAsset": "rough_linen",
+      "tint": "#607c7d",
+      "operation": "Reduced luminance contrast and baked palette tint; original detail retained"
+    }
+  ],
+  "scope": "Residence_Interior_v1 only"
+}

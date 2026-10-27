@@ -1,0 +1,30 @@
+{
+  "scenic_sakura": {
+    "width": 28,
+    "depth": 26,
+    "wallHeight": 18,
+    "roofColor": "#f8cddd",
+    "wallColor": "#c1c7c6"
+  },
+  "scenic_cliff": {
+    "width": 44,
+    "depth": 56,
+    "wallHeight": 14,
+    "roofColor": "#f8cddd",
+    "wallColor": "#c1c7c6"
+  },
+  "scenic_academy": {
+    "width": 22,
+    "depth": 25,
+    "wallHeight": 11,
+    "roofColor": "#444e59",
+    "wallColor": "#eee2c7"
+  },
+  "scenic_farm": {
+    "width": 38,
+    "depth": 34,
+    "wallHeight": 8,
+    "roofColor": "#507e80",
+    "wallColor": "#a88154"
+  }
+}

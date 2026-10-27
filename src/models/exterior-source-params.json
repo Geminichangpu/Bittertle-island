@@ -1,0 +1,162 @@
+{
+  "shrine_main": {
+    "templateId": "shrine_main",
+    "params": {
+      "width": 16,
+      "depth": 12,
+      "wallHeight": 7,
+      "roofColor": "#50565a",
+      "wallColor": "#d5c8ae"
+    }
+  },
+  "shrine_torii": {
+    "templateId": "shrine_torii",
+    "params": {
+      "width": 12,
+      "depth": 3,
+      "wallHeight": 8,
+      "roofColor": "#50565a",
+      "wallColor": "#d5c8ae"
+    }
+  },
+  "shrine_temizu": {
+    "templateId": "shrine_temizu",
+    "params": {
+      "width": 6.5,
+      "depth": 5.5,
+      "wallHeight": 4.6,
+      "roofColor": "#50565a",
+      "wallColor": "#d5c8ae"
+    }
+  },
+  "shrine_office": {
+    "templateId": "shrine_office",
+    "params": {
+      "width": 12,
+      "depth": 8,
+      "wallHeight": 5.2,
+      "roofColor": "#50565a",
+      "wallColor": "#d5c8ae"
+    }
+  },
+  "shrine_residence": {
+    "templateId": "shrine_residence",
+    "params": {
+      "width": 15,
+      "depth": 9,
+      "wallHeight": 5.3,
+      "roofColor": "#50565a",
+      "wallColor": "#d5c8ae"
+    }
+  },
+  "shrine_court": {
+    "templateId": "shrine_court",
+    "params": {
+      "width": 22,
+      "depth": 14,
+      "wallHeight": 1,
+      "roofColor": "#50565a",
+      "wallColor": "#d5c8ae"
+    }
+  },
+  "shrine_path": {
+    "templateId": "shrine_path",
+    "params": {
+      "width": 12,
+      "depth": 24,
+      "wallHeight": 1,
+      "roofColor": "#50565a",
+      "wallColor": "#d5c8ae"
+    }
+  },
+  "shrine_garden": {
+    "templateId": "shrine_garden",
+    "params": {
+      "width": 8,
+      "depth": 16,
+      "wallHeight": 1,
+      "roofColor": "#50565a",
+      "wallColor": "#d5c8ae"
+    }
+  },
+  "base_office": {
+    "templateId": "base_office",
+    "params": {
+      "width": 12,
+      "depth": 9,
+      "wallHeight": 5,
+      "roofColor": "#41464b",
+      "wallColor": "#97632e"
+    }
+  },
+  "base_bedroom": {
+    "templateId": "base_bedroom",
+    "params": {
+      "width": 13,
+      "depth": 11,
+      "wallHeight": 5,
+      "roofColor": "#41464b",
+      "wallColor": "#97632e"
+    }
+  },
+  "base_pond": {
+    "templateId": "base_pond",
+    "params": {
+      "width": 12,
+      "depth": 10,
+      "wallHeight": 1,
+      "roofColor": "#41464b",
+      "wallColor": "#97632e"
+    }
+  },
+  "base_warehouse": {
+    "templateId": "base_warehouse",
+    "params": {
+      "width": 10,
+      "depth": 9,
+      "wallHeight": 5.2,
+      "roofColor": "#41464b",
+      "wallColor": "#97632e"
+    }
+  },
+  "landmark_liuli": {
+    "templateId": "landmark_liuli",
+    "params": {
+      "width": 14,
+      "depth": 14,
+      "wallHeight": 46,
+      "roofColor": "#548cc4",
+      "wallColor": "#d5f0ed"
+    }
+  },
+  "landmark_library": {
+    "templateId": "landmark_library",
+    "params": {
+      "width": 22,
+      "depth": 22,
+      "wallHeight": 12,
+      "roofColor": "#619bb7",
+      "wallColor": "#e3e2d3"
+    }
+  },
+  "layout_shopping": {
+    "templateId": "layout_shopping",
+    "params": {
+      "width": 23,
+      "depth": 29,
+      "wallHeight": 7,
+      "roofColor": "#668d91",
+      "wallColor": "#d5b984"
+    }
+  },
+  "layout_market": {
+    "templateId": "layout_market",
+    "params": {
+      "width": 25,
+      "depth": 20,
+      "wallHeight": 5,
+      "roofColor": "#cab86a",
+      "wallColor": "#ba8b49"
+    }
+  }
+}
