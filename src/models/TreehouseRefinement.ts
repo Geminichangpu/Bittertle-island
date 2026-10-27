@@ -6,8 +6,7 @@ import type {SceneController} from '../scene/SceneController';
 import {shadowSurfaces} from '../render/lighting';
 
 export function supportsRefinement(o:IslandObject){
- const p=o.params;
- return o.id==='layout_treehouse'&&o.templateId==='layout_treehouse'&&p.width===17&&p.depth===17&&p.wallHeight===20&&p.wallColor.toLowerCase()==='#9b7445'&&p.roofColor.toLowerCase()==='#a6b764';
+ return o.id==='layout_treehouse'&&o.templateId==='layout_treehouse';
 }
 function release(root:T.Object3D){
  const geometries=new Set<T.BufferGeometry>(),materials=new Set<T.Material>(),textures=new Set<T.Texture>();
@@ -18,7 +17,7 @@ function release(root:T.Object3D){
 
 /** Replace only a root's visible children. The original root, IDs and authored transforms survive. */
 export class TreehouseRefinement extends EventTarget {
- enabled=!(new URLSearchParams(location.search).get('models')==='original');
+ enabled=true;
  status:'idle'|'loading'|'ready'|'error'='idle';
  private template?:T.Group;private disposed=false;
  private mounted?:{root:T.Object3D;original:T.Object3D[];refined:T.Object3D};
@@ -55,9 +54,8 @@ export class TreehouseRefinement extends EventTarget {
     if(m.transparent){m.depthWrite=false;m.side=T.DoubleSide;m.forceSinglePass=true;}
    }});
    shadowSurfaces(scene);this.template=scene;this.status='ready';this.sync();
-  }catch(error){if(!this.disposed){this.status='error';this.changed();console.warn('树屋精修模型加载失败，继续显示原版。',error);}}
+  }catch(error){if(!this.disposed){this.status='error';this.changed();console.warn('树屋精修模型加载失败。');this.owner.host.dispatchEvent(new CustomEvent('scene-error',{detail:'树屋精修模型加载失败，请刷新重试。'}));}}
  }
- setEnabled(enabled:boolean){if(this.disposed)return;this.enabled=enabled;this.sync();}
  retry(){if(this.status!=='error')return;this.status='idle';this.sync();}
  dispose(){this.disposed=true;this.restore();if(this.template)release(this.template);this.template=undefined;}
 }

@@ -12,8 +12,7 @@ import {finishFeihuaMaterial,makeFeihuaJoinery} from './feihua-art';
 
 const assets:Record<string,string>={landmark_feihua:mainUrl,feihua_annex:annexUrl,feihua_onsen:onsenUrl,feihua_terrace:terraceUrl,feihua_bridge:bridgeUrl};
 function supports(o:IslandObject){
- const p=o.params;
- return Object.hasOwn(assets,o.id)&&o.templateId===o.id&&p.width===26&&p.depth===16&&p.wallHeight===21&&p.wallColor.toLowerCase()==='#e5d4b5'&&p.roofColor.toLowerCase()==='#525d77';
+ return Object.hasOwn(assets,o.id)&&o.templateId===o.id;
 }
 function release(root:T.Object3D){
  const geometry=new Set<T.BufferGeometry>(),materials=new Set<T.Material>(),textures=new Set<T.Texture>();
@@ -24,7 +23,7 @@ function release(root:T.Object3D){
 
 /** Local-space Blender exteriors retain the five existing editable object roots. */
 export class FeihuaRefinement extends EventTarget {
- enabled=new URLSearchParams(location.search).get('models')!=='original';
+ enabled=true;
  status:'idle'|'loading'|'ready'|'error'='idle';
  private templates=new Map<string,T.Group>();private disposed=false;
  private mounted:{root:T.Object3D;original:T.Object3D[];refined:T.Group}[]=[];
@@ -56,7 +55,7 @@ export class FeihuaRefinement extends EventTarget {
   const results=await Promise.allSettled(ids.map(id=>loader.loadAsync(assets[id])));
   if(this.disposed||results.some(r=>r.status==='rejected')){
    for(const result of results)if(result.status==='fulfilled')release(result.value.scene);
-   if(!this.disposed){this.status='error';this.changed();console.warn('绯华楼精修模型未完整载入，继续显示原版。');}
+   if(!this.disposed){this.status='error';this.changed();console.warn('绯华楼精修模型未完整载入。');this.owner.host.dispatchEvent(new CustomEvent('scene-error',{detail:'绯华楼精修模型未完整载入，请刷新重试。'}));}
    return;
   }
   results.forEach((result,i)=>{
@@ -73,7 +72,6 @@ export class FeihuaRefinement extends EventTarget {
   });
   this.status='ready';this.sync();
  }
- setEnabled(enabled:boolean){if(this.disposed)return;this.enabled=enabled;this.sync();}
  retry(){if(this.status!=='error')return;this.status='idle';this.sync();}
  dispose(){this.disposed=true;this.restore();this.templates.forEach(release);this.templates.clear();}
 }

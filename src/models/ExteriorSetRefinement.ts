@@ -1,5 +1,4 @@
 import * as T from 'three';
-import authored from './exterior-source-params.json';
 import asset0 from '../assets/models/shrine_main-exterior-refined-v1.glb?url';
 import asset1 from '../assets/models/shrine_torii-exterior-refined-v1.glb?url';
 import asset2 from '../assets/models/shrine_temizu-exterior-refined-v1.glb?url';
@@ -23,8 +22,7 @@ import {shadowSurfaces} from '../render/lighting';
 
 const assets:Record<string,string>={shrine_main:asset0,shrine_torii:asset1,shrine_temizu:asset2,shrine_office:asset3,shrine_residence:asset4,shrine_court:asset5,shrine_path:asset6,shrine_garden:asset7,base_office:asset8,base_bedroom:asset9,base_pond:asset10,base_warehouse:asset11,landmark_liuli:asset12,landmark_library:asset13,layout_shopping:asset14,layout_market:asset15};
 function supports(o:IslandObject){
- const source=(authored as Record<string,{templateId:string;params:Record<string,unknown>}>)[o.id];
- return !!source&&source.templateId===o.templateId&&Object.entries(source.params).every(([key,value])=>JSON.stringify((o.params as unknown as Record<string,unknown>)[key])===JSON.stringify(value));
+ return Object.hasOwn(assets,o.id)&&o.templateId===o.id;
 }
 function release(root:T.Object3D){
  const geometry=new Set<T.BufferGeometry>(),materials=new Set<T.Material>(),textures=new Set<T.Texture>();
@@ -35,7 +33,7 @@ function release(root:T.Object3D){
 
 /** Local-space Blender exteriors retain the existing editable object roots. */
 export class ExteriorSetRefinement extends EventTarget {
- enabled=new URLSearchParams(location.search).get('models')!=='original';
+ enabled=true;
  status:'idle'|'loading'|'ready'|'error'='idle';
  private templates=new Map<string,T.Group>();private disposed=false;
  private mounted:{root:T.Object3D;original:T.Object3D[];refined:T.Group}[]=[];
@@ -68,7 +66,7 @@ export class ExteriorSetRefinement extends EventTarget {
   for(let i=0;i<ids.length;i+=2){results.push(...await Promise.allSettled(ids.slice(i,i+2).map(id=>loader.loadAsync(assets[id]))));if(this.disposed)break;}
   if(this.disposed||results.some(r=>r.status==='rejected')){
    for(const result of results)if(result.status==='fulfilled')release(result.value.scene);
-   if(!this.disposed){this.status='error';this.changed();console.warn('建筑外景精修模型未完整载入，继续显示原版。');}
+   if(!this.disposed){this.status='error';this.changed();console.warn('建筑外景精修模型未完整载入。');this.owner.host.dispatchEvent(new CustomEvent('scene-error',{detail:'建筑外景精修模型未完整载入，请刷新重试。'}));}
    return;
   }
   results.forEach((result,i)=>{
@@ -88,7 +86,6 @@ export class ExteriorSetRefinement extends EventTarget {
   });
   this.status='ready';this.sync();
  }
- setEnabled(enabled:boolean){if(this.disposed)return;this.enabled=enabled;this.sync();}
  retry(){if(this.status!=='error')return;this.status='idle';this.sync();}
  dispose(){this.disposed=true;this.restore();this.templates.forEach(release);this.templates.clear();}
 }

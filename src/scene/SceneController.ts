@@ -1,4 +1,5 @@
 import {ScenicRefinement} from '../models/ScenicRefinement';
+import {hasRefinedModel} from '../models/refined-objects';
 import {EnvironmentManager} from '../environment/EnvironmentManager';
 import {LighthouseRefinement} from '../models/LighthouseRefinement';
 import {FeihuaRefinement} from '../models/FeihuaRefinement';
@@ -63,7 +64,7 @@ export class SceneController {
   const removed=new Map(this.objectNodes),oldGroups=this.groupNodes;this.groupNodes=new Map();
   for(const g of this.project.groups||[]){const root=oldGroups.get(g.id)||new T.Group();root.userData.groupId=g.id;root.position.fromArray(g.position);root.rotation.set(...g.rotation);root.scale.fromArray(g.scale);this.groupNodes.set(g.id,root);this.objects.add(root);}
   for(const o of this.project.objects){let mesh=this.objectNodes.get(o.id);const signature=JSON.stringify([o.templateId,o.params]);
-   if(!mesh||mesh.userData.signature!==signature){if(mesh){mesh.removeFromParent();disposeObjectInstances(mesh);}mesh=makeMesh(o);shadowSurfaces(mesh);mesh.userData.signature=signature;this.objectNodes.set(o.id,mesh);}
+   if(!mesh||mesh.userData.signature!==signature){if(mesh){mesh.removeFromParent();disposeObjectInstances(mesh);}mesh=hasRefinedModel(o)?new T.Group():makeMesh(o);mesh.userData.objectId=o.id;shadowSurfaces(mesh);mesh.userData.signature=signature;this.objectNodes.set(o.id,mesh);}
    (o.parentId?this.groupNodes.get(o.parentId)!:this.objects).add(mesh);mesh.position.fromArray(o.position);mesh.rotation.set(...o.rotation);mesh.scale.fromArray(o.scale);
    removed.delete(o.id);
   }

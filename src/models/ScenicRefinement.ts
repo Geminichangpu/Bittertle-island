@@ -1,5 +1,4 @@
 import * as T from 'three';
-import authored from './scenic-source-params.json';
 import sakura from '../assets/models/scenic_sakura-refined-v3.glb?url';
 import cliff from '../assets/models/scenic_cliff-refined-v5.glb?url';
 import academy from '../assets/models/scenic_academy-refined-v5.glb?url';
@@ -10,7 +9,7 @@ import type {SceneController} from '../scene/SceneController';
 import {shadowSurfaces} from '../render/lighting';
 
 const assets:Record<string,string>={scenic_sakura:sakura,scenic_cliff:cliff,scenic_academy:academy,scenic_farm:farm};
-function supports(o:IslandObject){const source=(authored as Record<string,Record<string,unknown>>)[o.id];return !!source&&o.id===o.templateId&&Object.entries(source).every(([key,value])=>JSON.stringify((o.params as unknown as Record<string,unknown>)[key])===JSON.stringify(value));}
+function supports(o:IslandObject){return Object.hasOwn(assets,o.id)&&o.templateId===o.id;}
 function release(root:T.Object3D){
  const geometry=new Set<T.BufferGeometry>(),materials=new Set<T.Material>(),textures=new Set<T.Texture>();
  root.traverse(n=>{if(n instanceof T.InstancedMesh)n.dispose();if(n instanceof T.Mesh){geometry.add(n.geometry);for(const m of Array.isArray(n.material)?n.material:[n.material])materials.add(m);}});
@@ -20,7 +19,7 @@ function release(root:T.Object3D){
 
 /** Local-space Blender exteriors retain the existing editable object roots. */
 export class ScenicRefinement extends EventTarget {
- enabled=new URLSearchParams(location.search).get('models')!=='original';
+ enabled=true;
  status:'idle'|'loading'|'ready'|'error'='idle';
  private templates=new Map<string,T.Group>();private disposed=false;
  private mounted:{root:T.Object3D;original:T.Object3D[];refined:T.Group}[]=[];
@@ -53,7 +52,7 @@ export class ScenicRefinement extends EventTarget {
   for(let i=0;i<ids.length;i+=2){results.push(...await Promise.allSettled(ids.slice(i,i+2).map(id=>loader.loadAsync(assets[id]))));if(this.disposed)break;}
   if(this.disposed||results.some(r=>r.status==='rejected')){
    for(const result of results)if(result.status==='fulfilled')release(result.value.scene);
-   if(!this.disposed){this.status='error';this.changed();console.warn('樱花海崖精修模型未完整载入，继续显示原版。');}
+   if(!this.disposed){this.status='error';this.changed();console.warn('樱花海崖精修模型未完整载入。');this.owner.host.dispatchEvent(new CustomEvent('scene-error',{detail:'樱花海崖精修模型未完整载入，请刷新重试。'}));}
    return;
   }
   results.forEach((result,i)=>{
@@ -73,7 +72,6 @@ export class ScenicRefinement extends EventTarget {
   });
   this.status='ready';this.sync();
  }
- setEnabled(enabled:boolean){if(this.disposed)return;this.enabled=enabled;this.sync();}
  retry(){if(this.status!=='error')return;this.status='idle';this.sync();}
  dispose(){this.disposed=true;this.restore();this.templates.forEach(release);this.templates.clear();}
 }
