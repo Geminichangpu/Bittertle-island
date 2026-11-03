@@ -1,0 +1,123 @@
+{
+  "date": "2026-11-03",
+  "action": "Removed from current Git tracking; local originals retained at original paths and ignored. Git history preserved.",
+  "totalFiles": 23,
+  "totalBytes": 434752440,
+  "files": [
+    {
+      "path": "src/assets/models/bedroom-interior-refined-v1.glb",
+      "bytes": 39755756,
+      "sha256": "3d1e840eeb723936d002ad5138fdbcef4f9f6092184f723db3613b6077c37d53"
+    },
+    {
+      "path": "src/assets/models/feihua-interior-refined-v1.glb",
+      "bytes": 67050064,
+      "sha256": "6618346eea864f002b05b1702cbb0e25d7237325d2bc5ae7ecdffe5f2f61fae8"
+    },
+    {
+      "path": "src/assets/models/office-interior-refined-v1.glb",
+      "bytes": 44563176,
+      "sha256": "971c6a9fa1fefa0383360c8902257b60fe61bf514101e65251e550ebe5fbef72"
+    },
+    {
+      "path": "src/assets/models/residence-interior-refined-v1.glb",
+      "bytes": 45284728,
+      "sha256": "65f49056e2341f79bbefbb3014cd5ff72cdfe1f9c9f4b70961a27d9e37336841"
+    },
+    {
+      "path": "src/assets/models/scenic_sakura-refined-v3.glb",
+      "bytes": 8997056,
+      "sha256": "a48e5b380bf71bb6f66cef09dab7afb3609e3a66f0b797620be291feb087bb0a"
+    },
+    {
+      "path": "src/assets/models/shrine_court-exterior-refined-v1.glb",
+      "bytes": 806068,
+      "sha256": "f67e7fdfee2ac78a38a0417be8933bfb8baeacabce74acbfbc8bd40fba5be2ec"
+    },
+    {
+      "path": "src/assets/models/shrine_garden-exterior-refined-v1.glb",
+      "bytes": 1883988,
+      "sha256": "c89721119f3fda4e57164baa8eb6c5418b9485408d8652e642d54caea6f5e5e1"
+    },
+    {
+      "path": "src/assets/models/shrine_main-exterior-refined-v1.glb",
+      "bytes": 7785908,
+      "sha256": "3c89bf58c5809c7f721411b6bf9fd307b7fd8bb671e8a72326360f891e67b7bf"
+    },
+    {
+      "path": "src/assets/models/shrine_office-exterior-refined-v1.glb",
+      "bytes": 5126076,
+      "sha256": "233f9e6b2d3cd1da1d091290d0f2b1bae319e0ac1c0f0a357ce910cc2f52606f"
+    },
+    {
+      "path": "src/assets/models/shrine_path-exterior-refined-v1.glb",
+      "bytes": 438256,
+      "sha256": "b2ae58f40676200fe7ca880ab913f7e67748656664b36f391d51786ca81755b6"
+    },
+    {
+      "path": "src/assets/models/shrine_residence-exterior-refined-v1.glb",
+      "bytes": 5598976,
+      "sha256": "2c4f9d120f9e971f2984655f23679e8751fc77b0e4207229be575f5262cbfb60"
+    },
+    {
+      "path": "src/assets/models/shrine_temizu-exterior-refined-v1.glb",
+      "bytes": 3312400,
+      "sha256": "8e3d9162a5769bba60ef72c7bd1b182a5393c48ac5ef38300a04949a97d289d5"
+    },
+    {
+      "path": "src/assets/models/shrine_torii-exterior-refined-v1.glb",
+      "bytes": 1671740,
+      "sha256": "094911b2e9e4af84ed0c37c3608b2e9cc1ccfb9c3c734c55a5acffef4532b19a"
+    },
+    {
+      "path": "src/assets/models/tower-dolly-interior-refined-v1.glb",
+      "bytes": 40074220,
+      "sha256": "92491c526d297405bde9245f36484181b6661add778109b9b21aa62ffff33e3e"
+    },
+    {
+      "path": "src/assets/models/tower-hebe-interior-refined-v1.glb",
+      "bytes": 39892796,
+      "sha256": "b2458cf7d44ccad48857de901e79dcc4873150549d7a479687980a95b517298a"
+    },
+    {
+      "path": "src/assets/models/tower-hecate-interior-refined-v1.glb",
+      "bytes": 43327532,
+      "sha256": "f3fe73bd61f7d467278107dcf976475eede30c5cfc600f1ecbe1e8277f79bc82"
+    },
+    {
+      "path": "src/assets/models/tower-lobby-interior-refined-v1.glb",
+      "bytes": 38519344,
+      "sha256": "f0fd3c05b8bce3a0ce285561bf2ec2741da4fb541277bb0fe86daa58963ef2e3"
+    },
+    {
+      "path": "src/assets/models/tower-owner-interior-refined-v1.glb",
+      "bytes": 37805412,
+      "sha256": "ef52e9e95f63ec2011a1efe5232e16c02395454e8a3c41df4914aa2a97052dbc"
+    },
+    {
+      "path": "src/assets/textures/island-nature/bark-orm.jpg",
+      "bytes": 32776,
+      "sha256": "f941813a7ce1504ee30709139fa900343f4b4048a7603ef46d2e86477ec4b973"
+    },
+    {
+      "path": "src/assets/textures/island-nature/cliff-orm.jpg",
+      "bytes": 1287248,
+      "sha256": "883fe49819f8cef2b4337ddf68f7ca396c0d5b6076b29f4fda189f428cc73901"
+    },
+    {
+      "path": "src/assets/textures/island-nature/coast-ground-orm.jpg",
+      "bytes": 420335,
+      "sha256": "60cbf6acd0c99d33cf85c3d0b9866bec8ea108c5124374597d8245e8a1e8e0b8"
+    },
+    {
+      "path": "src/assets/textures/island-nature/coast-trail-orm.jpg",
+      "bytes": 528927,
+      "sha256": "a078a482db413de81e2c43b96ccf375ebed906eda461dc691601750ef18a47a6"
+    },
+    {
+      "path": "src/assets/textures/island-nature/rock-orm.jpg",
+      "bytes": 589658,
+      "sha256": "3982efc1482a372c6e2ab90da46263a07da23a045e89e12ae22499f051fbca45"
+    }
+  ]
+}

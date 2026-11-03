@@ -1,7 +1,7 @@
 import * as T from 'three';
 
 export type NatureKind='gravel'|'paving'|'bark'|'rock'|'cliff'|'coast-ground'|'coast-trail';
-const files=import.meta.glob('../assets/textures/island-nature/*.jpg',{eager:true,query:'?url',import:'default'}) as Record<string,string>;
+const files=import.meta.glob('../assets/textures/island-nature/*-{color,normal,rough}.jpg',{eager:true,query:'?url',import:'default'}) as Record<string,string>;
 
 /** Textures are owned by one derived environment, including its shared walk-view clones. */
 export function createNatureMaterials(onReady:()=>void){

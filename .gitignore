@@ -19,3 +19,9 @@ assets/textures/**/*
 !assets/textures/**/*.txt
 *.blend1
 *.blend2
+# Replaced source exports stay on this workstation; runtime Meshopt copies are tracked.
+src/assets/models/*-interior-refined-*.glb
+src/assets/models/shrine_*-exterior-refined-*.glb
+src/assets/models/scenic_sakura-refined-*.glb
+# Runtime uses the separate normal/roughness maps, not these original packed maps.
+src/assets/textures/island-nature/*-orm.jpg
