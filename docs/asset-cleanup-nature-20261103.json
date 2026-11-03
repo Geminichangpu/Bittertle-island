@@ -1,0 +1,24 @@
+{
+  "date": "2026-11-03",
+  "scope": "Only superseded source modules, no Git history rewrite",
+  "backup": "Local ignored reports/nature-sample/retired-source",
+  "totalFiles": 2,
+  "totalBytes": 4301,
+  "files": [
+    {
+      "path": "src/environment/coastal-skirt.ts",
+      "bytes": 2068,
+      "sha256": "62f3e4ed1c1d54a9f56ac8cec576eba94f45a071b61a9fc04a0ab3e8660d9516",
+      "reason": "Retired coastal skirt; replaced by natural-coastal-skirt",
+      "runtimeReferences": 0
+    },
+    {
+      "path": "src/environment/shrine-coast.ts",
+      "bytes": 2233,
+      "sha256": "b0352e19c46f151afa28e0afd26fdbc4aeff4bee7d0ce409874d6b43b973250d",
+      "reason": "Retired raised shoreline overlay; replaced by terrain material mixing",
+      "runtimeReferences": 0
+    }
+  ],
+  "retained": "Active GLBs, runtime textures, editable masters, licenses and prior reports. Previous cleanup already removed 434752440 bytes of redundant runtime sources from current tracking."
+}

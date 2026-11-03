@@ -27,7 +27,7 @@
 - 可编辑 Blender：`art_source/blender/settlement-v5/academy-forest-farm-coast-v5.blend`
 - 网页模型：`scenic_cliff-refined-v5.glb`、`scenic_academy-refined-v5.glb`、`scenic_farm-refined-v5.glb`。
 - 新对象和位置迁移：`src/data/settlement-upgrade.ts`，标记 `expansionRevision:1`，旧存档自动一次性补充。
-- 局部地形：`src/terrain/village.ts`；贴合岸壁：`src/environment/coastal-skirt.ts`。
+- 局部地形：`src/terrain/village.ts`；贴合岸壁现由 `src/environment/natural-coastal-skirt.ts` 处理（原 `coastal-skirt.ts` 已被自然环境样板替换）。
 - 外景分件：`src/generators/settlement.ts`；保留此前母版与修改前 JSON 备份。
 
 仅更新本地网页包，不发布 GitHub；未做测试、浏览器、漫游或渲染验证。
