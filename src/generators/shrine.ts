@@ -23,6 +23,7 @@ export class Builder {
  cylinder(a:V,b:V,r:number,color=wood,sides=8){const start=new T.Vector3(...a),end=new T.Vector3(...b),delta=end.clone().sub(start);this.emit(`shrine:cyl:${sides}`,()=>new T.CylinderGeometry(1,1,1,sides),color,start.add(end).multiplyScalar(.5).toArray() as V,[r,delta.length(),r],new T.Quaternion().setFromUnitVectors(new T.Vector3(0,1,0),delta.normalize()));}
  beam(a:V,b:V,width:number,color=wood){const start=new T.Vector3(...a),end=new T.Vector3(...b),delta=end.clone().sub(start);this.emit('shrine:box',()=>new T.BoxGeometry(1,1,1),color,start.add(end).multiplyScalar(.5).toArray() as V,[width,delta.length(),width],new T.Quaternion().setFromUnitVectors(new T.Vector3(0,1,0),delta.normalize()));}
  scoped(p:V,angle:number,fn:()=>void){const previous=this.parent;this.parent=previous.clone().multiply(new T.Matrix4().makeTranslation(...p)).multiply(new T.Matrix4().makeRotationY(angle));fn();this.parent=previous;}
+ transformed(matrix:T.Matrix4,fn:()=>void){const previous=this.parent;this.parent=previous.clone().multiply(matrix);try{fn();}finally{this.parent=previous;}}
  sign(text:string,p:V,size:[number,number],rotation=0){this.scoped(p,rotation,()=>{this.box([0,0,-.06],[size[0]+.3,size[1]+.3,.18],trim);this.emit('shrine:signplane',()=>new T.PlaneGeometry(1,1),'sign:'+text,[0,0,.05],[...size,1],new T.Quaternion(),this.cache.sign(text));});}
  roof(p:V,width:number,depth:number,rise:number,color:string,angle=0){
   const profile=(z:number)=>rise*(1-Math.pow(Math.abs(z),.78))+.34*Math.pow(Math.abs(z),6);

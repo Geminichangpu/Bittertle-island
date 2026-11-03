@@ -1,6 +1,7 @@
 import {coastalSkirt} from './coastal-skirt';
 import {scenicPaths} from './scenic-paths';
 import {shrineCoastRock} from './shrine-coast';
+import {makeShrineSample} from './shrine-sample';
 import {addCentralCampus} from './central-campus';
 import * as T from 'three';
 import {surfaceMaterial} from '../render/surface-material.ts';
@@ -36,6 +37,7 @@ export function makeEnvironment(p:Project,terrainGeometry:T.BufferGeometry,onRea
  if(!p.environment)return root;
  const nature=createNatureMaterials(onReady);natureDisposers.set(root,nature.dispose);natureLibraries.set(root,nature);
  const rnd=random(p.environment.seed),surface=new TerrainSurface(terrainGeometry),routes=[...planPaths(p),...scenicPaths(p)],obstacles=p.objects.map(o=>({id:o.id,box:objectWorldBounds(p,o)}));
+ const sample=makeShrineSample(p,surface,routes,nature);if(sample){root.add(sample.root);natureDisposers.set(root,()=>{sample.dispose();nature.dispose();});}
  const geometries=new Map<string,T.BufferGeometry>(),materials=new Map<string,T.MeshStandardMaterial>();
  const geo=(key:string,make:()=>T.BufferGeometry)=>{if(!geometries.has(key)){const g=make();g.userData.surfaceKind=key==='env:blade'?'grass':'nature';geometries.set(key,g);}return geometries.get(key)!;};
  const stoneColors=new Set(['#8a8c84','#aaa698','#777e7a','#939ea8','#8c959e','#b2b9bc']);
@@ -154,18 +156,3 @@ export function disposeEnvironment(root:T.Group){
  geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());root.clear();root.removeFromParent();
 }
 
-export function seaMaterial(){const material=new T.ShaderMaterial({fog:true,
- uniforms:T.UniformsUtils.merge([T.UniformsLib.fog,{nearColor:{value:new T.Color('#269fca')},farColor:{value:new T.Color('#0869a6')},detailStrength:{value:.035}}]),
- vertexShader:`#include <fog_pars_vertex>
- varying vec2 worldXZ; void main(){vec4 world=modelMatrix*vec4(position,1.0);worldXZ=world.xz;vec4 mvPosition=viewMatrix*world;gl_Position=projectionMatrix*mvPosition;
- #include <fog_vertex>
- }`,
- fragmentShader:`#include <fog_pars_fragment>
- varying vec2 worldXZ; uniform vec3 nearColor; uniform vec3 farColor; uniform float detailStrength;
- void main(){float depth=clamp(length(worldXZ)/650.0,0.0,1.0);float patches=(sin(worldXZ.x*.018+sin(worldXZ.y*.025))*sin(worldXZ.y*.021)+.24*sin(worldXZ.x*.21+worldXZ.y*.13)*sin(worldXZ.y*.17-worldXZ.x*.09))*detailStrength;
- gl_FragColor=vec4(mix(nearColor,farColor,depth)+patches,1.0);
- #include <tonemapping_fragment>
- #include <colorspace_fragment>
- #include <fog_fragment>
- }`
-});material.userData.sea=true;return material;}

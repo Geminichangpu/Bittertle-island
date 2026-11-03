@@ -13,7 +13,8 @@ export class EnvironmentManager {
  constructor(private owner:SceneController){
   this.meteors=new NightMeteors(owner.host);
   owner.scene.add(...this.lamps);this.apply(this.mode);owner.scheduler.setFrameLimit(useEnvironment.getState().fps);
-  this.stop=useEnvironment.subscribe((s,old)=>{if(s.mode!==old.mode)this.apply(s.mode);if(s.fps!==old.fps)owner.scheduler.setFrameLimit(s.fps);});
+  owner.water.setAnimated(useEnvironment.getState().waterMotion);
+  this.stop=useEnvironment.subscribe((s,old)=>{if(s.mode!==old.mode)this.apply(s.mode);if(s.fps!==old.fps)owner.scheduler.setFrameLimit(s.fps);if(s.waterMotion!==old.waterMotion)owner.water.setAnimated(s.waterMotion);});
  }
  apply(mode:TimeMode){
   this.mode=mode;const p=TIME_PRESETS[mode],s=this.owner;s.host.dataset.timeMode=mode;
