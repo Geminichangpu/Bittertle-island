@@ -15,8 +15,10 @@ export function createNatureMaterials(onReady:()=>void){
    // share this Texture, so the real image appears everywhere once decoded.
    const canvas=document.createElement('canvas');canvas.width=canvas.height=1;
    const ctx=canvas.getContext('2d')!;ctx.fillStyle=channel==='normal'?'rgb(128,128,255)':'white';ctx.fillRect(0,0,1,1);
-   const texture=new T.CanvasTexture(canvas);
-   loader.load(files['../assets/textures/island-nature/'+key+'.jpg'],loaded=>{if(alive){texture.image=loaded.image;texture.needsUpdate=true;onReady();}loaded.dispose();},undefined,()=>{if(alive)onReady();});
+   const texture=new T.Texture<HTMLCanvasElement|HTMLImageElement>(canvas);texture.needsUpdate=true;
+   // The fallback may already own immutable 1x1 GPU storage. Reallocate before
+   // changing dimensions; clones continue to share this same Texture object.
+   loader.load(files['../assets/textures/island-nature/'+key+'.jpg'],loaded=>{if(alive){texture.dispose();texture.image=loaded.image;texture.needsUpdate=true;onReady();}loaded.dispose();},undefined,()=>{if(alive)onReady();});
    texture.wrapS=texture.wrapT=T.RepeatWrapping;texture.anisotropy=4;
    texture.colorSpace=channel==='color'?T.SRGBColorSpace:T.NoColorSpace;
    if(kind==='bark')texture.repeat.set(1,2);

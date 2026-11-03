@@ -8,7 +8,7 @@ export class IslandLighting {
  private quality?:'low'|'standard';
  constructor(private renderer:T.WebGLRenderer,scene:T.Scene){
   renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
-  renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.shadowMap.autoUpdate=false;
+  renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFShadowMap;renderer.shadowMap.autoUpdate=false;
   this.sun.position.set(-160,260,140);this.sun.castShadow=true;this.sun.shadow.autoUpdate=false;
   this.sun.shadow.bias=-.00035;this.sun.shadow.normalBias=.18;
   const cam=this.sun.shadow.camera;cam.left=-245;cam.right=245;cam.top=245;cam.bottom=-245;cam.near=10;cam.far=750;cam.updateProjectionMatrix();

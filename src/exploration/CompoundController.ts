@@ -42,7 +42,7 @@ export class CompoundController{
   // refined GLB merges materials, whose bounding boxes would close open paths.
   for(const object of island.project.objects){
    const node=island.node(object.id);if(!node||!this.bounds.intersectsBox(new T.Box3().setFromObject(node)))continue;
-   const proxy=makeMesh(object);proxy.matrixAutoUpdate=false;proxy.matrix.copy(node.matrixWorld);
+   const proxy=makeMesh(object);proxy.matrixAutoUpdate=false;proxy.matrix.copy(node.matrixWorld);proxy.matrixWorldNeedsUpdate=true;
    this.world.addObject(proxy,new Set(),this.bounds);disposeObjectInstances(proxy);
   }
   // The water in the decorative pond is not a walkable floor.
