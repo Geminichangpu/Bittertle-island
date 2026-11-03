@@ -13,8 +13,12 @@ export class EnvironmentManager {
  constructor(private owner:SceneController){
   this.meteors=new NightMeteors(owner.host);
   owner.scene.add(...this.lamps);this.apply(this.mode);owner.scheduler.setFrameLimit(useEnvironment.getState().fps);
-  owner.water.setAnimated(useEnvironment.getState().waterMotion);
-  this.stop=useEnvironment.subscribe((s,old)=>{if(s.mode!==old.mode)this.apply(s.mode);if(s.fps!==old.fps)owner.scheduler.setFrameLimit(s.fps);if(s.waterMotion!==old.waterMotion)owner.water.setAnimated(s.waterMotion);});
+  let effectRevision=0;
+  const setEffect=(enabled:boolean)=>{const revision=++effectRevision;owner.water.setAnimated(false);if(!enabled)owner.water.setReflection(false);void owner.water.setUltra(enabled).then(ok=>{if(revision!==effectRevision)return;if(!ok&&useEnvironment.getState().waterEffect){useEnvironment.getState().setWaterEffect(false);owner.host.dispatchEvent(new CustomEvent('scene-error',{detail:'水面效果不可用，已回退原水面。'}));return;}if(ok&&enabled&&useEnvironment.getState().waterEffect)owner.water.setAnimated(true);});};
+  setEffect(useEnvironment.getState().waterEffect);
+  owner.water.setReflection(useEnvironment.getState().waterReflection);
+  owner.labels.visible=useEnvironment.getState().labelsVisible;owner.requestRender();
+  this.stop=useEnvironment.subscribe((s,old)=>{if(s.mode!==old.mode)this.apply(s.mode);if(s.fps!==old.fps)owner.scheduler.setFrameLimit(s.fps);if(s.waterEffect!==old.waterEffect)setEffect(s.waterEffect);if(s.waterReflection!==old.waterReflection)owner.water.setReflection(s.waterReflection);if(s.labelsVisible!==old.labelsVisible){owner.labels.visible=s.labelsVisible;owner.requestRender();}});
  }
  apply(mode:TimeMode){
   this.mode=mode;const p=TIME_PRESETS[mode],s=this.owner;s.host.dataset.timeMode=mode;
@@ -22,6 +26,7 @@ export class EnvironmentManager {
   s.scene.background=new T.Color(p.sky);s.scene.fog=new T.Fog(p.fog,p.fogNear,p.fogFar);
   s.lighting.sun.color.set(p.sun);s.lighting.sun.intensity=p.sunIntensity;s.lighting.sun.position.fromArray(p.sunPosition);
   s.lighting.sky.color.set(p.ambient);s.lighting.sky.groundColor.set(p.ground);s.lighting.sky.intensity=p.ambientIntensity;s.renderer.toneMappingExposure=p.exposure;
+  s.water.material.uniforms.ultraSun.value.copy(s.lighting.sun.position).normalize();s.water.material.uniforms.ultraSunColor.value.copy(s.lighting.sun.color);s.water.material.uniforms.ultraSunStrength.value=Math.min(1,p.sunIntensity/2.7);
   this.refresh();s.invalidateShadows();s.requestRender();
  }
  refresh(){

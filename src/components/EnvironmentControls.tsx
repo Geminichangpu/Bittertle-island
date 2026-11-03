@@ -1,8 +1,13 @@
 import {useEnvironment} from '../environment/time-state';
 import {TIME_PRESETS,type TimeMode} from '../environment/time-presets';
+import waterLicense from '../vendor/ultra-water/LICENSE?url';
+import waterNotices from '../vendor/ultra-water/THIRD_PARTY_NOTICES.md?url';
 
-export function EnvironmentControls(){const {mode,fps,setMode,setFps,waterMotion,setWaterMotion}=useEnvironment();return <div className="environment-controls" aria-label="环境氛围">
+export function EnvironmentControls(){const {mode,fps,setMode,setFps,waterEffect,setWaterEffect,waterReflection,setWaterReflection,labelsVisible,setLabelsVisible}=useEnvironment();return <div className="environment-controls" aria-label="环境氛围">
  <div className="time-buttons" role="group" aria-label="时间档位">{(Object.keys(TIME_PRESETS) as TimeMode[]).map(key=><button key={key} aria-pressed={key===mode} className={key===mode?'active':''} onClick={()=>setMode(key)}>{TIME_PRESETS[key].label}</button>)}</div>
  <select aria-label="帧率上限" value={fps} onChange={e=>setFps(Number(e.target.value) as 30|60)}><option value={60}>最高 60 FPS</option><option value={30}>最高 30 FPS</option></select>
- <label><input type="checkbox" checked={waterMotion} onChange={e=>setWaterMotion(e.target.checked)}/>水面微动</label>
+ <label><input type="checkbox" checked={waterEffect} onChange={e=>setWaterEffect(e.target.checked)}/>水面效果</label>
+ {waterEffect&&<label><input type="checkbox" checked={waterReflection} onChange={e=>setWaterReflection(e.target.checked)}/>近岸倒影</label>}
+ <label><input type="checkbox" checked={labelsVisible} onChange={e=>setLabelsVisible(e.target.checked)}/>地点标签</label>
+ <a href={waterLicense} target="_blank" rel="noreferrer">海浪许可</a><a href={waterNotices} target="_blank" rel="noreferrer">第三方声明</a>
  </div>;}

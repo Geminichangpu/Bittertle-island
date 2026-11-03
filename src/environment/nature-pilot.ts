@@ -69,6 +69,9 @@ export function makePilotVegetation(p:Project,surface:TerrainSurface,routes:Rout
  for(let i=0;i<roots.length;i+=3){const [x,y,z]=roots[i];for(let j=0;j<2;j++){const a=i+j*2.4,xx=x+Math.cos(a)*2.2,zz=z+Math.sin(a)*2.2,yy=surface.height(xx,zz);if(yy===undefined||roadDistance(routes,xx,zz)<2.2||blocked(clearObstacles,xx,zz,2))continue;leaf(xx,yy+.5,zz,.9,.6,.85,palette[(i+j)%3],a);}}
  const canopy=b.finish();canopy.userData.naturePilotVegetation=true;canopy.traverse(n=>{n.userData.naturePilotVegetation=true;});root.add(canopy);
  const g=new Builder({geo,mat,sign:mat});for(let i=0;i<roots.length;i+=2){const [x,,z]=roots[i],xx=x+1.8,zz=z-.6,y=surface.height(xx,zz);if(y===undefined||roadDistance(routes,xx,zz)<2)continue;for(let k=0;k<3;k++)g.emit('pilot:grass',leafSprigGeometry,'#81915d',[xx+k*.28,y-.03,zz],[.75,.85,.75],new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),i+k));}
+ // A few irregular understory clusters use the existing instanced sprig and
+ // follow the same near-camera visibility gate as the original grass.
+ for(let i=0;i<roots.length;i+=3){const [x,,z]=roots[i];for(let k=0;k<5;k++){const a=i*2.4+k*2.1,r=2.4+(k%3)*.8,xx=x+Math.cos(a)*r,zz=z+Math.sin(a)*r,y=surface.height(xx,zz);if(y===undefined||roadDistance(routes,xx,zz)<2.8||blocked(clearObstacles,xx,zz,1.2)||coastDistance(p.terrain,[xx,zz])<3)continue;const s=.65+(k%3)*.18;g.emit('pilot:grass',leafSprigGeometry,'#81915d',[xx,y-.03,zz],[s,s*(.85+(k%2)*.25),s],new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),a));}}
  const grass=g.finish();grass.name='近景小草簇';grass.visible=false;grass.traverse(n=>{n.userData.naturePilotVegetation=true;n.userData.noCollision=true;if(n instanceof T.Mesh)n.geometry.userData.surfaceKind='grass';});root.add(grass);details.set(root,{grass,center});root.userData.metrics={...types,trees:roots.length};root.userData.roots=roots;
  return {root,roots};
 }
