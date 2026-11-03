@@ -1,6 +1,8 @@
-import {coastalSkirt} from './coastal-skirt';
+import {coastalSkirt} from './natural-coastal-skirt';
 import {scenicPaths} from './scenic-paths';
-import {shrineCoastRock} from './shrine-coast';
+import {makePilotVegetation,inNaturePilot,maskPilotScenicTrees} from './nature-pilot';
+import {naturalShore,consumeLegacyShoreRandom} from './natural-shore';
+import {slopeSteps} from './slope-steps';
 import {makeShrineSample} from './shrine-sample';
 import {addCentralCampus} from './central-campus';
 import * as T from 'three';
@@ -19,6 +21,7 @@ function random(seed:number){return ()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Ma
 function surfaceMesh(vertices:number[],colors:number[],name:string,material:T.MeshStandardMaterial){const g=new T.BufferGeometry(),uv:number[]=[];for(let i=0;i<vertices.length;i+=3)uv.push(vertices[i]*.32,vertices[i+2]*.32);g.setAttribute('position',new T.Float32BufferAttribute(vertices,3));g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));g.setAttribute('color',new T.Float32BufferAttribute(colors,3));g.computeVertexNormals();g.userData.surfaceKind="road";Object.assign(material,{side:T.DoubleSide,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});const m=new T.Mesh(g,material);m.name=name;return m;}
 const natureDisposers=new WeakMap<T.Group,()=>void>();
 const natureLibraries=new WeakMap<T.Group,ReturnType<typeof createNatureMaterials>>();
+export const environmentNature=(root:T.Group)=>natureLibraries.get(root);
 /** Authored tree/rock objects share the same texture set as the surrounding vegetation. */
 export function finishAuthoredNature(objects:T.Object3D,environment:T.Group){
  const library=natureLibraries.get(environment);if(!library)return;
@@ -29,6 +32,7 @@ export function finishAuthoredNature(objects:T.Object3D,environment:T.Group){
   else if(n.userData.natureKind==='rock')n.material=library.material('rock','#d8e2df');
   else {const m=n.material as T.MeshStandardMaterial;m.vertexColors=true;m.side=T.DoubleSide;m.needsUpdate=true;}
  });
+ objects.children.forEach(maskPilotScenicTrees);
 }
 
 /** Derived, seeded, static M3 layer. It never writes to the project or schedules animation. */
@@ -52,51 +56,35 @@ export function makeEnvironment(p:Project,terrainGeometry:T.BufferGeometry,onRea
   }return materials.get(color)!;
  };
  const b=new Builder({geo,mat,sign:mat});
+ let suppress=false;const emit=b.emit.bind(b);b.emit=(...args:Parameters<Builder['emit']>)=>{if(!suppress)emit(...args);};
  const metrics={trees:0,bushes:0,grass:0,flowers:0,rocks:0,steps:0,roadSamples:0};
  const ground=(x:number,z:number)=>surface.height(x,z);
- const shrineRock=shrineCoastRock(p,terrainGeometry,nature.material('cliff'));if(shrineRock)root.add(shrineRock);
- const skirt=coastalSkirt(p,terrainGeometry,nature.material('cliff'));if(skirt)root.add(skirt);
+ const skirt=coastalSkirt(p,terrainGeometry,nature.material('cliff'),nature.material('coast-ground'));if(skirt)root.add(skirt);
  const leaf=(v:V,s:V,color:string)=>b.emit('env:leaf',crownGeometry,color,v,s);
  const rock=(v:V,s:V,color:string,angle=0)=>{const variant=Math.floor(Math.abs(angle)*3)%3;b.emit('env:rock:'+variant,()=>boulderGeometry(variant),color,v,s,new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),angle));};
 
  // Drape short, cross-subdivided road ribbons on the actual mesh (not an approximate heightfield).
  for(const r of routes){
   if(r.status!=='connected')continue;
-  const vertices:number[]=[],colors:number[]=[],stone=new T.Color('#f4f0e5'),earth=new T.Color('#f4ebd8'),edge=new T.Color('#c3baa1');
+  const vertices:number[]=[],colors:number[]=[],stone=new T.Color('#d2ccbc'),earth=new T.Color('#f4ebd8'),edge=new T.Color('#c3baa1');
   const emit=(a:V,c:V,d:V,color:T.Color)=>{for(const v of [a,c,d]){vertices.push(...v);colors.push(color.r,color.g,color.b);}};
   let previous:V[]|undefined;
   for(let i=0;i<r.points.length;i++){
    const q=r.points[i],a=r.points[Math.max(0,i-1)],c=r.points[Math.min(r.points.length-1,i+1)],dx=c[0]-a[0],dz=c[1]-a[1],length=Math.hypot(dx,dz)||1;
    const row:V[]=[];for(let j=0;j<=4;j++){const shift=(j/4-.5)*r.width,x=q[0]-dz/length*shift,z=q[1]+dx/length*shift,y=ground(x,z);row.push([x,(y??ground(...q)??0)+.14,z]);}
    if(previous){
-    const steep=Math.abs(row[2][1]-previous[2][1])/Math.max(.1,Math.hypot(row[2][0]-previous[2][0],row[2][2]-previous[2][2]))>.25;
-    for(let j=0;j<4;j++){const color=steep&&i%2===0?stone:j===0||j===3?edge:earth;emit(previous[j],row[j],previous[j+1],color);emit(previous[j+1],row[j],row[j+1],color);}
-    metrics.roadSamples++;if(steep&&i%2===0)metrics.steps++;
+    const slope=Math.abs(row[2][1]-previous[2][1])/Math.max(.1,Math.hypot(row[2][0]-previous[2][0],row[2][2]-previous[2][2])),base=earth.clone().lerp(stone,T.MathUtils.smoothstep(slope,.12,.42));
+    for(let j=0;j<4;j++){const color=j===0||j===3?edge:base;emit(previous[j],row[j],previous[j+1],color);emit(previous[j+1],row[j],row[j+1],color);}
+    metrics.roadSamples++;
    }
    previous=row;
   }
   const paved=[r.fromId,r.toId].some(id=>id.startsWith('shrine_')||id.startsWith('base_')||id==='landmark_library'||id==='scenic_cliff'||id==='scenic_north_rock');
   const mesh=surfaceMesh(vertices,colors,r.name,nature.material(r.id==='scenic-coast-path'?'coast-trail':paved?'paving':'gravel','#ffffff',true));mesh.userData.routeId=r.id;root.add(mesh);
  }
+ const steps=slopeSteps(p,routes,surface,nature);root.add(steps);metrics.steps=steps.userData.stepCount;
 
- // Sandy shore skirt, turquoise shallows and broken white foam. All waves are static geometry.
- const shoreV:number[]=[],shoreC:number[]=[],sand=new T.Color('#f3e3b7'),wet=new T.Color('#b3e4d8'),aqua=new T.Color('#4fc4d0'),blue=new T.Color('#168bc0');
- const shoreTri=(a:V,c:V,d:V,ca:T.Color,cc:T.Color,cd:T.Color)=>{shoreV.push(...a,...c,...d);shoreC.push(ca.r,ca.g,ca.b,ca===blue?0:1,cc.r,cc.g,cc.b,cc===blue?0:1,cd.r,cd.g,cd.b,cd===blue?0:1);};
- const coastLoops=p.terrain.campus?[mainCoast(p.terrain)]:[mainCoast(p.terrain),p.terrain.islet];
- for(const loop of coastLoops){
-  const rows:{p:Point;n:Point;v:V[]}[]=[];
-  for(let i=0;i<loop.length;i++){
-   const a=loop[i],c=loop[(i+1)%loop.length],dx=c[0]-a[0],dz=c[1]-a[1],len=Math.hypot(dx,dz),steps=Math.ceil(len/1.5);
-   for(let j=0;j<steps;j++){
-    const u=j/steps,x=a[0]+dx*u,z=a[1]+dz*u;let nx=-dz/len,nz=dx/len;if(isLand(p.terrain,x+nx*.2,z+nz*.2)){nx=-nx;nz=-nz;}
-    const widths=[0,1.8,6.5,14],ys=[.9,.04,-.03,-.1];rows.push({p:[x,z],n:[nx,nz],v:widths.map((w,k)=>[x+nx*w,ys[k],z+nz*w] as V)});
-    if(j%3===0&&rnd()>.18){const off=2.1+rnd()*.5,length=.6+rnd()*1.3;b.box([x+nx*off,.09,z+nz*off],[length,.025,.11],'#ecfaf1',-Math.atan2(dz,dx));}
-   }
-  }
-  const palette=[sand,wet,aqua,blue];for(let i=0;i<rows.length;i++){const a=rows[i],c=rows[(i+1)%rows.length];for(let k=0;k<3;k++){const mid=[(a.v[k+1][0]+c.v[k+1][0])/2,(a.v[k+1][2]+c.v[k+1][2])/2] as Point;if(isLand(p.terrain,...mid))continue;shoreTri(a.v[k],c.v[k],a.v[k+1],palette[k],palette[k],palette[k+1]);shoreTri(a.v[k+1],c.v[k],c.v[k+1],palette[k+1],palette[k],palette[k+1]);}}
- }
- const shoreGeometry=new T.BufferGeometry();shoreGeometry.setAttribute('position',new T.Float32BufferAttribute(shoreV,3));shoreGeometry.setAttribute('color',new T.Float32BufferAttribute(shoreC,4));
- const shore=new T.Mesh(shoreGeometry,new T.MeshBasicMaterial({vertexColors:true,transparent:true,depthWrite:false,side:T.DoubleSide}));shore.material.userData.shore=true;shore.name='Shore';root.add(shore);
+ consumeLegacyShoreRandom(p,rnd);root.add(naturalShore(p,surface));
 
  // A cached occupancy field makes road clearance inexpensive for many vegetation candidates.
  const roadCache=new Map<string,number>();
@@ -107,12 +95,13 @@ export function makeEnvironment(p:Project,terrainGeometry:T.BufferGeometry,onRea
  const spaced=(x:number,z:number,r:number)=>{const ix=Math.floor(x/5),iz=Math.floor(z/5);for(let xx=ix-1;xx<=ix+1;xx++)for(let zz=iz-1;zz<=iz+1;zz++)for(const q of occupied.get(xx+','+zz)||[])if(Math.hypot(q[0]-x,q[1]-z)<r)return false;const key=ix+','+iz;let qs=occupied.get(key);if(!qs)occupied.set(key,qs=[]);qs.push([x,z]);return true;};
  const palette=['#557f4e','#658d50','#7ca35d','#97b66d','#4e7750'];
  for(let attempt=0;attempt<22000;attempt++){
+  suppress=false;
   const x=(rnd()-.5)*p.terrain.size,z=(rnd()-.5)*p.terrain.size,y=ground(x,z);if(p.terrain.campus&&inside([x,z],p.terrain.islet))continue;if(y===undefined)continue;
   const shore=coastDistance(p.terrain,[x,z]);if(shore<4||blocked(obstacles,x,z,3.5)||roadClearance(x,z)<2.8||clearing(x,z))continue;
   const slope=Math.max(Math.abs((ground(x+1,z)??y)-y),Math.abs((ground(x,z+1)??y)-y));if(slope>2||y>65||(x<-105&&y>28))continue;
   const patch=(Math.sin(x*.055+Math.sin(z*.04))*Math.cos(z*.065)+Math.sin((x+z)*.11)*.28+1.3)/2.6;
   if(rnd()>patch*.8||!spaced(x,z,2.8))continue;
-  const color=palette[Math.floor(rnd()*palette.length)],r=1.1+rnd()*1.6;
+  suppress=inNaturePilot(p,x,z);const color=palette[Math.floor(rnd()*palette.length)],r=1.1+rnd()*1.6;
   if(metrics.trees<600&&rnd()<.37&&shore>7&&y<36){
    const h=3.6+rnd()*3.2,trunkRadius=.18+rnd()*.12;
    b.emit('env:tapered-trunk',()=>new T.CylinderGeometry(.66,1,1,10,3),'#766246',[x,y+(h*.72-.2)/2,z],[trunkRadius,h*.72+.2,trunkRadius]);
@@ -125,26 +114,30 @@ export function makeEnvironment(p:Project,terrainGeometry:T.BufferGeometry,onRea
    metrics.trees++;
   }else if(metrics.bushes<1900){for(let j=0;j<3;j++)leaf([x+(rnd()-.5)*r,y+.35+r*.28,z+(rnd()-.5)*r],[r*.65,r*.45,r*.65],color);metrics.bushes++;}
  }
+ suppress=false;
  for(let attempt=0;attempt<6000;attempt++){
+  suppress=false;
   const x=(rnd()-.5)*p.terrain.size,z=(rnd()-.5)*p.terrain.size,y=ground(x,z);if(p.terrain.campus&&inside([x,z],p.terrain.islet))continue;if(y===undefined||y>33||coastDistance(p.terrain,[x,z])<4||blocked(obstacles,x,z,1)||roadClearance(x,z)<.75)continue;
-  if(metrics.grass<750){for(let j=0;j<3;j++)b.emit('env:blade',()=>{const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute([-.12,0,0,.08,.7,0,.12,0,0,0,0,-.1,0,.6,.1,0,0,.1],3));g.computeVertexNormals();return g;},j%2?'#8ba65e':'#afbc72',[x+(rnd()-.5),y-.04,z+(rnd()-.5)],[1,.5+rnd(),1],new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),rnd()*6.28));metrics.grass++;}
+  suppress=inNaturePilot(p,x,z);if(metrics.grass<750){for(let j=0;j<3;j++)b.emit('env:blade',()=>{const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute([-.12,0,0,.08,.7,0,.12,0,0,0,0,-.1,0,.6,.1,0,0,.1],3));g.computeVertexNormals();return g;},j%2?'#8ba65e':'#afbc72',[x+(rnd()-.5),y-.04,z+(rnd()-.5)],[1,.5+rnd(),1],new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),rnd()*6.28));metrics.grass++;}
   if(metrics.flowers<140&&roadClearance(x,z)<5&&rnd()>.5){for(let j=0;j<4;j++){const xx=x+(rnd()-.5),zz=z+(rnd()-.5),yy=ground(xx,zz)??y;b.cylinder([xx,yy,zz],[xx,yy+.5,zz],.025,'#70884e',5);leaf([xx,yy+.5,zz],[.16,.1,.16],j%2?'#f5ead1':'#d9b7c0');}metrics.flowers++;}
  }
- // Irregular boulder beaches and exposed west-peak rock blades match the supplied island artwork.
+ suppress=false;
+ // Irregular boulder beaches. The west peak uses a continuous terrain finish instead of piled rocks.
+ let mountainRocks=0;
  for(let attempt=0;attempt<4000;attempt++){
   const x=(rnd()-.5)*p.terrain.size,z=(rnd()-.5)*p.terrain.size,y=ground(x,z);if(p.terrain.campus&&inside([x,z],p.terrain.islet))continue;if(y===undefined||blocked(obstacles,x,z,3)||roadClearance(x,z)<2)continue;
   const d=coastDistance(p.terrain,[x,z]);if(d<1||d>8||rnd()>.38||metrics.rocks>=180)continue;
-  const r=.7+rnd()*1.9;rock([x,y+r*.3,z],[r,r*(.5+rnd()*.45),r*.8],['#8a8c84','#aaa698','#777e7a'][attempt%3],rnd()*6);metrics.rocks++;
+  const r=.7+rnd()*1.9,sy=r*(.5+rnd()*.45),angle=rnd()*6;
+  // Consume the same draws and placement quota so other beaches keep their existing rocks.
+  if(y>12&&Math.hypot((x+129)/38,(z-21)/43)<1)mountainRocks++;
+  else rock([x,y+r*.3,z],[r,sy,r*.8],['#8a8c84','#aaa698','#777e7a'][attempt%3],angle);
+  metrics.rocks++;
  }
- for(let i=0;i<9;i++){
-  const a=i*2.4,x=-129+Math.cos(a)*(3+i*.5),z=21+Math.sin(a)*(3+i*.4),y=ground(x,z);if(p.terrain.campus&&inside([x,z],p.terrain.islet))continue;if(y===undefined||blocked(obstacles,x,z,5)||roadClearance(x,z)<4)continue;
-  // Sink the exposed peak blades into the slope and keep their silhouette low.
-  rock([x,y-3.2,z],[3.5+i%3,4.5+i%4*1.1,2.8],i%2?'#8a8c84':'#aaa698',a);metrics.rocks++;
- }
- for(let i=0;i<140;i++){const x=(rnd()-.5)*600,z=(rnd()-.5)*460;if(isLand(p.terrain,x,z)||coastDistance(p.terrain,[x,z])<17)continue;b.box([x,-.035,z],[1+rnd()*3,.015,.08],'#87d1e0',-.08);}
+ metrics.rocks-=mountainRocks;
 
  addCentralCampus(p,b);
  const instances=b.finish();instances.name='植被、岩石与静态海浪';root.add(instances);
+ const pilot=makePilotVegetation(p,surface,routes,obstacles,nature);root.add(pilot.root);root.userData.pilotRoots=pilot.roots;root.userData.pilotMetrics=pilot.root.userData.metrics;
  root.userData.routes=routes;root.userData.metrics=metrics;
  root.userData.environmentRevision=p.environment.revision;
  return root;

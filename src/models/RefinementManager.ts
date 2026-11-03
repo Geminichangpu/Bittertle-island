@@ -4,6 +4,7 @@ import type {SceneController} from '../scene/SceneController';
 import {shadowSurfaces} from '../render/lighting';
 import {finishFeihuaMaterial,makeFeihuaJoinery} from './feihua-art';
 import {replaceBakedLeafCrowns} from './foliage-refinement';
+import {maskPilotScenicTrees} from '../environment/nature-pilot';
 
 const urls=import.meta.glob(['../assets/models/*-refined-*.glb','!../assets/models/*-interior-*.glb','!../assets/models/shrine_*-exterior-refined-*.glb','!../assets/models/scenic_sakura-refined-*.glb','../assets/models-optimized/shrine_*-exterior-meshopt-lossless.glb'],{eager:true,query:'?url',import:'default'}) as Record<string,string>;
 const files:Record<string,string>={
@@ -21,7 +22,7 @@ export class RefinementManager {
  private cache=new Map<string,T.Group>();private mounted=new Map<string,Mount>();private running=new Map<string,AbortController>();private wanted=new Map<string,number>();private failures=new Set<string>();private disposed=false;private suspended=false;private visitListener?: (id:string)=>void;
  constructor(private owner:SceneController){}
  restore(){for(const id of this.mounted.keys())this.unmount(id);}
- private mount(id:string){const root=this.owner.node(id),template=this.cache.get(id);if(!root||!template||this.mounted.has(id))return false;const original=root.children.filter(n=>!(n instanceof T.Mesh&&n.geometry.userData.sourceKey==='shrine:signplane'));const refined=template.clone(true);refined.name=id+'-refined';refined.traverse(n=>n.userData.objectId=id);root.remove(...original);root.add(refined);root.userData.modelVariant='refined';this.mounted.set(id,{root,original,refined});return true;}
+ private mount(id:string){const root=this.owner.node(id),template=this.cache.get(id);if(!root||!template||this.mounted.has(id))return false;const original=root.children.filter(n=>!(n instanceof T.Mesh&&n.geometry.userData.sourceKey==='shrine:signplane'));const refined=template.clone(true);refined.name=id+'-refined';refined.traverse(n=>n.userData.objectId=id);maskPilotScenicTrees(refined);root.remove(...original);root.add(refined);root.userData.modelVariant='refined';this.mounted.set(id,{root,original,refined});return true;}
  private unmount(id:string){const mount=this.mounted.get(id);if(!mount)return false;mount.refined.traverse(n=>{if(n instanceof T.InstancedMesh)n.dispose();});mount.refined.removeFromParent();mount.root.add(...mount.original);mount.root.userData.modelVariant='low';this.mounted.delete(id);return true;}
  refresh(){if(this.disposed||this.suspended)return;const camera=this.owner.camera,target=this.owner.controls.target;const close=camera instanceof T.OrthographicCamera?camera.zoom>1.15:camera.position.distanceTo(target)<230;
   const desired=new Map<string,number>();if(close){camera.updateMatrixWorld();const frustum=new T.Frustum().setFromProjectionMatrix(new T.Matrix4().multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse));for(const o of this.owner.project.objects){if(!files[o.id]||o.id!==o.templateId)continue;const root=this.owner.node(o.id);if(!root)continue;root.updateWorldMatrix(true,false);const pos=root.getWorldPosition(new T.Vector3()),dist=Math.hypot(pos.x-target.x,pos.z-target.z);if(dist<85&&frustum.intersectsSphere(new T.Sphere(pos,Math.max(o.params.width,o.params.depth,o.params.wallHeight)*3)))desired.set(o.id,dist);}}
