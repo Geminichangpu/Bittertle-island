@@ -155,4 +155,3 @@ export function disposeEnvironment(root:T.Group){
  const geometries=new Set<T.BufferGeometry>(),materials=new Set<T.Material>();root.traverse(n=>{if(n instanceof T.Mesh){geometries.add(n.geometry);for(const m of Array.isArray(n.material)?n.material:[n.material])materials.add(m);if(n instanceof T.InstancedMesh)n.dispose();}});
  geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());root.clear();root.removeFromParent();
 }
-

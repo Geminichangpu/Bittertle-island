@@ -1,0 +1,47 @@
+import {chromium} from 'playwright-core';
+import assert from 'node:assert/strict';
+import {readFile,writeFile} from 'node:fs/promises';
+const browser=await chromium.launch({executablePath:process.env.BROWSER_PATH||'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
+const loadingOnly=process.argv.includes('--loading-only');
+const report=loadingOnly?JSON.parse(await readFile('reports/r187-sample/checks.json','utf8')):{errors:[],warnings:[],failed:[]};
+const watch=p=>{p.on('pageerror',e=>report.errors.push(String(e)));p.on('console',m=>{if(m.type()==='error')report.errors.push(m.text());if(m.type()==='warning')report.warnings.push(m.text());});p.on('requestfailed',r=>{if(!r.failure()?.errorText.includes('ERR_ABORTED'))report.failed.push({url:r.url(),error:r.failure()?.errorText});});};
+try{
+ if(!loadingOnly){
+ const p=await browser.newPage({viewport:{width:1440,height:960},deviceScaleFactor:1,reducedMotion:'no-preference'});watch(p);
+ await p.goto('http://127.0.0.1:4190/?diagnostics=1');await p.waitForFunction(()=>window.__islandDiagnostics&&window.__island,{timeout:90000});
+ const fixtures=JSON.parse(await readFile('reports/r187-sample/cameras.json','utf8'));
+ await p.evaluate(v=>window.__island.scene.restoreView(v),fixtures[0]);await p.waitForLoadState('networkidle');await p.waitForTimeout(2000);
+ await p.getByRole('checkbox',{name:'水面微动'}).check();await p.waitForTimeout(500);
+ const motionStart=await p.evaluate(()=>({frames:window.__island.scene.scheduler.frames,shadows:window.__island.scene.lighting.shadowUpdates}));await p.waitForTimeout(1000);
+ report.water=await p.evaluate(start=>{const s=window.__island.scene;return {running:s.water.running,framesInOneSecond:s.scheduler.frames-start.frames,shadowUpdates:s.lighting.shadowUpdates-start.shadows};},motionStart);assert(report.water.running&&report.water.framesInOneSecond>0&&report.water.framesInOneSecond<=23);assert.equal(report.water.shadowUpdates,0);
+ await p.evaluate(()=>window.__island.scene.preset('all'));await p.waitForLoadState('networkidle');await p.waitForTimeout(300);const allFrames=await p.evaluate(()=>window.__island.scene.scheduler.frames);await p.waitForTimeout(1000);report.overview=await p.evaluate(n=>({waterRunning:window.__island.scene.water.running,extraFrames:window.__island.scene.scheduler.frames-n,refined:[...window.__island.scene.objectNodes.values()].filter(n=>n.userData.modelVariant==='refined').length}),allFrames);assert.deepEqual(report.overview,{waterRunning:false,extraFrames:0,refined:0});
+ await p.getByRole('checkbox',{name:'水面微动'}).uncheck();
+ await p.evaluate(v=>window.__island.scene.restoreView(v),fixtures[0]);await p.waitForLoadState('networkidle');await p.waitForTimeout(500);
+ const shadowStart=await p.evaluate(()=>window.__island.scene.lighting.shadowUpdates);await p.evaluate(()=>{const s=window.__island.scene;s.camera.position.x+=.1;s.controls.update();});await p.waitForTimeout(200);report.cameraShadowUpdates=await p.evaluate(n=>window.__island.scene.lighting.shadowUpdates-n,shadowStart);assert.equal(report.cameraShadowUpdates,0);
+ await p.getByRole('button',{name:'展示模式',exact:true}).click();await p.locator('main').getByLabel('选择漫游地点').selectOption('shrine_group');await p.getByRole('button',{name:'漫游神社建筑群',exact:true}).click();await p.waitForFunction(()=>window.__compound,{timeout:60000});await p.waitForTimeout(2000);
+ report.compound=await p.evaluate(()=>{const c=window.__compound,e=c.interactions.entries.find(e=>e.spec.id==='bell');if(e)c.interactions.trigger(e.key);return {locations:c.locations.length,collisionBoxes:c.world.boxes.length,bellParts:e?.parts.length||0,animated:c.interactions.animating};});assert(report.compound.locations>0&&report.compound.collisionBoxes>0&&report.compound.bellParts>0&&report.compound.animated);await p.waitForTimeout(1800);await p.getByRole('button',{name:'返回沙盘',exact:true}).click();
+ report.interiors=[];
+ for(const [id,name,refinement] of [['shrine_residence','进入神社住居','residenceRefinement'],['base_bedroom','进入基地卧室','bedroomRefinement']]){
+  console.log(`Checking ${id}`);await p.locator('main').getByLabel('选择漫游地点').selectOption(id);await p.getByRole('button',{name,exact:true}).click();await p.waitForFunction(key=>window.__interior?.[key]?.status==='ready',refinement,{timeout:120000});
+  const data=await p.evaluate(()=>({views:window.__interior.views.length,interactions:window.__interior.interactions.entries.map(e=>({id:e.spec.id,parts:e.parts.length})),shadowType:window.__interior.renderer.shadowMap.type}));report.interiors.push({id,...data});assert(data.views>0&&data.interactions.length>0);await p.getByRole('button',{name:'开始漫游',exact:true}).click();await p.waitForTimeout(100);assert.equal(await p.locator('.interior-canvas').getAttribute('data-exploration'),'walking');await p.evaluate(()=>document.exitPointerLock());await p.waitForTimeout(100);await p.locator('.interior-exit').click();
+ }
+ // Compile the three existing custom hooks with the real r187 WebGLRenderer.
+ report.hooks=await p.evaluate(async()=>{const T=await import('/node_modules/.vite/deps/three.js'),{surfaceMaterial}=await import('/src/render/surface-material.ts'),{finishFeihuaMaterial}=await import('/src/models/feihua-art.ts'),{stylizedMaterials}=await import('/src/interiors/stylized-materials.ts');const a=surfaceMaterial('#71533d'),b=window.__island.scene.terrain.material.clone();b.name='EX_525d77_surface';finishFeihuaMaterial(b);if(!b.onBeforeCompile.toString().includes('vFeihuaPosition'))throw new Error('Feihua hook was not installed');const lib=stylizedMaterials(),c=new T.MeshStandardMaterial();lib.configure(c,'#916340');const scene=new T.Scene(),geometry=new T.BoxGeometry(1,1,1);for(const m of [a,b,c])scene.add(new T.Mesh(geometry,m));const s=window.__island.scene;s.renderer.compile(scene,s.camera);for(const m of [a,b,c])m.dispose();geometry.dispose();lib.dispose();return ['surface-material','feihua-art','stylized-materials'];});
+ await p.close();
+ }
+ console.log('Measuring cold production load: 10 Mbps, 80 ms RTT, 4x CPU slowdown');
+ const q=await browser.newPage({viewport:{width:1280,height:800},deviceScaleFactor:2});watch(q);const cdp=await q.context().newCDPSession(q);await cdp.send('Network.enable');await cdp.send('Network.setCacheDisabled',{cacheDisabled:true});await cdp.send('Network.emulateNetworkConditions',{offline:false,latency:80,downloadThroughput:1_250_000,uploadThroughput:250_000});await cdp.send('Emulation.setCPUThrottlingRate',{rate:4});
+ let active=0,max=0,requests=0,httpActive=0,lastNetwork=Date.now();const glbs=[];
+ q.on('request',r=>{if(r.url().startsWith('http')){httpActive++;lastNetwork=Date.now();}if(r.url().includes('.glb')){active++;requests++;max=Math.max(max,active);}});
+ q.on('requestfinished',r=>{if(r.url().startsWith('http')){httpActive--;lastNetwork=Date.now();}if(r.url().includes('.glb')){active--;glbs.push(r.url());}});
+ q.on('requestfailed',r=>{if(r.url().startsWith('http')){httpActive--;lastNetwork=Date.now();}if(r.url().includes('.glb'))active--;});
+ const quiet=async()=>{const deadline=Date.now()+180000;while(httpActive>0||Date.now()-lastNetwork<2000){if(Date.now()>deadline)throw new Error('Timed out waiting for completed HTTP bodies');await q.waitForTimeout(250);}};
+ const started=Date.now();await q.goto('http://127.0.0.1:4191/');await q.locator('.canvas-host canvas').waitFor({timeout:90000});await q.locator('.loading').waitFor({state:'hidden',timeout:90000});const firstReady=Date.now()-started;await quiet();
+ const resources=()=>q.evaluate(()=>performance.getEntriesByType('resource').filter(r=>r.name.startsWith('http')).map(r=>({name:r.name,bytes:r.encodedBodySize,transfer:r.transferSize,duration:r.duration})));
+ report.loading={conditions:{downloadMbps:10,latencyMs:80,cpuSlowdown:4,viewport:[1280,800],deviceDpr:2,server:'local HTTP, no compression/cache'},firstCanvasReadyMs:firstReady,overviewResources:await resources(),initialGlbRequests:requests};assert.equal(requests,0);
+ await q.getByLabel('画质').selectOption('low');report.loading.lowQualityCanvas=await q.locator('.canvas-host canvas').evaluate(c=>({cssWidth:c.clientWidth,cssHeight:c.clientHeight,bufferWidth:c.width,bufferHeight:c.height}));assert.equal(report.loading.lowQualityCanvas.cssWidth,report.loading.lowQualityCanvas.bufferWidth);
+ const near=Date.now();await q.getByRole('button',{name:'⌖ 神社',exact:true}).click();await q.waitForFunction(()=>performance.getEntriesByType('resource').filter(r=>r.name.includes('shrine_')&&r.name.includes('.glb')&&r.responseEnd>0).length===8,null,{timeout:180000});await quiet();report.loading.nearbyDownloadAndQuietMs=Date.now()-near;report.loading.nearbyResources=await resources();report.loading.maxConcurrentGlbs=max;report.loading.completedGlbs=glbs;assert(max<=2);assert(glbs.some(u=>u.includes('shrine_main-exterior-meshopt')));assert(!glbs.some(u=>u.includes('shrine_main-exterior-refined')));
+ await q.screenshot({path:'reports/r187-sample/production-low-quality.png'});await q.close();
+ assert.deepEqual(report.errors,[]);assert.deepEqual(report.warnings,[]);assert.deepEqual(report.failed,[]);
+}finally{await writeFile('reports/r187-sample/checks.json',JSON.stringify(report,null,2));await browser.close();}
+console.log(JSON.stringify({...report,loading:{...report.loading,overviewResources:report.loading.overviewResources.length,nearbyResources:report.loading.nearbyResources.length}},null,2));
