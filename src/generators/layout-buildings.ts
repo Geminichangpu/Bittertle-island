@@ -2,6 +2,7 @@ import * as T from 'three';
 import type {IslandObject} from '../data/model.ts';
 import {Builder,type Cache} from './shrine.ts';
 import {slateRoof,crate,paneFrame} from './details.ts';
+import {crownGeometry} from '../environment/nature-geometry.ts';
 type V=[number,number,number];
 /** M2 static structures: closed roofs, joinery, counters, glazing and repeated detail batches. */
 export function makeLayoutBuilding(o:IslandObject,cache:Cache){
@@ -71,7 +72,7 @@ export function makeLayoutBuilding(o:IslandObject,cache:Cache){
  }else{
   disc([0,.2,0],w*.46,.4,'#8d9e62');disc([0,h*.32,0],w*.12,h*.64,wall,w*.075);
   // Keep the crown; the radial slanted timbers around the trunk base were removed.
-  for(let i=0;i<7;i++){const a=i*Math.PI*2/7;b.ball([Math.cos(a)*w*.3,h*.94+(i%2)*1.3,Math.sin(a)*w*.3],[w*.24,h*.14,d*.23],i%2?'#6c9647':'#91ab53');}
+  for(let i=0;i<7;i++){const a=i*Math.PI*2/7;b.emit('treehouse:leaf',crownGeometry,i%2?'#6c9647':'#91ab53',[Math.cos(a)*w*.3,h*.94+(i%2)*1.3,Math.sin(a)*w*.3],[w*.24,h*.14,d*.23]);}
   const y=h*.55;b.box([0,y,1],[w*.63,.4,d*.53],wood);b.box([0,y+2,0],[w*.38,4,d*.32],wall);gable([0,y+4,0],w*.38,d*.32,1.65,wall);b.lattice(0,y+2,d*.16+.1,w*.23,2.4);
   slateRoof(b,[0,y+4,0],d*.42,w*.46,2,roof,Math.PI/2);
   for(let i=0;i<18;i++)b.box([-w*.3+i*w*.6/17,y+.23,1],[w*.6/18-.035,.06,d*.52],i%2?wood:'#927247');
@@ -82,10 +83,10 @@ export function makeLayoutBuilding(o:IslandObject,cache:Cache){
   }
   b.scoped([0,y+2,d*.16+.25],0,()=>paneFrame(b,w*.23,2.4,0));
   for(let i=0;i<18;i++){const a=i*2.4,r=w*.095;b.beam([Math.cos(a)*r,h*.08,Math.sin(a)*r],[Math.cos(a)*r*.83,h*.48,Math.sin(a)*r*.83],.045,'#735335');}
-  for(let i=0;i<21;i++){const a=i*2.4,rr=w*(.18+(i%3)*.065);b.ball([Math.cos(a)*rr,h*.94+(i%4)*.52,Math.sin(a)*rr],[w*.12,h*.08,d*.12],['#6d934a','#86a653','#a6b960'][i%3]);}
+  for(let i=0;i<21;i++){const a=i*2.4,rr=w*(.18+(i%3)*.065);b.emit('treehouse:leaf',crownGeometry,['#6d934a','#86a653','#a6b960'][i%3],[Math.cos(a)*rr,h*.94+(i%4)*.52,Math.sin(a)*rr],[w*.12,h*.08,d*.12]);}
   // Story reference: no stairs or ladder; keep the treehouse deck and its front rail.
   for(let k=0;k<6;k++)b.box([-w*.3+k*w*.12,y+.9,d*.32],[.13,1.6,.13],wood);
   for(const yy of [.45,1.55])b.box([0,y+yy,d*.32],[w*.62,.12,.12],wood);
  }
- return b.finish();
+ const root=b.finish();root.traverse(n=>{if(n instanceof T.Mesh&&n.geometry.userData.sourceKey==='treehouse:leaf'){n.userData.natureKind='leaf';n.userData.noCollision=true;}});return root;
 }

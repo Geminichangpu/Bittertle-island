@@ -1,14 +1,19 @@
 import * as T from 'three';
 
-/** Shared, deterministic silhouettes. No extra random draws change the island planting plan. */
+/** Shared 176-triangle leaf sprays replace the 180-triangle solid balls.
+ * Opaque folded leaves need neither alpha blending nor additional textures/draw calls. */
 export function crownGeometry(){
- const g=new T.IcosahedronGeometry(1,2),p=g.getAttribute('position'),colors:number[]=[];
- for(let i=0;i<p.count;i++){
-  const x=p.getX(i),y=p.getY(i),z=p.getZ(i),r=1+.075*Math.sin(x*17+z*13)*Math.sin(y*15-z*9);
-  p.setXYZ(i,x*r,y*r,z*r);
-  const shade=.79+.17*(y+1)/2+.04*Math.sin(x*22+z*19);colors.push(shade,shade,shade);
+ const vertices:number[]=[],colors:number[]=[];
+ for(let i=0;i<44;i++){
+  const a=i*2.399963,lobe=i%5,spread=.32+.5*((i*17)%43)/43;
+  const center=new T.Vector3(Math.cos(a)*spread,Math.sin(i*1.7)*.4+(lobe===0?.3:0),Math.sin(a)*spread*.88);
+  const direction=new T.Vector3(Math.cos(a+.45)*.65,.15+Math.sin(i*.7)*.25,Math.sin(a+.45)*.65).normalize();
+  const across=new T.Vector3(-direction.z,.1*Math.cos(i),direction.x).normalize(),length=.55+(i%4)*.09,width=.22+(i%3)*.035;
+  const base=center.clone().addScaledVector(direction,-length*.46),tip=center.clone().addScaledVector(direction,length*.54);
+  const left=center.clone().addScaledVector(across,width),right=center.clone().addScaledVector(across,-width),ridge=center.clone().add(new T.Vector3(0,.07,0));
+  for(const triangle of [[base,left,ridge],[left,tip,ridge],[tip,right,ridge],[right,base,ridge]])for(const v of triangle){vertices.push(v.x,v.y,v.z);const shade=.73+.19*(v.y+1)/2+(i%3)*.035;colors.push(shade,shade,shade);}
  }
- g.setAttribute('color',new T.Float32BufferAttribute(colors,3));g.computeVertexNormals();return g;
+ const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(vertices,3));g.setAttribute('color',new T.Float32BufferAttribute(colors,3));g.computeVertexNormals();return g;
 }
 export function boulderGeometry(variant=0){
  const g=new T.IcosahedronGeometry(1,2),p=g.getAttribute('position');

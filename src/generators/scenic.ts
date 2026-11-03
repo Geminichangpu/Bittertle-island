@@ -60,12 +60,11 @@ export function makeScenicMesh(o:IslandObject,cache:Cache){
    for(let twig=0;twig<4;twig++){
     const ta=a+(twig-1.5)*.42,rr=r*.65+twig*.85,c:V=[Math.cos(ta)*rr,y+2.5+Math.sin(twig*1.8)*1.2,Math.sin(ta)*rr*.85];
     branch([[tip[0]*.68,y+.8,tip[2]*.68],[c[0],c[1]-.45,c[2]]],.11);
-    b.emit('scenic:flower-cloud',crownGeometry,pink[(limb+twig)%3],c,[2.2,1.25,1.8]);
-    // Individual notched five-petal flowers sit around each cloud's silhouette.
-    for(let k=0;k<50;k++){
-     const az=k*2.39996+twig,ny=1-2*(k+.5)/50,rh=Math.sqrt(1-ny*ny),flower:V=[c[0]+Math.cos(az)*rh*2.22,c[1]+ny*1.28,c[2]+Math.sin(az)*rh*1.82];
-     const rotation=new T.Quaternion().setFromUnitVectors(new T.Vector3(0,1,0),new T.Vector3(Math.cos(az)*rh,ny,Math.sin(az)*rh));
-     b.emit('scenic:blossom',blossom,pink[(k+limb)%4],flower,[.9,.9,.9],rotation);
+    // Open blossom sprays reveal the existing curved limbs. No solid pink cloud underneath.
+    for(let k=0;k<96;k++){
+     const az=k*2.39996+twig,u=(k+.5)/96,rr=Math.sqrt(u)*(.84+.16*Math.sin(az*3+limb)),flower:V=[c[0]+Math.cos(az)*2.65*rr,c[1]+Math.sin(k*1.73)*.38+(1-u)*.22,c[2]+Math.sin(az)*2.05*rr];
+     const rotation=new T.Quaternion().setFromUnitVectors(new T.Vector3(0,1,0),new T.Vector3(Math.cos(az)*.55,1,Math.sin(az)*.55).normalize());
+     const scale=1.24+(k%4)*.09;b.emit('scenic:blossom',blossom,pink[(k+limb)%4],flower,[scale,scale,scale],rotation);
     }
    }
   }
