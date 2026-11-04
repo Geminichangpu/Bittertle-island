@@ -10,13 +10,16 @@ export function slopeSteps(p:Project,routes:Route[],surface:TerrainSurface,natur
  const vertices:number[]=[],uv:number[]=[],colors:number[]=[],indices:number[]=[];let stepCount=0;
  const quad=(a:T.Vector3,b:T.Vector3,c:T.Vector3,d:T.Vector3,shade:number)=>{const start=vertices.length/3;for(const v of [a,b,c,d]){vertices.push(v.x,v.y,v.z);uv.push(v.x*.4,v.z*.4+v.y*.17);colors.push(shade,shade,shade);}indices.push(start,start+1,start+2,start,start+2,start+3);};
  for(const route of routes){
-  if(route.status!=='connected')continue;let arc=0,next=.38;
+  // The island loop remains a continuous road; only the eastern shrine climb keeps treads.
+  if(route.status!=='connected'||route.id!=='base-shrine')continue;let arc=0,next=.38;
   for(let i=1;i<route.points.length;i++){
    const a=route.points[i-1],b=route.points[i],dx=b[0]-a[0],dz=b[1]-a[1],length=Math.hypot(dx,dz);if(length<.001)continue;
    for(;next<=arc+length;next+=.72){
     const t=(next-arc)/length,x=a[0]+dx*t,z=a[1]+dz*t;if(!inNaturePilot(p,x,z))continue;
-    const fx=dx/length,fz=dz/length,near=surface.height(x-fx*.55,z-fz*.55),far=surface.height(x+fx*.55,z+fz*.55);if(near===undefined||far===undefined||Math.abs(far-near)/1.1<.24)continue;
-    const halfWidth=Math.max(.4,route.width*.5-.2),halfDepth=.34,bottom:T.Vector3[]=[],top:T.Vector3[]=[];let valid=true;
+    const fx=dx/length,fz=dz/length,near=surface.height(x-fx*.55,z-fz*.55),far=surface.height(x+fx*.55,z+fz*.55);if(near===undefined||far===undefined)continue;
+    // Keep the two shrine approaches continuous; retain slope-only steps elsewhere.
+    const shrineApproach=route.id==='base-shrine'||route.id==='shrine-shopping';if(!shrineApproach&&Math.abs(far-near)/1.1<.24)continue;
+    const halfWidth=Math.max(.4,route.width*.5-.2),halfDepth=.365,bottom:T.Vector3[]=[],top:T.Vector3[]=[];let valid=true;
     for(const along of [-halfDepth,halfDepth])for(const across of [-halfWidth,halfWidth]){const xx=x+fx*along-fz*across,zz=z+fz*along+fx*across,y=surface.height(xx,zz);if(y===undefined){valid=false;break;}bottom.push(new T.Vector3(xx,y+.125,zz));}
     if(!valid||bottom.length!==4)continue;
     for(let k=0;k<4;k++){const across=k%2,high=Math.max(bottom[across].y,bottom[across+2].y)+.045;top.push(new T.Vector3(bottom[k].x,high,bottom[k].z));}

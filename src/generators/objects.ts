@@ -1,3 +1,4 @@
+import {makeTownMesh} from './island-town';
 import {makeScenicMesh} from './scenic.ts';
 import {makeLayoutBuilding} from './layout-buildings.ts';
 import {makeBridge} from './bridge.ts';
@@ -13,7 +14,7 @@ const geometries=new Map<string,T.BufferGeometry>(),materials=new Map<string,T.M
 function geo(key:string,fn:()=>T.BufferGeometry){if(!geometries.has(key)){const g=fn();g.userData.sourceKey=key;geometries.set(key,g);}return geometries.get(key)!;}
 function mat(color:string,role?:'window'|'lamp'){const key=color+'|'+(role||'surface');if(!materials.has(key)){const m=surfaceMaterial(color);if(role)m.userData.lightRole=role;materials.set(key,m);}return materials.get(key)!;}
 export function makeMesh(o:IslandObject){
- const root=o.templateId.startsWith('scenic_')?makeScenicMesh(o,{geo,mat,sign}):o.templateId.startsWith('feihua_')?makeFeihuaPart(o,{geo,mat,sign}):o.templateId==='island_bridge'?makeBridge(o,{geo,mat,sign}):o.templateId.startsWith("layout_")?makeLayoutBuilding(o,{geo,mat,sign}):o.templateId.startsWith("landmark_")?makeLandmarkMesh(o,{geo,mat,sign}):o.templateId.startsWith("base_")?makeBaseMesh(o,{geo,mat,sign}):o.templateId.startsWith("shrine_")?makeShrineMesh(o,{geo,mat,sign}):new T.Group(),p=o.params,w=p.width,d=p.depth,h=p.wallHeight;
+ const root=o.templateId.startsWith('layout_island_')?makeTownMesh(o,{geo,mat,sign}):o.templateId.startsWith('scenic_')?makeScenicMesh(o,{geo,mat,sign}):o.templateId.startsWith('feihua_')?makeFeihuaPart(o,{geo,mat,sign}):o.templateId==='island_bridge'?makeBridge(o,{geo,mat,sign}):o.templateId.startsWith("layout_")?makeLayoutBuilding(o,{geo,mat,sign}):o.templateId.startsWith("landmark_")?makeLandmarkMesh(o,{geo,mat,sign}):o.templateId.startsWith("base_")?makeBaseMesh(o,{geo,mat,sign}):o.templateId.startsWith("shrine_")?makeShrineMesh(o,{geo,mat,sign}):new T.Group(),p=o.params,w=p.width,d=p.depth,h=p.wallHeight;
  function part(kind:string,color:string,pos:number[],scale:number[],rotation=0){const g=geo(kind,()=>kind==='box'?new T.BoxGeometry(1,1,1):kind==='sphere'?new T.IcosahedronGeometry(1,0):kind==='cone'?new T.ConeGeometry(1,1,7):kind==='gable'?new T.CylinderGeometry(1,1,1,3):new T.ConeGeometry(1,1,4));const m=new T.Mesh(g,mat(color));m.position.fromArray(pos);m.scale.fromArray(scale);m.rotation.y=rotation;root.add(m);return m;}
  if(o.templateId.startsWith('scenic_')||o.templateId==='island_bridge'||o.templateId.startsWith('feihua_')||o.templateId.startsWith('layout_')||o.templateId.startsWith('landmark_')||o.templateId.startsWith('shrine_')||o.templateId.startsWith('base_')){} 
  else if(o.templateId==='tree'){

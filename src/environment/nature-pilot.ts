@@ -47,6 +47,8 @@ export function makePilotVegetation(p:Project,surface:TerrainSurface,routes:Rout
   if(kind===0){types.tall++;for(let k=0;k<4;k++){const a=angle+k*2.4,rr=r*(1-k*.16),yy=y+h*.53+k*h*.16;leaf(x+Math.cos(a)*.3,yy,z+Math.sin(a)*.3,rr,rr*.9,rr,palette[k%3],a);}}
   else {if(kind===1)types.broad++;else types.lean++;for(let k=0;k<5;k++){const a=angle+k*2.4,spread=k===0?0:r*.75,xx=x+dx+Math.cos(a)*spread,zz=z+dz+Math.sin(a)*spread,yy=y+h*.72+(k%3)*r*.48;b.cylinder([x+dx*.3,y+h*.43,z+dz*.3],[xx,yy-.2,zz],.08,'#766246',7);leaf(xx,yy,zz,r*(k===0?1:.8),r*.72,r*.84,palette[k%3],a);}}
   }
+  // Enrich only the small forest-edge sample, retaining the same shared leaf geometry.
+  if(!tropical&&Math.hypot(x-(center.x-12),z-(center.y+34))<21){for(let k=0;k<3;k++){const a=angle+k*2.4,xx=x+dx+Math.cos(a)*r*.85,zz=z+dz+Math.sin(a)*r*.85,yy=y+h*.65+(k%2)*.5;b.cylinder([x+dx*.3,y+h*.4,z+dz*.3],[xx,yy-.15,zz],.07,'#766246',7);leaf(xx,yy,zz,r*.7,r*.55,r*.72,palette[(roots.length+k)%3],a);}}
   roots.push([x,y,z]);
  };
  for(let attempt=0;attempt<2300&&roots.length<92;attempt++){
@@ -65,6 +67,20 @@ export function makePilotVegetation(p:Project,surface:TerrainSurface,routes:Rout
   plantTree(x,y,z,meadowShapes);
  }
  root.userData.meadowTrees=roots.length-previousTrees;
+ // Trees flank the existing shrine approaches without occupying paths or buildings.
+ const pathRnd=random((p.environment?.seed??1)^0x174ac);let pathTrees=0;
+ for(const route of routes.filter(r=>r.status==='connected'&&(r.id==='base-shrine'||r.id==='shrine-shopping'))){
+  let last=-Infinity,arc=0;
+  for(let i=1;i<route.points.length&&pathTrees<36;i++){
+   const a=route.points[i-1],q=route.points[i],dx=q[0]-a[0],dz=q[1]-a[1],len=Math.hypot(dx,dz);arc+=len;if(!len||arc-last<8||!inNaturePilot(p,q[0],q[1]))continue;last=arc;
+   for(const side of [-1,1]){const d=route.width*.5+4+pathRnd()*2,x=q[0]-dz/len*d*side,z=q[1]+dx/len*d*side,y=surface.height(x,z);
+    if(y===undefined||!isLand(p.terrain,x,z)||coastDistance(p.terrain,[x,z])<7||blocked(clearObstacles,x,z,4)||roadDistance(routes,x,z)<3.8||roots.some(r=>Math.hypot(r[0]-x,r[2]-z)<4.5))continue;
+    if(Math.max(Math.abs((surface.height(x+1,z)??y)-y),Math.abs((surface.height(x,z+1)??y)-y))>.6)continue;plantTree(x,y,z,pathRnd);pathTrees++;
+   }
+  }
+ }
+ root.userData.pathTrees=pathTrees;
+
  // Sparse low planting collects at woodland edges; meadow and paths stay legible.
  for(let i=0;i<roots.length;i+=3){const [x,y,z]=roots[i];for(let j=0;j<2;j++){const a=i+j*2.4,xx=x+Math.cos(a)*2.2,zz=z+Math.sin(a)*2.2,yy=surface.height(xx,zz);if(yy===undefined||roadDistance(routes,xx,zz)<2.2||blocked(clearObstacles,xx,zz,2))continue;leaf(xx,yy+.5,zz,.9,.6,.85,palette[(i+j)%3],a);}}
  const canopy=b.finish();canopy.userData.naturePilotVegetation=true;canopy.traverse(n=>{n.userData.naturePilotVegetation=true;});root.add(canopy);
@@ -72,6 +88,12 @@ export function makePilotVegetation(p:Project,surface:TerrainSurface,routes:Rout
  // A few irregular understory clusters use the existing instanced sprig and
  // follow the same near-camera visibility gate as the original grass.
  for(let i=0;i<roots.length;i+=3){const [x,,z]=roots[i];for(let k=0;k<5;k++){const a=i*2.4+k*2.1,r=2.4+(k%3)*.8,xx=x+Math.cos(a)*r,zz=z+Math.sin(a)*r,y=surface.height(xx,zz);if(y===undefined||roadDistance(routes,xx,zz)<2.8||blocked(clearObstacles,xx,zz,1.2)||coastDistance(p.terrain,[xx,zz])<3)continue;const s=.65+(k%3)*.18;g.emit('pilot:grass',leafSprigGeometry,'#81915d',[xx,y-.03,zz],[s,s*(.85+(k%2)*.25),s],new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),a));}}
- const grass=g.finish();grass.name='近景小草簇';grass.visible=false;grass.traverse(n=>{n.userData.naturePilotVegetation=true;n.userData.noCollision=true;if(n instanceof T.Mesh)n.geometry.userData.surfaceKind='grass';});root.add(grass);details.set(root,{grass,center});root.userData.metrics={...types,trees:roots.length};root.userData.roots=roots;
+ // A bounded meadow patch: low-poly crossed tufts, instanced and visible only nearby.
+ const tuft=()=>{const v:number[]=[],c:number[]=[];for(let k=0;k<4;k++){const a=k*2.4,dx=Math.cos(a),dz=Math.sin(a),sx=-dz,sz=dx,w=.075+(k%2)*.02,h=.34+(k%3)*.06,baseL=[-sx*w,0,-sz*w],baseR=[sx*w,0,sz*w],midL=[dx*.13-sx*w*.6,h*.55,dz*.13-sz*w*.6],midR=[dx*.13+sx*w*.6,h*.55,dz*.13+sz*w*.6],tip=[dx*.32,h,dz*.32];for(const [x,y,z] of [baseL,baseR,midL,baseR,midR,midL,midL,midR,tip]){v.push(x,y,z);const shade=y?.98:.8;c.push(shade,shade,shade);}}const mesh=new T.BufferGeometry();mesh.setAttribute('position',new T.Float32BufferAttribute(v,3));mesh.setAttribute('color',new T.Float32BufferAttribute(c,3));mesh.computeVertexNormals();return mesh;};
+ const patchRnd=random((p.environment?.seed??1)^0x29a4),patches=[[-18,34,12],[-7,24,11],[1,43,10]],grassColors=['#8aa95e','#a4bd70','#b6c782'];let meadowTufts=0;
+ for(let i=0;i<1300&&meadowTufts<600;i++){const [cx,cz,r]=patches[i%patches.length],a=patchRnd()*Math.PI*2,d=Math.sqrt(patchRnd())*r,x=center.x+cx+Math.cos(a)*d,z=center.y+cz+Math.sin(a)*d,y=surface.height(x,z);if(y===undefined||!isLand(p.terrain,x,z)||roadDistance(routes,x,z)<2.7||blocked(clearObstacles,x,z,1.5)||coastDistance(p.terrain,[x,z])<5)continue;const slope=Math.max(Math.abs((surface.height(x+1,z)??y)-y),Math.abs((surface.height(x,z+1)??y)-y));if(slope>.5)continue;const scale=.65+patchRnd()*.55;g.emit('pilot:meadow-tuft',tuft,grassColors[i%3],[x,y-.035,z],[scale,scale*(.8+patchRnd()*.4),scale],new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),a));meadowTufts++;}
+ // Reuse the existing broad-leaf sprig in small irregular groups at tree bases.
+ for(let i=0;i<roots.length;i+=2){const [x,,z]=roots[i];if(Math.hypot(x-(center.x-12),z-(center.y+34))>21)continue;for(let k=0;k<4;k++){const a=i*2.4+k*1.7,d=1.4+(k%3)*.55,xx=x+Math.cos(a)*d,zz=z+Math.sin(a)*d,y=surface.height(xx,zz);if(y===undefined||roadDistance(routes,xx,zz)<2.7||blocked(clearObstacles,xx,zz,1.2))continue;const s=.7+(k%2)*.2;g.emit('pilot:grass',leafSprigGeometry,'#81915d',[xx,y-.025,zz],[s,s,s],new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),a));}}
+ const grass=g.finish();grass.name='近景小草簇';grass.visible=false;grass.traverse(n=>{n.userData.naturePilotVegetation=true;n.userData.noCollision=true;if(n instanceof T.Mesh)n.geometry.userData.surfaceKind='grass';});root.add(grass);details.set(root,{grass,center});root.userData.metrics={...types,trees:roots.length,meadowTufts};root.userData.roots=roots;
  return {root,roots};
 }

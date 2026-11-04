@@ -15,6 +15,7 @@ export function coastalSkirt(p:Project,terrain:T.BufferGeometry,material:T.MeshS
  const weight=(x:number,z:number)=>{const d=Math.hypot((x-center.x)/105,(z-center.y)/120),u=T.MathUtils.clamp((1-d)/.28,0,1);return u*u*(3-2*u);};
  for(const {a,b,count} of edges.values()){
   if(count!==1)continue;const x=(a.x+b.x)/2,z=(a.z+b.z)/2,nearShrine=shrine&&x>shrine.position[0]-65&&x<shrine.position[0]+50&&z>shrine.position[2]-65&&z<shrine.position[2]+50;
+  if(p.terrain.flatBayRevision===1&&x>55&&x<102&&z> -52&&z<38)continue;
   if((!scenicHighland(p.terrain,x,z)&&!nearShrine)||distance([x,z],coast)>.035)continue;
   const n=new T.Vector2(b.z-a.z,a.x-b.x).normalize();if(isLand(p.terrain,x+n.x*.2,z+n.y*.2))n.negate();selected.push({a,b,n});for(const v of [a,b]){const k=key(v);if(!normals.has(k))normals.set(k,new T.Vector2());normals.get(k)!.add(n);}
  }

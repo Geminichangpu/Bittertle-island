@@ -35,11 +35,22 @@ export function addCentralCampus(p:Project,b:Builder){
   b.box([x,yy+.05,z],[2.8,.09,2.8],'#8bb575');
  }
  for(const side of [-1,1])b.box([cx,y+.12,cz+side*(r+10)/2],[2,.13,r-10],'#dce3df');
- // Gentle paved approach joins the existing bridge without changing its transform.
- for(let x=cx+8;x<cx+r;x+=.6){const yy=sampleHeight(p.terrain,x,gapZ);b.box([x,yy+.07,gapZ],[.62,.12,(bridge?.params.depth??5)-.2],'#d6e0e5');}
  const fz=cz+14;
  b.cylinder([cx,y+.12,fz],[cx,y+.5,fz],2.6,'#e2e9e9',48);
  b.cylinder([cx,y+.51,fz],[cx,y+.55,fz],2.2,'#52b8d4',48);
  b.cylinder([cx,y+.55,fz],[cx,y+3.5,fz],.11,'#c3ecf2',12);
  for(let i=0;i<8;i++){const a=i*Math.PI/4;b.ball([cx+Math.cos(a)*.5,y+1.2,fz+Math.sin(a)*.5],[.06,.4,.06],'#b3e4ec');}
+}
+
+/** Broad sandstone steps follow the existing terrain between the campus and bridge. */
+export function campusApproach(p:Project,surface:import('./surface').TerrainSurface,material:T.MeshStandardMaterial){
+ const campus=p.terrain.campus,bridge=p.objects.find(o=>o.templateId==='island_bridge');if(!campus||!bridge)return;
+ const x0=campus.center[0]+8,x1=bridge.position[0]-bridge.params.width/2+.05,z=bridge.position[2],half=(bridge.params.depth-.2)/2,vertices:number[]=[];
+ if(x1<=x0)return;const n=Math.ceil((x1-x0)/.65),levels:number[]=[];
+ for(let i=0;i<n;i++){const a=x0+(x1-x0)*i/n,b=x0+(x1-x0)*(i+1)/n,ys=[surface.height(a,z-half),surface.height(a,z+half),surface.height(b,z-half),surface.height(b,z+half)];if(ys.some(y=>y===undefined))return;levels.push(Math.max(...ys as number[])+.06);}
+ const face=(a:number[],b:number[],c:number[],d:number[])=>vertices.push(...a,...b,...c,...b,...d,...c);
+ for(let i=0;i<n;i++){const a=x0+(x1-x0)*i/n,b=x0+(x1-x0)*(i+1)/n,y=levels[i];face([a,y,z-half],[a,y,z+half],[b,y,z-half],[b,y,z+half]);if(i+1<n){const y2=levels[i+1];face([b,y,z-half],[b,y,z+half],[b,y2,z-half],[b,y2,z+half]);}}
+ const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(vertices,3));g.computeVertexNormals();g.userData.surfaceKind='road';
+ const finish=material.clone();finish.map=null;finish.color.set('#c9b485');finish.side=T.DoubleSide;finish.polygonOffset=true;finish.polygonOffsetFactor=-1;finish.polygonOffsetUnits=-1;
+ const mesh=new T.Mesh(g,finish);mesh.name='中心岛桥头砂石阶梯';mesh.userData.noCollision=true;return mesh;
 }

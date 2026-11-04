@@ -29,7 +29,9 @@ export function shadowSurfaces(root:T.Object3D){root.traverse(n=>{
  if(!(n instanceof T.Mesh))return;
  const materials=Array.isArray(n.material)?n.material:[n.material];
  if(materials.some(m=>m.transparent||m instanceof T.MeshBasicMaterial||m instanceof T.ShaderMaterial))return;
- n.receiveShadow=true;
+ // Thin terrain-draped road strips self-shadow against the coarse terrain mesh;
+ // disabling their shadow reception prevents visible seams without changing the rest of the island.
+ n.receiveShadow=!n.userData.routeId;
  // Tiny grass blades and thin road ribbons only receive shadows; they need not populate the shadow pass.
  n.castShadow=n.geometry.userData.surfaceKind!=='grass'&&n.geometry.userData.surfaceKind!=='road';
 });}

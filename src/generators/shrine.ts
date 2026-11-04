@@ -183,9 +183,7 @@ export function makeShrineMesh(o:IslandObject,cache:Cache){
   b.box([0,-.12,0],[w,.22,d],'#b3ad98');const nx=Math.round(w/1.8),nz=Math.round(d/1.8);for(let i=0;i<nx;i++)for(let j=0;j<nz;j++)b.box([-w/2+(i+.5)*w/nx,.045,-d/2+(j+.5)*d/nz],[w/nx-.055,.12,d/nz-.055],['#c0b8a4','#b8b09d','#c9bfaa'][(i*7+j*3)%3]);
   b.lantern(-w*.43,d*.3,.8);b.lantern(w*.43,d*.3,.8);
  }else if(o.templateId==='shrine_path'){
-  // Right-hand fork: south to the relocated office, north into the residential garden.
-  const routes:[number,number][][]=[[[-w/6,d/8],[w/3,d/8],[w/3,d/6]],[[w/12,d/8],[w/12,-d*5/12]]];
-  for(const nodes of routes)for(let n=0;n<nodes.length-1;n++){const a=nodes[n],c=nodes[n+1],dx=c[0]-a[0],dz=c[1]-a[1],length=Math.hypot(dx,dz),count=Math.ceil(length/1.4);for(let i=0;i<count;i++)b.box([a[0]+dx*(i+.5)/count,.04,a[1]+dz*(i+.5)/count],[2.7,.16,length/count-.04],i%2?'#b7ae97':'#c2b79f',Math.atan2(dx,dz));}
+  // The garden stepping stones provide the path here; do not lay a second brick ribbon over them.
  }else if(o.templateId==='shrine_garden'){
   for(let i=0;i<10;i++){const z=-d*.43+i*d*.09,x=Math.sin(i*.6)*w*.12;b.ball([x,.1,z],[1.1,.16,.7],i%2?'#a7aaa0':'#b8b7a8');}
   for(let i=1;i<=4;i++)b.ball([i*1.65,.1,-2],[.85,.16,.65],stone);

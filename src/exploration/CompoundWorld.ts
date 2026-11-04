@@ -7,7 +7,7 @@ type GroundTriangle={ax:number;az:number;ay:number;bx:number;bz:number;by:number
 export class CompoundWorld extends CollisionWorld{
  private triangles=new Map<string,GroundTriangle[]>();
  private oriented=new Map<T.Box3,{local:T.Box3;inverse:T.Matrix4;matrix:T.Matrix4;obb:OBB}>();
- constructor(terrain:T.Mesh,readonly bounds:T.Box3,private elevated=false){
+ constructor(terrain:T.Mesh,readonly bounds:T.Box3,private elevated=false,private bridgeSupport=false){
   super();terrain.updateWorldMatrix(true,false);const g=terrain.geometry,p=g.getAttribute('position'),index=g.index;
   const a=new T.Vector3(),b=new T.Vector3(),c=new T.Vector3(),count=index?index.count:p.count;
   for(let i=0;i<count;i+=3){a.fromBufferAttribute(p,index?index.getX(i):i).applyMatrix4(terrain.matrixWorld);b.fromBufferAttribute(p,index?index.getX(i+1):i+1).applyMatrix4(terrain.matrixWorld);c.fromBufferAttribute(p,index?index.getX(i+2):i+2).applyMatrix4(terrain.matrixWorld);
@@ -33,10 +33,10 @@ export class CompoundWorld extends CollisionWorld{
   return null;
  }
  override floor(x:number,z:number,feet:number,step=.38,drop=.6){
-  const ground=this.ground(x,z);if(ground===null)return null;
+  const ground=this.ground(x,z);if(ground===null&&!this.bridgeSupport)return null;
   let support=-Infinity;const origin=new T.Vector3(x,feet+step+.006,z),hit=new T.Vector3();
   for(const box of this.nearby(x,z,.03)){const ob=this.oriented.get(box),ray=new T.Ray(origin.clone(),new T.Vector3(0,-1,0));if(ob)ray.applyMatrix4(ob.inverse);const result=ray.intersectBox(ob?.local||box,hit);if(!result)continue;if(ob)hit.applyMatrix4(ob.matrix);if(hit.y<=feet+step+.005&&hit.y>=feet-drop)support=Math.max(support,hit.y);}
-  if(ground<=feet+step+.005&&ground>=feet-drop)support=Math.max(ground,support);
+  if(ground!==null&&ground<=feet+step+.005&&ground>=feet-drop)support=Math.max(ground,support);
   return Number.isFinite(support)?support:null;
  }
  override visible(from:T.Vector3,to:T.Vector3){

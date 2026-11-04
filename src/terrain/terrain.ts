@@ -1,3 +1,4 @@
+import {gradeSettlement} from './settlement-grade';
 import {villageHeight,villageCuts} from './village.ts';
 import {scenicCoastHeight,scenicHighland,scenicCoastCuts} from './scenic-coast.ts';
 import * as THREE from 'three';
@@ -10,8 +11,14 @@ export function mainCoast(t:Terrain):Point[]{return t.topology==='open-bay'?[...
 export function coastDistance(t:Terrain,p:Point){return t.topology==='open-bay'?Math.min(distance(p,mainCoast(t)),distance(p,t.islet)):Math.min(distance(p,t.outer),distance(p,t.bay),distance(p,t.islet));}
 export function isLand(t:Terrain,x:number,z:number){return (t.topology==='open-bay'?inside([x,z],mainCoast(t)):(inside([x,z],t.outer)&&!inside([x,z],t.bay)))||inside([x,z],t.islet);}
 function onCampus(t:Terrain,p:Point){return !!t.campus&&(inside(p,t.islet)||distance(p,t.islet)<.001);}
-export function sampleHeight(t:Terrain,x:number,z:number){
-  if(!isLand(t,x,z)){if(t.scenicCoast&&scenicHighland(t,x,z)&&distance([x,z],mainCoast(t))<.001)return scenicCoastHeight(t,x,z,.9);if(t.campus&&distance([x,z],t.islet)<.001)return t.campus.level;return 0;}
+function lowBayCoast(t:Terrain,x:number,z:number){return t.flatBayRevision===1&&x>40&&x<130&&z> -70&&z<52&&!inside([x,z],t.islet);}
+export function sampleHeight(t:Terrain,x:number,z:number,includeBay=true):number{
+  if(!isLand(t,x,z)){if(lowBayCoast(t,x,z)&&distance([x,z],mainCoast(t))<.001)return .9;if(t.scenicCoast&&scenicHighland(t,x,z)&&distance([x,z],mainCoast(t))<.001)return scenicCoastHeight(t,x,z,.9);if(t.campus&&distance([x,z],t.islet)<.001){
+   // A coast vertex may fall microscopically outside the polygon after triangulation.
+   // Sample just inside so its bridge-approach grading matches the adjacent land.
+   const dx=x-t.campus.center[0],dz=z-t.campus.center[1],length=Math.hypot(dx,dz)||1,ix=x-dx/length*.005,iz=z-dz/length*.005;
+   return isLand(t,ix,iz)?sampleHeight(t,ix,iz,includeBay):t.campus.level;
+  }return 0;}
   const n=t.resolution,u=Math.max(0,Math.min(n-1,(x/t.size+.5)*(n-1))),v=Math.max(0,Math.min(n-1,(z/t.size+.5)*(n-1))),ix=Math.min(n-2,Math.floor(u)),iz=Math.min(n-2,Math.floor(v)),a=u-ix,b=v-iz;
   const h=(1-b)*((1-a)*t.heights[iz*n+ix]+a*t.heights[iz*n+ix+1])+b*((1-a)*t.heights[(iz+1)*n+ix]+a*t.heights[(iz+1)*n+ix+1]);
   const d=inside([x,z],t.islet)?distance([x,z],t.islet):coastDistance(t,[x,z]);
@@ -32,18 +39,48 @@ export function sampleHeight(t:Terrain,x:number,z:number){
     height=height*(1-weight)+target*weight;
    }
   }
+  // Interpolate the campus bridge approach pads before the overlapping bridge pad.
+  // This avoids vertical seams caused by choosing whole one-unit pads in order.
+  if(t.campus&&x>t.campus.center[0]+3&&x<t.campus.center[0]+t.campus.radius+8&&Math.abs(z-t.campus.center[1])<16){
+   const pads=(t.pads||[]).filter(p=>p.ownerId.startsWith('campus:approach:')).sort((a,b)=>a.minX-b.minX);
+   if(pads.length>1){const first=pads[0],last=pads[pads.length-1],firstX=first.minX+.5,lastX=last.maxX-.5,z0=(first.minZ+first.maxZ)/2,half=(first.maxZ-first.minZ)/2,edge=Math.abs(z-z0);
+    if(x>=firstX-4&&x<=lastX+4&&edge<half+7){let j=0;while(j<pads.length-2&&x>(pads[j+1].minX+.5))j++;const a=pads[j],b=pads[j+1],ax=a.minX+.5,bx=b.minX+.5,u=Math.max(0,Math.min(1,(x-ax)/(bx-ax||1))),level=a.level+(b.level-a.level)*u;const w=(1-THREE.MathUtils.smoothstep(edge,Math.max(0,half-.5),half+7))*THREE.MathUtils.smoothstep(x,firstX-4,firstX+1)*(1-THREE.MathUtils.smoothstep(x,lastX-1,lastX+4));return feihuaMountainHeight(t,x,z,height*(1-w)+level*w);}
+   }
+  }
   // Flat bearing surfaces beneath the entire model footprint, with soft earth transitions.
-  for(const p of t.pads||[])if(x>=p.minX&&x<=p.maxX&&z>=p.minZ&&z<=p.maxZ)return feihuaMountainHeight(t,x,z,p.level);
+  for(const p of t.pads||[])if(p.ownerId!=='island-town:bay'&&p.ownerId!=='scenic_academy'&&p.ownerId!=='island-town:academy-village'&&x>=p.minX&&x<=p.maxX&&z>=p.minZ&&z<=p.maxZ)return feihuaMountainHeight(t,x,z,p.level);
   let sum=0,weight=0,maxWeight=0;
-  for(const p of t.pads||[]){const dx=Math.max(p.minX-x,0,x-p.maxX),dz=Math.max(p.minZ-z,0,z-p.maxZ),r=Math.hypot(dx,dz);if(r>=p.feather)continue;const u=1-r/p.feather,f=u*u*(3-2*u);const w=f/(r+.1)**2;sum+=p.level*w;weight+=w;maxWeight=Math.max(maxWeight,f);}
+  for(const p of t.pads||[]){if(p.ownerId==='island-town:bay'||p.ownerId==='scenic_academy'||p.ownerId==='island-town:academy-village')continue;const dx=Math.max(p.minX-x,0,x-p.maxX),dz=Math.max(p.minZ-z,0,z-p.maxZ),r=Math.hypot(dx,dz);if(r>=p.feather)continue;const u=1-r/p.feather,f=u*u*(3-2*u);const w=f/(r+.1)**2;sum+=p.level*w;weight+=w;maxWeight=Math.max(maxWeight,f);}
   if(weight)height=height*(1-maxWeight)+sum/weight*maxWeight;
-  return villageHeight(t,x,z,scenicCoastHeight(t,x,z,feihuaMountainHeight(t,x,z,height)));
+  let result=villageHeight(t,x,z,scenicCoastHeight(t,x,z,feihuaMountainHeight(t,x,z,height)),d,includeBay);
+  // Apply these terraces after the highland and village shaping so their edges blend continuously.
+  for(const pad of t.pads||[]){if(pad.ownerId!=='island-town:bay'&&pad.ownerId!=='scenic_academy'&&pad.ownerId!=='island-town:academy-village')continue;const dx=Math.max(pad.minX-x,0,x-pad.maxX),dz=Math.max(pad.minZ-z,0,z-pad.maxZ),r=Math.hypot(dx,dz);if(r>=pad.feather)continue;const u=1-r/pad.feather,w=u*u*(3-2*u);result=result*(1-w)+pad.level*w;}
+  result=gradeSettlement(t,x,z,result,d);
+  if(lowBayCoast(t,x,z)){const shore=distance([x,z],mainCoast(t)),weight=THREE.MathUtils.smoothstep(x,40,55)*(1-THREE.MathUtils.smoothstep(x,115,130))*THREE.MathUtils.smoothstep(z,-70,-58)*(1-THREE.MathUtils.smoothstep(z,40,52)),level=.9+1.7*THREE.MathUtils.smoothstep(shore,0,14);result=THREE.MathUtils.lerp(result,level,weight);}
+  return result;
+}
+/** Smooth the lighting on a narrow triangulation join near the bay; heights stay unchanged. */
+function smoothBayJoinNormals(g:THREE.BufferGeometry,t:Terrain){
+ if(!t.scenicCoast||!t.village)return;
+ const pos=g.getAttribute('position'),normal=g.getAttribute('normal');if(!pos||!normal)return;
+ const ax=123,az=-12,bx=76,bz=30,dx=bx-ax,dz=bz-az,length2=dx*dx+dz*dz;
+ for(let i=0;i<pos.count;i++){
+  const x=pos.getX(i),z=pos.getZ(i);if(x<69||x>130||z< -19||z>37)continue;
+  const u=THREE.MathUtils.clamp(((x-ax)*dx+(z-az)*dz)/length2,0,1),d=Math.hypot(x-(ax+u*dx),z-(az+u*dz));
+  const weight=1-THREE.MathUtils.smoothstep(d,4,7);if(weight<=0||coastDistance(t,[x,z])<2||!isLand(t,x-1,z)||!isLand(t,x+1,z)||!isLand(t,x,z-1)||!isLand(t,x,z+1))continue;
+  let nx=sampleHeight(t,x-1,z)-sampleHeight(t,x+1,z),ny=2,nz=sampleHeight(t,x,z-1)-sampleHeight(t,x,z+1),len=Math.hypot(nx,ny,nz);nx/=len;ny/=len;nz/=len;
+  nx=THREE.MathUtils.lerp(normal.getX(i),nx,weight);ny=THREE.MathUtils.lerp(normal.getY(i),ny,weight);nz=THREE.MathUtils.lerp(normal.getZ(i),nz,weight);len=Math.hypot(nx,ny,nz)||1;normal.setXYZ(i,nx/len,ny/len,nz/len);
+ }
+ normal.needsUpdate=true;
 }
 export function terrainGeometry(t:Terrain,beautify=false){
   const vertices:number[]=[],colors:number[]=[]; const sand=new THREE.Color('#e9d6a1'),grass=new THREE.Color('#8aa975'),high=new THREE.Color('#969789'),peak=new THREE.Color('#c2c2b5');
   function emit(a:Point,b:Point,c:Point){
    if(Math.abs((b[0]-a[0])*(c[1]-a[1])-(c[0]-a[0])*(b[1]-a[1]))<1e-10)return;
-   for(const p of [a,c,b]){const d=coastDistance(t,p),h=d<.001&&!onCampus(t,p)&&!scenicHighland(t,...p)?.9:sampleHeight(t,...p);vertices.push(p[0],h,p[1]);const beach=t.landscapeRevision&&((p[0]-132)/31)**2+((p[1]-132)/24)**2<1;const color=(d<3.5&&!scenicHighland(t,...p))||beach?sand:grass.clone().lerp(high,Math.max(0,Math.min(1,(h-16)/20))).lerp(peak,Math.max(0,Math.min(1,(h-35)/15)));if(beautify&&d>=3.5&&!beach){const patch=Math.sin(p[0]*.075+Math.sin(p[1]*.08))*Math.cos(p[1]*.065)*.5+.5;color.lerp(new THREE.Color(patch>.48?'#789a59':'#b0bd7d'),.32);if(p[0]<-105&&h>25)color.lerp(new THREE.Color('#9b9b87'),Math.min(.8,(h-25)/20));}colors.push(color.r,color.g,color.b);}
+   for(const p of [a,c,b]){const d=coastDistance(t,p),h=d<.001&&!onCampus(t,p)&&!scenicHighland(t,...p)?.9:sampleHeight(t,...p);vertices.push(p[0],h,p[1]);const beach=t.landscapeRevision&&((p[0]-132)/31)**2+((p[1]-132)/24)**2<1;const northBeach=t.landscapeRevision&&p[0]>8&&p[0]<84&&p[1]<-100&&d<15;const color=(d<3.5&&!scenicHighland(t,...p))||beach||northBeach?sand:grass.clone().lerp(high,Math.max(0,Math.min(1,(h-16)/20))).lerp(peak,Math.max(0,Math.min(1,(h-35)/15)));if(beautify&&d>=3.5&&!beach&&!northBeach){const patch=Math.sin(p[0]*.075+Math.sin(p[1]*.08))*Math.cos(p[1]*.065)*.5+.5;color.lerp(new THREE.Color(patch>.48?'#789a59':'#b0bd7d'),.32);if(p[0]<-105&&h>25)color.lerp(new THREE.Color('#9b9b87'),Math.min(.8,(h-25)/20));
+    // Subtle, patchy north-mountain color variation; the land shape is unchanged.
+    const mountain=Math.max(0,1-((p[0]+45)/75)**2-((p[1]+107)/42)**2);if(mountain>0&&h>5){const shade=Math.sin(p[0]*.19+p[1]*.11)*Math.cos(p[1]*.17);color.lerp(new THREE.Color(shade>.25?'#a9ad83':'#718d64'),Math.min(.26,mountain*.26));}}
+    colors.push(color.r,color.g,color.b);}
   }
   // Insert terrace boundaries into the actual mesh, not just the height sampler.
   // Otherwise a large triangle straddling a pad can lift through a floor or leave an air gap.
@@ -72,7 +109,7 @@ export function terrainGeometry(t:Terrain,beautify=false){
   function triangle(a:Point,b:Point,c:Point,depth:number){if(depth){const ab:Point=[(a[0]+b[0])/2,(a[1]+b[1])/2],bc:Point=[(b[0]+c[0])/2,(b[1]+c[1])/2],ca:Point=[(c[0]+a[0])/2,(c[1]+a[1])/2];triangle(a,ab,ca,depth-1);triangle(ab,b,bc,depth-1);triangle(ca,bc,c,depth-1);triangle(ab,bc,ca,depth-1);return;}
     terraceTriangles(a,b,c);}
   for(const [outer,holes] of [[mainCoast(t),t.topology==='open-bay'?[]:[t.bay]],[t.islet,[]]] as [Point[],Point[][]][]){const contour=outer.map(p=>new THREE.Vector2(...p)),hs=holes.map(r=>r.map(p=>new THREE.Vector2(...p)));const all=[...outer,...holes.flat()];THREE.ShapeUtils.triangulateShape(contour,hs).forEach(ids=>triangle(all[ids[0]],all[ids[1]],all[ids[2]],t.heightmapRevision?5:4));}
-  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));if(beautify){const merged=mergeVertices(g,.0001);g.dispose();merged.computeVertexNormals();return merged;}g.computeVertexNormals();return g;
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));if(beautify){const merged=mergeVertices(g,.0001);g.dispose();merged.computeVertexNormals();smoothBayJoinNormals(merged,t);return merged;}g.computeVertexNormals();return g;
 }
-export function updateTerrainHeights(g:THREE.BufferGeometry,t:Terrain){const pos=g.getAttribute('position'),colors=g.getAttribute('color'),sand=new THREE.Color('#e9d6a1'),grass=new THREE.Color('#8aa975'),high=new THREE.Color('#768f70');for(let i=0;i<pos.count;i++){const x=pos.getX(i),z=pos.getZ(i),d=coastDistance(t,[x,z]),h=d<.001&&!onCampus(t,[x,z])&&!scenicHighland(t,x,z)?.9:sampleHeight(t,x,z);pos.setY(i,h);const c=d<3.5&&!scenicHighland(t,x,z)?sand:h>21?high:grass;colors.setXYZ(i,c.r,c.g,c.b);}pos.needsUpdate=true;colors.needsUpdate=true;g.computeVertexNormals();g.computeBoundingSphere();}
+export function updateTerrainHeights(g:THREE.BufferGeometry,t:Terrain){const pos=g.getAttribute('position'),colors=g.getAttribute('color'),sand=new THREE.Color('#e9d6a1'),grass=new THREE.Color('#8aa975'),high=new THREE.Color('#768f70');for(let i=0;i<pos.count;i++){const x=pos.getX(i),z=pos.getZ(i),d=coastDistance(t,[x,z]),h=d<.001&&!onCampus(t,[x,z])&&!scenicHighland(t,x,z)?.9:sampleHeight(t,x,z);pos.setY(i,h);const c=d<3.5&&!scenicHighland(t,x,z)?sand:h>21?high:grass;colors.setXYZ(i,c.r,c.g,c.b);}pos.needsUpdate=true;colors.needsUpdate=true;g.computeVertexNormals();smoothBayJoinNormals(g,t);g.computeBoundingSphere();}
 

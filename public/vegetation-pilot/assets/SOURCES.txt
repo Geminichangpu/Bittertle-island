@@ -1,0 +1,10 @@
+Vegetation pilot — source and license
+
+Grass_Common_Tall and Flower_3_Group: Stylized Nature MegaKit Standard by Quaternius, CC0 1.0.
+Source: https://quaternius.itch.io/stylized-nature-megakit
+See MegaKit-LICENSE.txt for the original license file.
+
+EZ-Tree Oak Medium: generated with EZ-Tree 1.1.0 by Daniel Greenheck, MIT license.
+Source: https://github.com/dgreenheck/ez-tree
+The static GLB was exported using Three.js GLTFExporter; its geometry and textures derive from EZ-Tree.
+See EZ-Tree-LICENSE.txt for the full license and copyright notice.

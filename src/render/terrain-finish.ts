@@ -46,6 +46,11 @@ export class TerrainFinish {
      vec3 grass=mix(diffuseColor.rgb,mix(grassA,grassB,macro)*vec3(.77,1.,.64),.22+landFine*.35)*( .91+macro*.15);
      vec3 soil=texture2D(landSoil,landUV*.72+vec2(.3)).rgb*vec3(.95,.82,.62);
      vec3 rock=(mountainRegion>.001?triplanar(landPeak,vLandPosition,landAxis):triplanar(landRock,vLandPosition,landAxis))*vec3(.91,.92,.87);
+     // Restrained rock strata and sheltered green patches on the existing mountain material.
+     float strata=.5+.5*sin(vLandPosition.y*.34+vLandPosition.x*.045+sin(vLandPosition.z*.09)*1.2);
+     float moss=mountainRegion*(1.-smoothstep(.16,.46,slope))*(1.-smoothstep(28.,54.,vLandPosition.y))*(.08+.13*macro);
+     rock*=mix(1.0,.84+.22*strata,mountainRegion*.7);
+     rock=mix(rock,grass*vec3(.79,.91,.74),moss);
      diffuseColor.rgb=mix(diffuseColor.rgb,mix(mix(grass,soil,landSoilWeight),rock,landRockWeight),landRegion);
     }`);
    shader.fragmentShader=shader.fragmentShader.replace('#include <roughnessmap_fragment>',`#include <roughnessmap_fragment>
