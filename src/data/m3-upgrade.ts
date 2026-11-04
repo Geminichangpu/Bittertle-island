@@ -1,5 +1,5 @@
-import {upgradeIslandTown} from './island-town';
-import {upgradeNorthEstate} from './north-estate';
+import {upgradeIslandTown} from './island-town.ts';
+import {upgradeNorthEstate} from './north-estate.ts';
 import {upgradeSettlement} from './settlement-upgrade.ts';
 import {upgradeScenicCoast} from './scenic-upgrade.ts';
 import {upgradeCentralCampus} from './central-campus.ts';

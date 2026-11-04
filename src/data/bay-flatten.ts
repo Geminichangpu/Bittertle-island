@@ -1,4 +1,4 @@
-import type {Project} from './model';
+import type {Project} from './model.ts';
 /** Level the shopping building with the existing low residential terrace. */
 export function flattenBay(p:Project){
  if(p.terrain.flatBayRevision===1)return p;

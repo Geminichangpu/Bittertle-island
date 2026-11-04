@@ -1,7 +1,7 @@
-import type {Project} from './model';
-import {isLand,coastDistance,sampleHeight} from '../terrain/terrain';
-import {objectWorldBounds} from '../terrain/placement';
-import {planPaths,roadDistance} from '../environment/paths';
+import type {Project} from './model.ts';
+import {isLand,coastDistance,sampleHeight} from '../terrain/terrain.ts';
+import {objectWorldBounds} from '../terrain/placement.ts';
+import {planPaths,roadDistance} from '../environment/paths.ts';
 
 /** Move only the automatically placed stops; respect any user-edited positions. */
 export function adjustRoadsideStops(p:Project):Project{

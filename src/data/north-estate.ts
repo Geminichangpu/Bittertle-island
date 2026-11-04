@@ -1,5 +1,5 @@
-import type {Project,IslandObject} from './model';
-import {isLand,sampleHeight} from '../terrain/terrain';
+import type {Project,IslandObject} from './model.ts';
+import {isLand,sampleHeight} from '../terrain/terrain.ts';
 /** Add one editable coastal estate only when its intended footprint is available. */
 export function upgradeNorthEstate(p:Project){
  if(p.northEstateRevision===2)return p;

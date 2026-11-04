@@ -1,4 +1,4 @@
-import type {Terrain} from '../data/model';
+import type {Terrain} from '../data/model.ts';
 const smooth=(a:number,b:number,x:number)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t);};
 
 /** Gentle settlement-side grading; authored footprints, shore, shrine and eastern cliff remain authoritative. */

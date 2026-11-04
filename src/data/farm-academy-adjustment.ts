@@ -1,6 +1,6 @@
-import type {Project,IslandObject} from './model';
-import {isLand} from '../terrain/terrain';
-import {objectWorldBounds} from '../terrain/placement';
+import type {Project,IslandObject} from './model.ts';
+import {isLand} from '../terrain/terrain.ts';
+import {objectWorldBounds} from '../terrain/placement.ts';
 
 /** Apply the requested settlement changes once, preserving unrelated authored objects. */
 export function adjustFarmAndAcademy(p:Project){

@@ -1,8 +1,8 @@
 import * as T from 'three';
-import type {Project,IslandObject} from './model';
-import {objectWorldBounds} from '../terrain/placement';
-import {isLand,coastDistance,sampleHeight} from '../terrain/terrain';
-import {planPaths,roadDistance} from '../environment/paths';
+import type {Project,IslandObject} from './model.ts';
+import {objectWorldBounds} from '../terrain/placement.ts';
+import {isLand,coastDistance,sampleHeight} from '../terrain/terrain.ts';
+import {planPaths,roadDistance} from '../environment/paths.ts';
 
 /** Space only the unchanged automatically placed bay homes; keep user-customized homes intact. */
 export function upgradeBayGroups(p:Project,justGenerated=false):Project{

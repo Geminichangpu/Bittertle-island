@@ -1,8 +1,8 @@
 import * as T from 'three';
-import type {Project,IslandObject} from './model';
-import {objectWorldBounds} from '../terrain/placement';
-import {isLand,coastDistance,sampleHeight} from '../terrain/terrain';
-import {planPaths,omitShrineBackRoad,roadDistance,type Route} from '../environment/paths';
+import type {Project,IslandObject} from './model.ts';
+import {objectWorldBounds} from '../terrain/placement.ts';
+import {isLand,coastDistance,sampleHeight} from '../terrain/terrain.ts';
+import {planPaths,omitShrineBackRoad,roadDistance,type Route} from '../environment/paths.ts';
 
 /** Four small editable roadside shelters; preserve the rest of the saved scene. */
 export function upgradeBusStops(p:Project):Project{

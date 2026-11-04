@@ -1,6 +1,6 @@
 import * as T from 'three';
-import type {IslandObject} from '../data/model';
-import {Builder,type Cache} from './shrine';
+import type {IslandObject} from '../data/model.ts';
+import {Builder,type Cache} from './shrine.ts';
 
 /** A small modeled hill containing a closed-back, walk-in rock chamber. */
 export function makeNaturalCave(_o:IslandObject,cache:Cache){

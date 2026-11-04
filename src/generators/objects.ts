@@ -1,4 +1,4 @@
-import {makeTownMesh} from './island-town';
+import {makeTownMesh} from './island-town.ts';
 import {makeScenicMesh} from './scenic.ts';
 import {makeLayoutBuilding} from './layout-buildings.ts';
 import {makeBridge} from './bridge.ts';

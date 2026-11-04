@@ -1,13 +1,13 @@
-import {upgradeBayGroups} from './bay-groups';
-import {upgradeBusStops} from './bus-stops';
-import {adjustRoadsideStops} from './station-adjustment';
-import {adjustFarmAndAcademy} from './farm-academy-adjustment';
-import {flattenBay} from './bay-flatten';
+import {upgradeBayGroups} from './bay-groups.ts';
+import {upgradeBusStops} from './bus-stops.ts';
+import {adjustRoadsideStops} from './station-adjustment.ts';
+import {adjustFarmAndAcademy} from './farm-academy-adjustment.ts';
+import {flattenBay} from './bay-flatten.ts';
 import * as T from 'three';
-import type {Project,IslandObject} from './model';
-import {isLand,coastDistance,sampleHeight,mainCoast} from '../terrain/terrain';
-import {objectWorldBounds,transformMatrix} from '../terrain/placement';
-import {planPaths,roadDistance} from '../environment/paths';
+import type {Project,IslandObject} from './model.ts';
+import {isLand,coastDistance,sampleHeight,mainCoast} from '../terrain/terrain.ts';
+import {objectWorldBounds,transformMatrix} from '../terrain/placement.ts';
+import {planPaths,roadDistance} from '../environment/paths.ts';
 
 /** Enable the current island's reversible, derived settlement-side terrain finish. */
 function finishSettlementGrade(p:Project){if(p.terrain.village&&p.terrain.grading&&p.terrain.scenicCoast)p.terrain.settlementGradeRevision=1;const cave=p.objects.find(o=>o.id==='layout_island_cave');if(cave&&Math.abs(cave.rotation[1]-Math.PI)<.001)cave.rotation[1]=-Math.PI/2;return flattenBay(adjustFarmAndAcademy(adjustRoadsideStops(p)));}

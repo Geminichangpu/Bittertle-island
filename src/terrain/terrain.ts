@@ -1,9 +1,9 @@
-import {gradeSettlement} from './settlement-grade';
+import {gradeSettlement} from './settlement-grade.ts';
 import {villageHeight,villageCuts} from './village.ts';
 import {scenicCoastHeight,scenicHighland,scenicCoastCuts} from './scenic-coast.ts';
 import * as THREE from 'three';
 import {mergeVertices} from 'three/addons/utils/BufferGeometryUtils.js';
-import type {Point,Terrain} from '../data/model';
+import type {Point,Terrain} from '../data/model.ts';
 import {feihuaMountainHeight,feihuaMountainCuts} from './feihua-mountain.ts';
 export function inside(p:Point,poly:Point[]){let yes=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a[1]>p[1])!==(b[1]>p[1])&&p[0]<(b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1])+a[0])yes=!yes;}return yes;}
 export function distance(p:Point,poly:Point[]){return Math.min(...poly.map((a,i)=>{const b=poly[(i+1)%poly.length],dx=b[0]-a[0],dz=b[1]-a[1],t=Math.max(0,Math.min(1,((p[0]-a[0])*dx+(p[1]-a[1])*dz)/(dx*dx+dz*dz)));return Math.hypot(p[0]-a[0]-t*dx,p[1]-a[1]-t*dz);}));}

@@ -1,8 +1,8 @@
-import {makeNaturalCave} from './natural-cave';
+import {makeNaturalCave} from './natural-cave.ts';
 import * as T from 'three';
-import {Builder,type Cache} from './shrine';
-import {slateRoof,crate} from './details';
-import type {IslandObject} from '../data/model';
+import {Builder,type Cache} from './shrine.ts';
+import {slateRoof,crate} from './details.ts';
+import type {IslandObject} from '../data/model.ts';
 
 /** Small editable outdoor landmarks; the cave is an open, constructed rock tunnel. */
 export function makeTownMesh(o:IslandObject,cache:Cache){
