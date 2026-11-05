@@ -42,7 +42,7 @@ export function addVegetationTrial(root:T.Group,p:Project,surface:TerrainSurface
    source.updateMatrixWorld(true);const box=new T.Box3().setFromObject(source),size=box.getSize(new T.Vector3()),center=box.getCenter(new T.Vector3());if(!size.y)return;
    const norm=new T.Matrix4().makeScale(height/size.y,height/size.y,height/size.y).multiply(new T.Matrix4().makeTranslation(-center.x,-box.min.y,-center.z));
    const chunks=new Map<string,Placement[]>();for(const q of places){const k=Math.floor(q.x/64)+','+Math.floor(q.z/64),a=chunks.get(k)||[];a.push(q);chunks.set(k,a);}
-   source.traverse(n=>{if(!(n instanceof T.Mesh))return;for(const places of chunks.values()){const mesh=new T.InstancedMesh(n.geometry,n.material,places.length);mesh.castShadow=false;mesh.receiveShadow=true;mesh.userData.noCollision=true;
+   source.traverse(n=>{if(!(n instanceof T.Mesh))return;for(const places of chunks.values()){const mesh=new T.InstancedMesh(n.geometry,n.material,places.length);mesh.castShadow=false;mesh.receiveShadow=true;mesh.userData.noCollision=true;mesh.userData.walkDetailRange=height>1?180:75;
     places.forEach((q,i)=>{const matrix=new T.Matrix4().compose(new T.Vector3(q.x,q.y,q.z),new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),q.angle),new T.Vector3(q.scale,q.scale,q.scale)).multiply(norm).multiply(n.matrixWorld);mesh.setMatrixAt(i,matrix);});mesh.computeBoundingSphere();group.add(mesh);}
    });
   };

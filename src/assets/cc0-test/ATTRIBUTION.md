@@ -601,3 +601,103 @@ Three.js GLTFLoader 实际读取：通过；网格 2。未做场景外观或性�
 - Source: [MakeHuman dress01](https://static.makehumancommunity.org/assets/assetpacks/dress01.html), author MargaretToigo, CC0 1.0 Universal.
 - Models: `toigo_halter_dress_with_fluted_skirt`, `toigo_dress_with_tiered_skirt`, `toigo_camisole_dress_with_full_skirt`, and `toigo_strapless_ruffle_top_dress`.
 - Modifications: converted from the supplied OBJ, arranged as hanging dresses, optimised and recoloured with satin materials. Source patterns were not used.
+
+## Kenney Watercraft Kit — 码头船只
+
+作者：Kenney；来源：https://kenney.nl/assets/watercraft-kit
+许可：CC0 1.0 Universal，https://creativecommons.org/publicdomain/zero/1.0/
+使用：boat-row-small、boat-fishing-small；从 GLB 转出并嵌入原贴图，场景内调整位置、比例和朝向。
+下载镜像：https://github.com/shorepine/kenney/tree/main/3d/watercraft
+
+## 项目制作的模型
+
+云、灌木、书籍、赫卡忒的地图、地球仪和收藏盘、多莉的棋盘、拼图和魔方、农作物、羊、儿童滑梯、花坛植物与别墅小桌为本项目制作，没有使用第三方模型。赫伯衣柜礼服的第三方原型及修改说明见上方 Hebe wardrobe dresses。
+
+## 室内与自然环境贴图来源
+
+下列素材来自 Poly Haven 或 ambientCG，许可为 CC0 1.0。部分贴图经缩放、压缩或调色后用于项目。
+- Paper001 — ambientCG: https://ambientcg.com/a/Paper001
+- PavingStones036 — ambientCG: https://ambientcg.com/view?id=PavingStones036
+- Tatami002 — ambientCG: https://ambientcg.com/a/Tatami002
+- dark_rock — Poly Haven: https://polyhaven.com/a/dark_rock
+- dark_wood — Poly Haven: https://polyhaven.com/a/dark_wood
+- fine_grained_wood — Poly Haven: https://polyhaven.com/a/fine_grained_wood
+- gravel_road — Poly Haven: https://polyhaven.com/a/gravel_road
+- grey_plaster — Poly Haven: https://polyhaven.com/a/grey_plaster
+- japanese_cedar_bark — Poly Haven: https://polyhaven.com/a/japanese_cedar_bark
+- leather_white — Poly Haven: https://polyhaven.com/a/leather_white
+- marble_01 — Poly Haven: https://polyhaven.com/a/marble_01
+- rock_boulder_dry — Poly Haven: https://polyhaven.com/a/rock_boulder_dry
+- rough_linen — Poly Haven: https://polyhaven.com/a/rough_linen
+- velour_velvet — Poly Haven: https://polyhaven.com/a/velour_velvet
+- Poly Haven 许可：https://polyhaven.com/license
+- ambientCG 许可：https://docs.ambientcg.com/license/
+
+## 其他网页植被模型及许可
+
+
+Vegetation pilot — source and license
+
+Grass_Common_Tall and Flower_3_Group: Stylized Nature MegaKit Standard by Quaternius, CC0 1.0.
+Source: https://quaternius.itch.io/stylized-nature-megakit
+See MegaKit-LICENSE.txt for the original license file.
+
+EZ-Tree Oak Medium: generated with EZ-Tree 1.1.0 by Daniel Greenheck, MIT license.
+Source: https://github.com/dgreenheck/ez-tree
+The static GLB was exported using Three.js GLTFExporter; its geometry and textures derive from EZ-Tree.
+See EZ-Tree-LICENSE.txt for the full license and copyright notice.
+
+
+MIT License
+
+Copyright (c) 2024 Daniel Greenheck
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+This is the standard FREE version of the Stylized Nature MegaKit, which only contains
+a portion of the models (68/116). You can buy the PRO version which has all the models,
+or the SOURCE version which has all the models and also includes Unity(URP), Unreal Engine and Godot projects
+with the stylized shader already set up.
+
+You can get the other versions from the website https://quaternius.com
+
+-------------------------------------------------------
+License:
+CC0 1.0 Universal (CC0 1.0)
+Public Domain Dedication
+https://creativecommons.org/publicdomain/zero/1.0/
+
+------------------------------------------------------
+Models by @Quaternius
+Consider supporting me on Patreon!
+
+https://www.patreon.com/quaternius
+
+-------------------------------------------------------
+Join the Discord Server:
+https://discord.gg/vJqnRUYRfT
+
+
+### 海岸和山崖贴图
+
+- Marble Cliff 01，作者 Amal Kumar：https://polyhaven.com/a/marble_cliff_01
+- Aerial Grass Rock：https://polyhaven.com/a/aerial_grass_rock
+- Rocky Trail，作者 Amal Kumar：https://polyhaven.com/a/rocky_trail
+- 许可：Poly Haven CC0 1.0，https://polyhaven.com/license 。项目中调整了分辨率和贴图格式。
