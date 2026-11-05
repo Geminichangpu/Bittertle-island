@@ -7,10 +7,10 @@ import type {IslandObject} from '../data/model.ts';
 /** Small editable outdoor landmarks; the cave is an open, constructed rock tunnel. */
 export function makeTownMesh(o:IslandObject,cache:Cache){
  if(o.templateId==='layout_island_cave')return makeNaturalCave(o,cache);
- const b=new Builder(cache),{width:w,depth:d,wallHeight:h,wallColor:wall,roofColor:roof}=o.params,wood='#79583d',stone='#a5a79b',blue='#648faf';
+ const b=new Builder(cache),parkBench=new Builder(cache),parkSlide=new Builder(cache),planting=new Builder(cache),dining=new Builder(cache),{width:w,depth:d,wallHeight:h,wallColor:wall,roofColor:roof}=o.params,wood='#79583d',stone='#a5a79b',blue='#648faf';
  const box=(p:[number,number,number],s:[number,number,number],c:string)=>b.box(p,s,c);
  const roofed=(x:number,z:number,ww:number,dd:number,hh:number)=>{box([x,.25,z],[ww+.4,.5,dd+.4],stone);box([x,hh/2+.5,z],[ww,hh,dd],wall);slateRoof(b,[x,hh+.5,z],ww+1.8,dd+1.8,1.55,roof);};
- const planters=(x:number,z:number)=>{for(let i=0;i<3;i++){box([x+i*.65,.24,z],[.43,.48,.43],'#aa7656');b.ball([x+i*.65,.65,z],[.28,.35,.28],i%2?'#8dad6a':'#b4ba78');}};
+ const planters=(x:number,z:number)=>{for(let i=0;i<3;i++){planting.box([x+i*.65,.24,z],[.43,.48,.43],'#aa7656');planting.ball([x+i*.65,.65,z],[.28,.35,.28],i%2?'#8dad6a':'#b4ba78');}};
  if(o.templateId==='layout_island_house'||o.templateId==='layout_island_restaurant'){
   const shop=o.templateId==='layout_island_restaurant',dd=d*.65,z=-d*.12;roofed(0,z,w,dd,h);
   // Light plaster, deep timber veranda and sliding panels.
@@ -22,13 +22,13 @@ export function makeTownMesh(o:IslandObject,cache:Cache){
   for(let i=0;i<6;i++){const x=(i-2.5)*w*.15;box([x,.08,d*.42],[w*.13,.16,.75],i%2?'#bcbdb1':'#d0ccc0');}
   planters(-w*.36,d*.43);
   for(const x of [-w*.48,w*.48])box([x,.35,d*.32],[.25,.7,d*.34],'#b3b2a6');
-  if(shop){for(let i=0;i<7;i++)box([-w*.45+i*w*.15,3,z+dd*.5+1.8],[w*.14,.12,1.5],i%2?'#7599b7':'#f4eee0');for(const x of [-w*.25,w*.25]){b.cylinder([x,0,d*.42],[x,1,d*.42],.1,wood,8);box([x,1.05,d*.42],[1.6,.15,1.2],'#b18d68');for(const dx of [-.9,.9])box([x+dx,.45,d*.42],[.5,.12,.5],wood);}}
+  if(shop){for(let i=0;i<7;i++)box([-w*.45+i*w*.15,3,z+dd*.5+1.8],[w*.14,.12,1.5],i%2?'#7599b7':'#f4eee0');for(const x of [-w*.25,w*.25]){dining.cylinder([x,0,d*.42],[x,1,d*.42],.1,wood,8);dining.box([x,1.05,d*.42],[1.6,.15,1.2],'#b18d68');for(const dx of [-.9,.9])dining.box([x+dx,.45,d*.42],[.5,.12,.5],wood);}}
  }else if(o.templateId==='layout_island_park'){
   box([0,.06,0],[w,.12,d],'#dbca9d');
   for(const side of [-1,1]){b.beam([-w*.32,.05,side*2.5],[-w*.32,3.4,0],.16,blue);b.beam([w*.12,.05,side*2.5],[w*.12,3.4,0],.16,blue);}b.box([-w*.1,3.4,0],[w*.48,.2,.2],blue);
   for(const x of [-w*.22,0]){for(const dx of [-.4,.4])b.cylinder([x+dx,3.35,0],[x+dx,1.1,0],.025,'#8d9090',5);box([x,1.05,0],[.9,.12,.5],'#c27e59');}
-  for(const x of [w*.24,w*.38])for(const z of [-2,-.4])b.box([x,1.35,z],[.12,2.7,.12],wood);box([w*.31,2.7,-1.2],[w*.2,.18,2.2],'#c2a77b');b.beam([w*.31,2.7,-.3],[w*.31,.25,2.8],1.0,'#e9a868');
-  box([0,.4,-d*.43],[3,.15,.8],wood);for(const x of [-1,1])box([x,.2,-d*.43],[.15,.4,.7],wood);
+  for(const x of [w*.24,w*.38])for(const z of [-2,-.4])parkSlide.box([x,1.35,z],[.12,2.7,.12],wood);parkSlide.box([w*.31,2.7,-1.2],[w*.2,.18,2.2],'#c2a77b');parkSlide.beam([w*.31,2.7,-.3],[w*.31,.25,2.8],1.0,'#e9a868');
+  parkBench.box([0,.4,-d*.43],[3,.15,.8],wood);for(const x of [-1,1])parkBench.box([x,.2,-d*.43],[.15,.4,.7],wood);
   for(let x=-w*.45;x<=w*.45;x+=1.6)for(const z of [-d*.49,d*.49])b.ball([x,.45,z],[.9,.65,.7],'#71945e');
  }else if(o.templateId==='layout_island_station'){
   box([0,.12,0],[w,.24,d],'#d0cbbc');for(const x of [-w*.45,w*.45])for(const z of [-d*.36,d*.36])box([x,1.5,z],[.16,3,.16],'#e8e9e0');slateRoof(b,[0,3,0],w+.8,d+.8,.8,blue);box([0,.65,-d*.25],[w*.7,.15,.65],blue);for(const x of [-w*.3,w*.3])box([x,.34,-d*.25],[.15,.65,.6],'#ece9dd');b.cylinder([w*.6,0,d*.2],[w*.6,3,d*.2],.08,wood,8);box([w*.6,2.8,d*.2],[1,.65,.1],'#eae9dc');box([w*.6,2.95,d*.27],[.85,.22,.04],blue);
@@ -53,5 +53,5 @@ export function makeTownMesh(o:IslandObject,cache:Cache){
   for(let i=0;i<34;i++){const x=-w*.44+(i%9)*w*.11+Math.sin(i*2.4)*.24,z=-d*.43+Math.floor(i/9)*d*.26+Math.cos(i*1.7)*.28,y=6.55+Math.sin(i*2.4)*.25;b.emit('town:cave-leaf',()=>new T.IcosahedronGeometry(1,0),i%3?'#718c55':'#8da66b',[x,y,z],[.85,.28,.72]);}
   for(let i=0;i<10;i++){const x=-w*.45+i*w*.1,z=d*.51; b.cylinder([x,5,z],[x+Math.sin(i)*.22,3.3-(i%3)*.3,z],.045,'#57764b',6);for(let k=0;k<3;k++)b.ball([x+(k%2?.2:-.2),4.6-k*.5,z],[.22,.17,.1],k%2?'#789655':'#688a53');}
  }
- const root=b.finish();root.traverse(n=>{if(n instanceof T.Mesh&&n.geometry.userData.sourceKey==='town:cave-leaf')n.userData.noCollision=true;});return root;
+ const root=b.finish();if(o.templateId==='layout_island_restaurant'){const old=dining.finish();old.name='town-original-dining';root.add(old);}if(o.templateId==='layout_island_house'||o.templateId==='layout_island_restaurant'){const pots=planting.finish();pots.name='town-original-planters';root.add(pots);}if(o.templateId==='layout_island_park'){const original=parkBench.finish();original.name='town-park-bench-original';root.add(original);const slide=parkSlide.finish();slide.name='town-original-slide';root.add(slide);}root.traverse(n=>{if(n instanceof T.Mesh&&n.geometry.userData.sourceKey==='town:cave-leaf')n.userData.noCollision=true;});return root;
 }

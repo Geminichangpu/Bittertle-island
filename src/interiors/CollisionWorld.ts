@@ -6,6 +6,10 @@ export class CollisionWorld {
  readonly boxes:T.Box3[]=[];
  private cells=new Map<string,number[]>();
  readonly cellSize=2;
+ removeInside(regions:T.Box3[]){
+  const keep=this.boxes.filter(b=>!regions.some(region=>region.containsBox(b)&&b.max.y>region.min.y+.1));
+  this.boxes.length=0;this.cells.clear();keep.forEach(b=>this.add(b));
+ }
  constructor(room?:InteriorRoom){
   if(!room)return;
   this.addObject(room.root,new Set([room.scenery,room.lid]));

@@ -10,8 +10,8 @@ export function IslandWalkPreview({island,onClose}:{island:SceneController;onClo
  const host=useRef<HTMLDivElement>(null),controller=useRef<IslandWalkController|null>(null);
  const [state,setState]=useState<ExplorationState>({active:false,locked:false,hint:'',target:'',message:''}),[error,setError]=useState('');
  useEffect(()=>{island.setActive(false);const element=host.current!;let c:IslandWalkController|undefined;const lost=(e:Event)=>setError((e as CustomEvent).detail);element.addEventListener('island-walk-error',lost);
-  try{c=new IslandWalkController(element,island,setState,onClose);controller.current=c;if(import.meta.env.DEV)(window as any).__islandWalk=c;}catch(e){setError(String(e));}
-  return()=>{element.removeEventListener('island-walk-error',lost);c?.dispose();controller.current=null;if(import.meta.env.DEV)delete (window as any).__islandWalk;island.setActive(true);};
+  let cancelled=false;void island.prepareAboWalk().then(()=>{if(cancelled)return;try{c=new IslandWalkController(element,island,setState,onClose);controller.current=c;if(import.meta.env.DEV)(window as any).__islandWalk=c;}catch(e){setError(String(e));}}).catch(e=>{if(!cancelled)setError(String(e));});
+  return()=>{cancelled=true;element.removeEventListener('island-walk-error',lost);c?.dispose();controller.current=null;if(import.meta.env.DEV)delete (window as any).__islandWalk;island.setActive(true);};
  },[island]);
  return <section className="interior-preview compound-preview island-walk" role="dialog" aria-modal="true" aria-label="全岛第一人称漫游">
   <div className="interior-canvas compound-canvas" ref={host}/>

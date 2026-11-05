@@ -1,3 +1,8 @@
+import {CustomBooks} from '../models/custom-books';
+import {captureNature,InteriorNature} from '../models/custom-nature';
+import {interiorPlantPlacements} from '../models/interior-plants';
+import {addAboCollisions} from '../models/abo-collision';
+import {applyAssetReplacement,restoreAssetReplacement} from '../models/asset-replacement';
 import {TowerInteriorRefinement} from '../models/TowerInteriorRefinement';
 import {InteractionManager} from '../interactions/InteractionManager';
 import {interiorInteractions} from '../interactions/config';
@@ -21,6 +26,8 @@ import type {IslandObject} from '../data/model';
 import {makeOffice} from './office';
 import {makeBedroom,makeResidence,makeFeihua} from './additional-rooms';
 import type {InteriorRoom,RoomView} from './room-kit';
+import {loadAboTrial,disposeAboTrial,type AboTrialKind} from '../models/abo-test';
+import {InteriorWallMaterials} from './wall-materials';
 
 export class InteriorController{
  interactions!:InteractionManager;
@@ -35,11 +42,14 @@ export class InteriorController{
  scene=new T.Scene();camera=new T.PerspectiveCamera(65,1,.05,150);renderer:T.WebGLRenderer;
  scheduler:DemandRenderer;controls:OrbitControls;room:InteriorRoom;views:RoomView[];private extraLights:T.PointLight[]=[];
  private resize:ResizeObserver;private unsubscribe:()=>void;
+ private aboAbort=new AbortController();private aboTrial?:T.Group;private aboKind?:AboTrialKind;
+ private wallMaterials?:InteriorWallMaterials;private customNature?:InteriorNature;private customBooks?:CustomBooks;
+ private feihuaFixtureCollisions=false;
  private sun=new T.DirectionalLight();private ambient=new T.HemisphereLight();private fill=new T.AmbientLight(0xffffff,.6);private lamp=new T.PointLight('#ffd39a',0,22,2);
  constructor(public host:HTMLElement,office:IslandObject,quality:'low'|'standard',floor:TowerFloor='lobby'){
   this.bedroom=office.id==='base_bedroom';
   this.renderer=new T.WebGLRenderer({antialias:true,powerPreference:quality==='low'?'low-power':'high-performance'});this.renderer.setPixelRatio(Math.min(devicePixelRatio,quality==='low'?1:1.5));this.renderer.outputColorSpace=T.SRGBColorSpace;this.renderer.toneMapping=T.ACESFilmicToneMapping;this.renderer.shadowMap.enabled=true;this.renderer.shadowMap.type=T.PCFShadowMap;this.renderer.shadowMap.autoUpdate=false;
-  this.room=office.templateId==='landmark_liuli'?makeTowerInterior(floor):office.id==='base_bedroom'?makeBedroom(office):office.id==='shrine_residence'?makeResidence(office):office.id==='landmark_feihua'?makeFeihua(office):makeOffice(office);this.views=this.room.views||[{id:'reference',label:'参考视角',position:[3.8,3.25,5.3],target:[-.6,2.15,-2.52]},{id:'desk',label:'桌面近景',position:[2.7,2.8,3.3],target:[-.6,2.15,-2.52]},{id:'overview',label:'剖面总览',position:[11,12,14],target:[-.6,2.15,-2.52],cutaway:true}];if(!this.room.views){const {w,h,d}=this.room.dimensions;this.views=this.views.map(v=>({...v,position:[v.position[0]*w/9,v.position[1]*h/5,v.position[2]*d/12],target:[v.target[0],h*.43,-d*.21]}));}expandRoomSpace(this.room,office.id,floor);refineInterior(this.room);this.room.root.visible=false;this.scene.add(this.room.root,this.sun,this.sun.target,this.ambient,this.fill,this.lamp);host.append(this.renderer.domElement);
+  this.room=office.templateId==='landmark_liuli'?makeTowerInterior(floor):office.id==='base_bedroom'?makeBedroom(office):office.id==='shrine_residence'?makeResidence(office):office.id==='landmark_feihua'?makeFeihua(office):makeOffice(office);this.views=this.room.views||[{id:'reference',label:'参考视角',position:[3.8,3.25,5.3],target:[-.6,2.15,-2.52]},{id:'desk',label:'桌面近景',position:[2.7,2.8,3.3],target:[-.6,2.15,-2.52]},{id:'overview',label:'剖面总览',position:[11,12,14],target:[-.6,2.15,-2.52],cutaway:true}];if(!this.room.views){const {w,h,d}=this.room.dimensions;this.views=this.views.map(v=>({...v,position:[v.position[0]*w/9,v.position[1]*h/5,v.position[2]*d/12],target:[v.target[0],h*.43,-d*.21]}));}const authoredPlants=interiorPlantPlacements(this.room.root,office.id,floor),authoredNature=captureNature(this.room);expandRoomSpace(this.room,office.id,floor);refineInterior(this.room);this.room.root.visible=false;this.scene.add(this.room.root,this.sun,this.sun.target,this.ambient,this.fill,this.lamp);host.append(this.renderer.domElement);
   this.sun.position.set(...(office.id==='base_bedroom'?[3,9,-15]:office.id==='shrine_residence'?[-12,9,15]:[-12,9,3]) as [number,number,number]);this.sun.castShadow=true;this.sun.shadow.mapSize.setScalar(quality==='low'?1024:2048);Object.assign(this.sun.shadow.camera,{left:-10,right:10,top:10,bottom:-10,near:.1,far:40});this.sun.shadow.bias=-.0003;this.sun.shadow.normalBias=.025;this.lamp.position.set(0,this.room.dimensions.h-.8,0);if(office.id==='landmark_feihua'){for(const at of [[-1,5.5,1],[-5.5,12,0],[4,12,6.5]]){const light=new T.PointLight('#ffd39a',0,24,2);light.position.fromArray(at).multiply(this.room.root.scale);this.scene.add(light);this.extraLights.push(light);}this.lamp.intensity=0;const radius=Math.max(this.room.dimensions.w,this.room.dimensions.d);Object.assign(this.sun.shadow.camera,{left:-radius,right:radius,top:radius,bottom:-radius,far:80});this.sun.position.set(-25,32,18);}
   if(office.templateId==='landmark_liuli'){
    this.camera.far=300;this.camera.updateProjectionMatrix();this.sun.position.set(-25,30,25);Object.assign(this.sun.shadow.camera,{left:-26,right:26,top:26,bottom:-26,far:100});
@@ -51,24 +61,42 @@ export class InteriorController{
    const taskLight=new T.PointLight('#ffe2b4',0,9,2);taskLight.position.set(-5.68,1.92,-1.074).multiply(this.room.root.scale);this.scene.add(taskLight);this.extraLights.push(taskLight);
   }
   this.scheduler=new DemandRenderer(()=>{this.exploration?.update(performance.now());this.interactions?.update(performance.now());this.syncRefinedLighting();this.renderer.render(this.scene,this.camera);host.dataset.frames=String(this.scheduler.frames+1);if(this.exploration?.needsFrame||this.interactions?.animating)this.scheduler.requestRender();});
+  const wallKind=office.templateId==='landmark_liuli'?'tower':office.id==='base_office'?'wood-office':office.id==='base_bedroom'?'wood-bedroom':office.id==='shrine_residence'||office.id==='landmark_feihua'?'plaster':undefined;
+  if(wallKind)this.wallMaterials=new InteriorWallMaterials(this.room,wallKind,()=>{this.renderer.shadowMap.needsUpdate=true;this.scheduler.requestRender();});
   this.controls=new OrbitControls(this.camera,this.renderer.domElement);this.controls.enableDamping=false;this.controls.enablePan=false;this.controls.minDistance=.8;this.controls.maxDistance=8;this.controls.addEventListener('change',this.scheduler.requestRender);
   if(office.id==='landmark_feihua')openFeihuaDeskAccess(this.room);
   const world=new CollisionWorld(this.room),config=explorationConfig(office.id,floor,this.room);
   this.exploration=new ExplorationController(this.renderer.domElement,this.camera,world,config,this.scheduler.requestRender,state=>{host.dataset.exploration=state.active?'walking':'orbit';host.dispatchEvent(new CustomEvent('exploration-state',{detail:state}));},point=>host.dispatchEvent(new CustomEvent('exploration-action',{detail:point})),()=>this.stopExploration());
   this.interactions=new InteractionManager(this.renderer.domElement,this.camera,this.scene,host,this.scheduler.requestRender,()=>!!this.exploration?.active,()=>{this.renderer.shadowMap.needsUpdate=true;},[{root:this.room.root,namespace:office.id+':'+floor,specs:interiorInteractions(office.id,floor)}],on=>{this.lamp.intensity=on?(useEnvironment.getState().mode==='day'?18:32):0;this.room.lampMaterial.emissiveIntensity=on?2:0;});
   this.resize=new ResizeObserver(()=>this.resizeViewport());this.resize.observe(host);document.addEventListener('visibilitychange',this.visibility);this.renderer.domElement.addEventListener('webglcontextlost',this.lost);
+  this.customBooks=new CustomBooks(this.room,()=>{this.renderer.shadowMap.needsUpdate=true;this.scheduler.requestRender();});
+  this.customNature=new InteriorNature(this.room,authoredNature,()=>{this.renderer.shadowMap.needsUpdate=true;this.scheduler.requestRender();});
   this.unsubscribe=useEnvironment.subscribe(()=>this.applyEnvironment());this.applyEnvironment();this.view('reference');this.resizeViewport();
   if(this.bedroom){this.bedroomRefinement=new BedroomInteriorRefinement(this.room,()=>this.rebindRefinedInteractions('base_bedroom'));this.bedroomRefinement.start();}
   if(office.id==='base_office'){this.officeRefinement=new OfficeInteriorRefinement(this.room,()=>this.rebindRefinedInteractions('base_office'));this.officeRefinement.start();}
   if(office.id==='landmark_feihua'){this.feihuaInteriorRefinement=new FeihuaInteriorRefinement(this.room,()=>this.rebindRefinedInteractions('landmark_feihua'));this.feihuaInteriorRefinement.start();}
   if(office.templateId==='landmark_liuli'){this.towerRefinement=new TowerInteriorRefinement(this.room,floor,()=>this.rebindRefinedInteractions(office.id,floor));this.towerRefinement.start();}
+  this.aboKind=office.templateId==='landmark_liuli'?floor:office.id==='base_office'?'office':office.id==='base_bedroom'?'bedroom':office.id==='shrine_residence'?'residence':office.id==='landmark_feihua'?'feihua':undefined;
+  if(this.aboKind)void loadAboTrial(this.aboKind,this.aboAbort.signal,authoredPlants).then(group=>{if(this.aboAbort.signal.aborted){disposeAboTrial(group);return;}if(!group.children.length)return;this.aboTrial=group;this.room.root.add(group);this.applyAboReplacement();this.room.root.updateWorldMatrix(true,true);const cuts=group.children.flatMap(n=>!n.userData.assetCutMaterial&&n.userData.assetCut?[new T.Box3(new T.Vector3(...n.userData.assetCut.slice(0,3)),new T.Vector3(...n.userData.assetCut.slice(3,6))).applyMatrix4(this.room.root.matrixWorld)]:[]);this.exploration.world.removeInside(cuts);addAboCollisions(this.exploration.world,group);if(office.templateId==='landmark_liuli'&&floor==='hecate'&&this.towerRefinement?.status==='ready')this.rebindRefinedInteractions(office.id,floor);this.renderer.shadowMap.needsUpdate=true;this.scheduler.requestRender();}).catch(error=>{if(!this.aboAbort.signal.aborted)console.warn('室内模型加载失败',error);});
   if(office.id==='shrine_residence'){this.residenceRefinement=new ResidenceInteriorRefinement(this.room,()=>this.rebindRefinedInteractions('shrine_residence'));this.residenceRefinement.start();}
  }
  private syncRefinedLighting(){for(const refinement of [this.bedroomRefinement,this.officeRefinement,this.feihuaInteriorRefinement,this.residenceRefinement,this.towerRefinement])refinement?.syncLighting();}
+ private applyAboReplacement(){if(!this.aboTrial)return;applyAssetReplacement(this.room.root,this.aboTrial);const loaded=(id:string)=>this.aboTrial!.children.some(n=>String(n.userData.aboAsset).includes(id)),slot=(id:string)=>this.aboTrial!.children.some(n=>n.userData.aboSlot===id);const prefixes:string[]=[];
+  if(this.aboKind==='office'){if(loaded('B07B83KVGK'))prefixes.push('15_木椅_','16_木椅_');if(slot('officeFlowers'))prefixes.push('42_桌上粉色花束_陶盆');if(slot('officeShelf'))prefixes.push('48_书柜绿植_陶盆');}
+  if(this.aboKind==='bedroom'&&loaded('B07B83KVGK'))prefixes.push('21_木椅_');
+  if(this.aboKind==='residence'){if(slot('residenceShelf'))prefixes.push('43_柜顶小花盆_陶盆');if(slot('residenceCorner'))prefixes.push('44_墙角绿植_陶盆');}if(this.aboKind==='feihua'&&loaded('B07B8VJBCL'))prefixes.push('50_壁龛红釉瓶');
+  this.room.root.traverse(node=>{if(node instanceof T.Mesh&&prefixes.some(prefix=>node.name.startsWith(prefix)))node.visible=false;});}
  private rebindRefinedInteractions(id:string,floor:TowerFloor='lobby'){
   const models=[this.bedroomRefinement,this.officeRefinement,this.feihuaInteriorRefinement,this.residenceRefinement,this.towerRefinement].filter(Boolean);
   if(models.some(model=>model?.status==='error')){this.host.dispatchEvent(new CustomEvent('interior-error',{detail:'精修室内加载失败，请返回并重试。'}));return;}
   this.room.root.visible=true;this.host.dispatchEvent(new Event('interior-model-ready'));
+  this.applyAboReplacement();this.customNature?.applyMask();this.customBooks?.apply();
+  if(id==='landmark_feihua'&&!this.feihuaFixtureCollisions){
+   const fixtures=new Map<string,T.Box3>();this.room.root.updateWorldMatrix(true,true);
+   this.room.root.traverse(node=>{if(!(node instanceof T.Mesh))return;const key=node.name.match(/^(31_外廊柱旁地灯_\d+|34_办公室入口地灯_\d+)_/)?.[1];if(!key)return;const bounds=fixtures.get(key)||new T.Box3();bounds.union(new T.Box3().setFromObject(node));fixtures.set(key,bounds);});
+   fixtures.forEach(bounds=>this.exploration.world.add(bounds));this.feihuaFixtureCollisions=true;
+  }
+  this.wallMaterials?.apply();
   const muted=this.interactions.audio.muted;this.interactions.dispose();
   this.interactions=new InteractionManager(this.renderer.domElement,this.camera,this.scene,this.host,this.scheduler.requestRender,()=>!!this.exploration?.active,()=>{this.renderer.shadowMap.needsUpdate=true;},[{root:this.room.root,namespace:id+':'+floor,specs:interiorInteractions(id,floor)}],on=>{this.lamp.intensity=on?(useEnvironment.getState().mode==='day'?18:32):0;this.room.lampMaterial.emissiveIntensity=on?2:0;});
   this.interactions.setMuted(muted);this.applyEnvironment();
@@ -84,19 +112,19 @@ export class InteriorController{
   }
   this.interactions?.environment();this.syncRefinedLighting();this.renderer.toneMappingExposure=p.exposure;this.renderer.shadowMap.needsUpdate=true;this.scheduler.setFrameLimit(fps);this.scheduler.requestRender();}
  startExploration(){
-  this.orbitView=this.host.dataset.view||'reference';this.room.walls.visible=true;this.room.lid.visible=true;if(this.room.scenery)this.room.scenery.visible=true;this.renderer.clippingPlanes=[];
+  this.orbitView=this.host.dataset.view||'reference';this.room.walls.visible=true;this.room.lid.visible=true;if(this.room.scenery)this.room.scenery.visible=true;this.customNature?.setVisible(true);this.renderer.clippingPlanes=[];
   this.controls.enabled=false;const ok=this.exploration.start();if(ok)void this.exploration.capturePointer();else this.controls.enabled=true;this.renderer.shadowMap.needsUpdate=true;
  }
  stopExploration(){this.exploration.stop();this.controls.enabled=true;this.view(this.orbitView);}
  view(name:string){
   if(this.exploration?.active){this.exploration.stop();this.controls.enabled=true;}
 
-  const view=this.views.find(v=>v.id===name)||this.views[0],cutaway=!!view.cutaway;this.room.walls.visible=!cutaway;this.room.lid.visible=!cutaway;if(this.room.scenery)this.room.scenery.visible=!cutaway;
+  const view=this.views.find(v=>v.id===name)||this.views[0],cutaway=!!view.cutaway;this.room.walls.visible=!cutaway;this.room.lid.visible=!cutaway;if(this.room.scenery)this.room.scenery.visible=!cutaway;this.customNature?.setVisible(!cutaway);
   this.renderer.clippingPlanes=view.clipHeight===undefined?[]:[new T.Plane(new T.Vector3(0,-1,0),view.clipHeight)];this.controls.maxDistance=Math.max(this.room.dimensions.w,this.room.dimensions.d)*4;this.camera.position.fromArray(view.position);this.controls.target.fromArray(view.target);this.controls.update();this.host.dataset.view=view.id;this.renderer.shadowMap.needsUpdate=true;this.scheduler.requestRender();
  }
  resizeViewport(){const w=this.host.clientWidth,h=this.host.clientHeight;if(!w||!h)return;this.renderer.setSize(w,h);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();this.scheduler.requestRender();}
  capture(){this.scheduler.renderNow();return this.renderer.domElement.toDataURL('image/png');}
- dispose(){this.interactions.dispose();this.bedroomRefinement?.dispose();this.officeRefinement?.dispose();this.feihuaInteriorRefinement?.dispose();this.residenceRefinement?.dispose();this.towerRefinement?.dispose();this.exploration.dispose();this.unsubscribe();this.resize.disconnect();document.removeEventListener('visibilitychange',this.visibility);this.renderer.domElement.removeEventListener('webglcontextlost',this.lost);this.controls.dispose();this.scheduler.dispose();this.room.dispose();this.sun.shadow.map?.dispose();this.renderer.dispose();this.renderer.forceContextLoss();this.renderer.domElement.remove();}
+ dispose(){this.customBooks?.dispose();this.customNature?.dispose();restoreAssetReplacement(this.room.root);this.aboAbort.abort();if(this.aboTrial)disposeAboTrial(this.aboTrial);this.wallMaterials?.dispose();this.interactions.dispose();this.bedroomRefinement?.dispose();this.officeRefinement?.dispose();this.feihuaInteriorRefinement?.dispose();this.residenceRefinement?.dispose();this.towerRefinement?.dispose();this.exploration.dispose();this.unsubscribe();this.resize.disconnect();document.removeEventListener('visibilitychange',this.visibility);this.renderer.domElement.removeEventListener('webglcontextlost',this.lost);this.controls.dispose();this.scheduler.dispose();this.room.dispose();this.sun.shadow.map?.dispose();this.renderer.dispose();this.renderer.forceContextLoss();this.renderer.domElement.remove();}
 }
 
 

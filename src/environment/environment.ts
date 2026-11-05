@@ -1,5 +1,8 @@
+import {addFarmSheep} from '../models/farm-models';
+import {natureGeometries} from '../models/custom-nature';
 import {addLocalLife} from './local-life';
 import {addVegetationTrial,disposeVegetationTrial} from './vegetation-trial';
+import {addAboBeach,disposeAboBeach} from './abo-beach';
 import {addNorthBeach,inNorthBeach} from './north-beach';
 import {addFarmExtensions} from './farm-extensions';
 import {makeIslandGrass} from './island-grass';
@@ -123,7 +126,7 @@ export function makeEnvironment(p:Project,terrainGeometry:T.BufferGeometry,onRea
    }
    for(let j=0;j<4;j++){const a=j*2.4+attempt,rr=j===0?0:r*.6;leaf([x+Math.cos(a)*rr,y+h*.74+(j%2)*r*.4,z+Math.sin(a)*rr],[r*(.8+rnd()*.25),r*.8,r],j%2?color:palette[(Math.floor(rnd()*palette.length))]);}
    if(!suppress)globalTreeRoots.push([x,y,z]);metrics.trees++;
-  }else if(metrics.bushes<1900){for(let j=0;j<3;j++)leaf([x+(rnd()-.5)*r,y+.35+r*.28,z+(rnd()-.5)*r],[r*.65,r*.45,r*.65],color);metrics.bushes++;}
+  }else if(metrics.bushes<1900){for(let j=0;j<3;j++){const xx=x+(rnd()-.5)*r,zz=z+(rnd()-.5)*r;if(j===0)b.emit('env:bush:'+((Math.imul(attempt+71,2654435761)>>>0)%3),crownGeometry,color,[xx,y+.35+r*.28,zz],[r*.9,r*.62,r*.9],new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),(attempt*2.39996)%(Math.PI*2)));}metrics.bushes++;}
  }
  suppress=false;
  for(let attempt=0;attempt<6000;attempt++){
@@ -148,17 +151,23 @@ export function makeEnvironment(p:Project,terrainGeometry:T.BufferGeometry,onRea
 
  const lifeBuilder=new Builder({geo,mat,sign:mat});root.userData.localLife=addLocalLife(p,lifeBuilder,surface,routes,obstacles);const lifeGroup=lifeBuilder.finish();lifeGroup.name='local-life-details';lifeGroup.userData.noCollision=true;lifeGroup.traverse(n=>{if(n instanceof T.Mesh&&String(n.geometry.userData.sourceKey||'').startsWith('life:cave-'))n.userData.naturePilotVegetation=true;});root.add(lifeGroup);addCentralCampus(p,b);const approach=campusApproach(p,surface,nature.material('paving','#d6e0e5'));if(approach)root.add(approach);
  const crowded=(x:number,z:number,r:number)=>{const ix=Math.floor(x/5),iz=Math.floor(z/5),n=Math.ceil(r/5);for(let xx=ix-n;xx<=ix+n;xx++)for(let zz=iz-n;zz<=iz+n;zz++)for(const q of occupied.get(xx+','+zz)||[])if(Math.hypot(q[0]-x,q[1]-z)<r)return true;return false;};
- const farmBuilder=new Builder({geo,mat,sign:mat});root.userData.farmExtensions=addFarmExtensions(p,farmBuilder,surface,routes,obstacles,crowded);const farmGroup=farmBuilder.finish();farmGroup.userData.farmExtension=true;root.userData.farmExtensionGroup=farmGroup;root.add(farmGroup);
- root.userData.northBeach=addNorthBeach(p,b,surface,routes,obstacles);
+ const farmBuilder=new Builder({geo,mat,sign:mat}),sheepBuilder=new Builder({geo,mat,sign:mat});root.userData.farmExtensions=addFarmExtensions(p,farmBuilder,sheepBuilder,surface,routes,obstacles,crowded);const farmGroup=farmBuilder.finish(),oldSheep=sheepBuilder.finish();oldSheep.name='farm-original-sheep';farmGroup.add(oldSheep);farmGroup.userData.farmExtension=true;root.userData.farmExtensionGroup=farmGroup;root.add(farmGroup);
+ const farmObject=p.objects.find(o=>o.id==='scenic_farm');if(farmObject){const transform=(o:{position:number[];rotation:number[];scale:number[]})=>new T.Matrix4().compose(new T.Vector3().fromArray(o.position),new T.Quaternion().setFromEuler(new T.Euler(...o.rotation as [number,number,number])),new T.Vector3().fromArray(o.scale));const m=transform(farmObject),parent=p.groups?.find(g=>g.id===farmObject.parentId);if(parent)m.premultiply(transform(parent));const ctl=new AbortController(),previous=natureDisposers.get(root);natureDisposers.set(root,()=>{ctl.abort();previous?.();});root.userData.farmSheepPromise=addFarmSheep(farmGroup,oldSheep,m,ctl.signal).then(()=>onReady()).catch(e=>{if(!ctl.signal.aborted)console.warn('农田羊模型加载失败',e);});}
+
+ const beachBuilder=new Builder({geo,mat,sign:mat});const beach=addNorthBeach(p,b,beachBuilder,surface,routes,obstacles);const beachFallback=beachBuilder.finish();beachFallback.name='beach-original-loungers';root.add(beachFallback);root.userData.northBeach=beach.points;addAboBeach(root,beachFallback,beach.loungers,onReady);
  const instances=b.finish();instances.traverse(n=>{n.userData.globalNatureInstances=true;});instances.name='植被、岩石与静态海浪';root.add(instances);
  const pilot=makePilotVegetation(p,surface,routes,obstacles,nature);root.add(pilot.root);root.userData.pilotRoots=pilot.roots;root.userData.pilotMetrics=pilot.root.userData.metrics;
  root.add(makeIslandGrass(p,surface,routes,obstacles));addVegetationTrial(root,p,surface,routes,obstacles,pilot.roots,globalTreeRoots,onReady);
+ const natureAbort=new AbortController(),previousDispose=natureDisposers.get(root);let customBushes:T.BufferGeometry[]=[];
+ natureDisposers.set(root,()=>{natureAbort.abort();customBushes.forEach(g=>g.dispose());previousDispose?.();});
+ root.userData.customBushesPromise=natureGeometries('shrub',natureAbort.signal).then(gs=>{if(natureAbort.signal.aborted){gs.forEach(g=>g.dispose());return;}customBushes=gs;root.traverse(n=>{if(!(n instanceof T.Mesh))return;const key=String(n.geometry.userData.sourceKey||'');if(key.startsWith('env:bush:'))n.geometry=gs[Number(key.slice(-1))];else if(key==='life:shrub')n.geometry=gs[1];});root.userData.customBushesReady=true;onReady();}).catch(e=>{if(!natureAbort.signal.aborted)console.warn('室外灌木加载失败',e);});
  root.userData.routes=routes;root.userData.metrics=metrics;
  root.userData.environmentRevision=p.environment.revision;
  return root;
 }
 
 export function disposeEnvironment(root:T.Group){
+ disposeAboBeach(root);
  disposeVegetationTrial(root);
  natureDisposers.get(root)?.();natureDisposers.delete(root);natureLibraries.delete(root);
  const attached=root.userData.farmExtensionGroup as T.Object3D|undefined;if(attached&&attached.parent!==root)root.add(attached);

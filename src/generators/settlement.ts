@@ -10,7 +10,7 @@ const wood='#785333',dark='#493728',paper='#eee3cd',roof='#485460',gold='#c3a35c
 function repairRoofNormals(geometry:T.BufferGeometry){const normal=geometry.getAttribute('normal');for(let i=0;i<normal.count;i++){if(Math.hypot(normal.getX(i),normal.getY(i),normal.getZ(i))>.01)continue;const start=i-i%4;for(const offset of [0,3,1,2]){const j=start+offset,x=normal.getX(j),y=normal.getY(j),z=normal.getZ(j);if(Math.hypot(x,y,z)>.01){normal.setXYZ(i,x,y,z);break;}}}normal.needsUpdate=true;}
 
 export function makeSettlement(o:IslandObject,cache:Cache){
- const b=new Builder(cache);
+ const b=new Builder(cache),crop=new Builder(cache);
  const leaf=(p:V,s:V,color='#799757')=>b.emit('settlement:leaf',crownGeometry,color,p,s);
  const rock=(p:V,s:V)=>b.emit('settlement:rock',()=>boulderGeometry(2),stone,p,s);
  function tree(x:number,z:number,h:number){
@@ -70,11 +70,11 @@ export function makeSettlement(o:IslandObject,cache:Cache){
     const rz=z-3+row*1.4;b.box([x,.37,rz],[9,.2,.34],'#94734f');
     for(let j=0;j<8;j++){
      const xx=x-4+j*1.12,yy=.52+(j%3)*.05;
-     b.emit('settlement:sprig',leafSprigGeometry,'#699456',[xx,yy,rz],[1.3,1.7,1.3]);
-     if(x<0&&z<0){for(let k=0;k<3;k++)b.ball([xx+(k-1)*.16,yy+.48+k*.13,rz],[.15,.28,.15],'#b6d58c');}
-     else if(x>0&&z<0){b.ball([xx,yy+.28,rz],[.38,.36,.36],j%2?'#b989d1':'#e8ad71');b.cylinder([xx,yy+.55,rz],[xx+.05,yy+.8,rz],.04,'#62764a',5);}
-     else if(x<0){b.emit('settlement:crystal',()=>new T.ConeGeometry(1,1,6),'#82c7ce',[xx,yy+.55,rz],[.25,.9,.25]);b.ball([xx,yy+.25,rz],[.42,.2,.42],'#7b9fb5');}
-     else {b.cylinder([xx,yy,rz],[xx,yy+.5,rz],.06,'#d8d6b1',6);b.ball([xx,yy+.55,rz],[.36,.16,.33],j%2?'#b4c8e3':'#dfb0cb');}
+     crop.emit('settlement:sprig',leafSprigGeometry,'#699456',[xx,yy,rz],[1.3,1.7,1.3]);
+     if(x<0&&z<0){for(let k=0;k<3;k++)crop.ball([xx+(k-1)*.16,yy+.48+k*.13,rz],[.15,.28,.15],'#b6d58c');}
+     else if(x>0&&z<0){crop.ball([xx,yy+.28,rz],[.38,.36,.36],j%2?'#b989d1':'#e8ad71');crop.cylinder([xx,yy+.55,rz],[xx+.05,yy+.8,rz],.04,'#62764a',5);}
+     else if(x<0){crop.emit('settlement:crystal',()=>new T.ConeGeometry(1,1,6),'#82c7ce',[xx,yy+.55,rz],[.25,.9,.25]);crop.ball([xx,yy+.25,rz],[.42,.2,.42],'#7b9fb5');}
+     else {crop.cylinder([xx,yy,rz],[xx,yy+.5,rz],.06,'#d8d6b1',6);crop.ball([xx,yy+.55,rz],[.36,.16,.33],j%2?'#b4c8e3':'#dfb0cb');}
     }
    }
   }
@@ -88,5 +88,5 @@ export function makeSettlement(o:IslandObject,cache:Cache){
   }
   for(const x of [-3.3,3.3])b.box([x,1.1,16],[.22,2.2,.22],wood);b.beam([-3.3,2.2,16],[3.3,2.2,16],.2,wood);
  }
- const root=b.finish();root.traverse(n=>{if(!(n instanceof T.Mesh))return;const key=n.geometry.userData.sourceKey||'';if(key==='settlement:rock')n.userData.natureKind='rock';if(key==='settlement:leaf'||key==='settlement:sprig'){n.userData.natureKind='leaf';(n.material as T.Material).side=T.DoubleSide;}n.userData.noCollision=true;});return root;
+ const root=b.finish();if(o.templateId==='scenic_farm'){const original=crop.finish();original.name='farm-original-crops';root.add(original);}root.traverse(n=>{if(!(n instanceof T.Mesh))return;const key=n.geometry.userData.sourceKey||'';if(key==='settlement:rock')n.userData.natureKind='rock';if(key==='settlement:leaf'||key==='settlement:sprig'){n.userData.natureKind='leaf';(n.material as T.Material).side=T.DoubleSide;}n.userData.noCollision=true;});return root;
 }

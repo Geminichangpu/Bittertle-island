@@ -3,6 +3,8 @@ import {TIME_PRESETS,type TimeMode} from '../environment/time-presets';
 import {useEffect,useRef,useState} from 'react';
 import waterLicense from '../vendor/ultra-water/LICENSE?raw';
 import waterNotices from '../vendor/ultra-water/THIRD_PARTY_NOTICES.md?raw';
+import aboAttribution from '../assets/abo-test/ATTRIBUTION.md?raw';
+import cc0Attribution from '../assets/cc0-test/ATTRIBUTION.md?raw';
 
 export function EnvironmentControls(){const {mode,fps,setMode,setFps,waterEffect,setWaterEffect,waterReflection,setWaterReflection,labelsVisible,setLabelsVisible}=useEnvironment();const [legal,setLegal]=useState<'license'|'notices'|null>(null),dialog=useRef<HTMLDialogElement>(null);useEffect(()=>{if(legal&&dialog.current&&!dialog.current.open)dialog.current.showModal();},[legal]);return <div className="environment-controls" aria-label="环境氛围">
  <div className="time-buttons" role="group" aria-label="时间档位">{(Object.keys(TIME_PRESETS) as TimeMode[]).map(key=><button key={key} aria-pressed={key===mode} className={key===mode?'active':''} onClick={()=>setMode(key)}>{TIME_PRESETS[key].label}</button>)}</div>
@@ -13,7 +15,7 @@ export function EnvironmentControls(){const {mode,fps,setMode,setFps,waterEffect
  <button type="button" onClick={()=>setLegal('license')}>海浪许可</button><button type="button" onClick={()=>setLegal('notices')}>第三方声明</button>
  <dialog ref={dialog} aria-labelledby="water-legal-title" onClose={()=>setLegal(null)} style={{width:'min(720px, 90vw)',maxHeight:'80vh',overflow:'auto',padding:'20px',borderRadius:'12px'}}>
   <h2 id="water-legal-title">{legal==='license'?'海浪许可':'第三方声明'}</h2>
-  <pre style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere',fontFamily:'inherit',textAlign:'left'}}>{legal==='license'?waterLicense:legal==='notices'?waterNotices:''}</pre>
+  <pre style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere',fontFamily:'inherit',textAlign:'left'}}>{legal==='license'?waterLicense:legal==='notices'?waterNotices+'\n\n'+aboAttribution+'\n\n'+cc0Attribution:''}</pre>
   <button type="button" onClick={()=>dialog.current?.close()}>关闭</button>
  </dialog>
  </div>;}

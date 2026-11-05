@@ -6,7 +6,7 @@ import {crownGeometry} from '../environment/nature-geometry.ts';
 type V=[number,number,number];
 /** M2 static structures: closed roofs, joinery, counters, glazing and repeated detail batches. */
 export function makeLayoutBuilding(o:IslandObject,cache:Cache){
- const b=new Builder(cache),{width:w,depth:d,wallHeight:h,wallColor:wall,roofColor:roof}=o.params;
+ const b=new Builder(cache),villaFlowers=new Builder(cache),{width:w,depth:d,wallHeight:h,wallColor:wall,roofColor:roof}=o.params;
  const wood='#705438',stone='#a6a290',red='#b85e45',green='#79994e';
  const disc=(p:V,r:number,height:number,color:string,top=r)=>b.emit('layout:cylinder:'+top/r,()=>new T.CylinderGeometry(top/r,1,1,16),color,p,[r,height,r]);
  const cone=(p:V,r:number,height:number,color:string,sides=8)=>b.emit('layout:cone:'+sides,()=>new T.ConeGeometry(1,1,sides),color,p,[r,height,r]);
@@ -60,7 +60,7 @@ export function makeLayoutBuilding(o:IslandObject,cache:Cache){
   // Estate perimeter keeps an opening in the front for the entrance.
   for(const side of [-1,1]){b.box([side*w/2,.6,0],[.22,1.2,d],'#d5d0bf');b.box([side*w*.34,.6,d/2],[w*.32,1.2,.22],'#d5d0bf');}b.box([0,.6,-d/2],[w,1.2,.22],'#d5d0bf');
   for(let i=0;i<6;i++)b.box([0,.2,d/2-1-i*.75],[2.4,.13,.68],i%2?'#d7d4c7':'#c8c8bc');
-  for(const side of [-1,1]){b.box([side*w*.36,.3,d*.29],[w*.18,.3,2.2],'#735f50');for(let i=0;i<6;i++)b.ball([side*w*.36+(i%3-1)*.7,.65,d*.29+(i<3?-.55:.55)],[.27,.25,.27],i%2?'#e0a8a8':'#f4e4ba');}
+  for(const side of [-1,1]){b.box([side*w*.36,.3,d*.29],[w*.18,.3,2.2],'#735f50');for(let i=0;i<6;i++)villaFlowers.ball([side*w*.36+(i%3-1)*.7,.65,d*.29+(i<3?-.55:.55)],[.27,.25,.27],i%2?'#e0a8a8':'#f4e4ba');}
   b.cylinder([0,.2,-d*.38],[0,.58,-d*.38],1.6,'#c8cabe',20);b.cylinder([0,.59,-d*.38],[0,.64,-d*.38],1.2,'#7bb0b5',20);for(const x of [-w*.34,w*.34]){b.cylinder([x,0,-d*.34],[x,2.6,-d*.34],.15,'#80674a',8);b.ball([x,3,-d*.34],[1.5,1.35,1.5],'#779a70');}
  }else if(o.templateId==='layout_shopping'){
   b.box([0,.25,0],[w+2,.5,d+2],stone);b.box([0,.55,0],[w*.3,.1,d],'#cfb98c');
@@ -125,5 +125,5 @@ export function makeLayoutBuilding(o:IslandObject,cache:Cache){
   for(let k=0;k<6;k++)b.box([-w*.3+k*w*.12,y+.9,d*.32],[.13,1.6,.13],wood);
   for(const yy of [.45,1.55])b.box([0,y+yy,d*.32],[w*.62,.12,.12],wood);
  }
- const root=b.finish();root.traverse(n=>{if(n instanceof T.Mesh&&n.geometry.userData.sourceKey==='treehouse:leaf'){n.userData.natureKind='leaf';n.userData.noCollision=true;}});return root;
+ const root=b.finish();if(o.templateId==='layout_villa'){const old=villaFlowers.finish();old.name='villa-original-flowers';root.add(old);}root.traverse(n=>{if(n instanceof T.Mesh&&n.geometry.userData.sourceKey==='treehouse:leaf'){n.userData.natureKind='leaf';n.userData.noCollision=true;}});return root;
 }

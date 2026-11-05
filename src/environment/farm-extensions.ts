@@ -5,7 +5,7 @@ import type {TerrainSurface} from './surface';
 import type {Obstacle,Route} from './paths';
 
 /** Two compact features sit inside the existing farm's tree ring. */
-export function addFarmExtensions(p:Project,b:Builder,_surface:TerrainSurface,_routes:Route[],_obstacles:Obstacle[],_crowded:(x:number,z:number,r:number)=>boolean){
+export function addFarmExtensions(p:Project,b:Builder,sheep:Builder,_surface:TerrainSurface,_routes:Route[],_obstacles:Obstacle[],_crowded:(x:number,z:number,r:number)=>boolean){
  const farm=p.objects.find(o=>o.id==='scenic_farm');if(!farm)return [];
  const matrix=(o:{position:number[];rotation:number[];scale:number[]})=>new T.Matrix4().compose(new T.Vector3().fromArray(o.position),new T.Quaternion().setFromEuler(new T.Euler(o.rotation[0],o.rotation[1],o.rotation[2])),new T.Vector3().fromArray(o.scale));
  const m=matrix(farm),parent=p.groups?.find(g=>g.id===farm.parentId);if(parent)m.premultiply(matrix(parent));
@@ -22,7 +22,7 @@ export function addFarmExtensions(p:Project,b:Builder,_surface:TerrainSurface,_r
   for(let i=0;i<5;i++)b.box([px-hw,.5,pz-hd+i*hd/2],[.12,1,.12],'#8b6b48');for(const h of [.35,.75])b.box([px-hw,h,pz],[.10,.10,hd*2],'#a8845f');
   // Gate on the inner side faces the central walking space.
   for(const zz of [-hd,-.6,.6,hd])b.box([px+hw,.5,pz+zz],[.12,1,.12],'#8b6b48');for(const h of [.35,.75])for(const side of [-1,1])b.box([px+hw,h,pz+side*(hd+.6)/2],[.1,.1,hd-.6],'#a8845f');
-  for(let i=0;i<3;i++){const xx=px-1.2+i*1.1,zz=pz+(i%2?.45:-.45);b.ball([xx,.58,zz],[.43,.38,.3],'#f0eadc');b.ball([xx+.35,.62,zz],[.18,.18,.16],'#c9bea9');for(const dx of [-.22,.22])for(const dz of [-.15,.15])b.box([xx+dx,.16,zz+dz],[.08,.3,.08],'#867968');}
+  sheep.transformed(m,()=>{for(let i=0;i<3;i++){const xx=px-1.2+i*1.1,zz=pz+(i%2?.45:-.45);sheep.ball([xx,.58,zz],[.43,.38,.3],'#f0eadc');sheep.ball([xx+.35,.62,zz],[.18,.18,.16],'#c9bea9');for(const dx of [-.22,.22])for(const dz of [-.15,.15])sheep.box([xx+dx,.16,zz+dz],[.08,.3,.08],'#867968');}});
  });
  return [{kind:'pond',...new T.Vector3(pond.x,pond.y,pond.z).applyMatrix4(m).toArray().reduce((o,v,i)=>({...o,[['x','y','z'][i]]:v}),{} as {x:number;y:number;z:number})},{kind:'pasture',...new T.Vector3(pasture.x,pasture.y,pasture.z).applyMatrix4(m).toArray().reduce((o,v,i)=>({...o,[['x','y','z'][i]]:v}),{} as {x:number;y:number;z:number})}];
 }

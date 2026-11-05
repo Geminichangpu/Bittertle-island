@@ -16,7 +16,6 @@ export function interiorInteractions(id:string,floor:string):InteractionSpec[]{
  if(id==='base_bedroom')return [
   item('lamp','床旁吊灯',[2,4.2,-1],[.65,.8,.65],'light','switch','房间里的灯光变得柔和。'),
   item('plant','书桌绿植',[-5.43,2.2,-4],[.7,.7,.7],'sway','paper','叶片轻轻摆动，房间安静下来。'),
-  item('books','床边书柜',[.7,1.25,.9],[.85,.7,.7],'slide','paper','随手翻开一本床边读物。',{delta:[.16,0,0]}),
   item('night','窗边的夜色',[3.38,2.85,5.28],[4.4,3.2,.3],'fireflies','sparkle','窗外掠过几点微光，像是小岛在向你道晚安。',{night:true,duration:2200}),
  ];
  if(id==='shrine_residence')return [

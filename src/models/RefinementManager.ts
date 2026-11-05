@@ -1,3 +1,4 @@
+import {natureGeometries} from './custom-nature';
 import * as T from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import type {SceneController} from '../scene/SceneController';
@@ -5,6 +6,8 @@ import {shadowSurfaces} from '../render/lighting';
 import {finishFeihuaMaterial,makeFeihuaJoinery} from './feihua-art';
 import {replaceBakedLeafCrowns} from './foliage-refinement';
 import {maskPilotScenicTrees} from '../environment/nature-pilot';
+
+import {ExteriorWallMaterials} from './exterior-wall-materials';
 
 const urls=import.meta.glob(['../assets/models/*-refined-*.glb','!../assets/models/*-interior-*.glb','!../assets/models/shrine_*-exterior-refined-*.glb','!../assets/models/scenic_sakura-refined-*.glb','../assets/models-optimized/shrine_*-exterior-meshopt-lossless.glb'],{eager:true,query:'?url',import:'default'}) as Record<string,string>;
 const files:Record<string,string>={
@@ -15,14 +18,16 @@ const files:Record<string,string>={
  scenic_cliff:'scenic_cliff-refined-v5',scenic_academy:'scenic_academy-refined-v5',scenic_farm:'scenic_farm-refined-v5'
 };
 const feihua=new Set(['landmark_feihua','feihua_annex','feihua_onsen','feihua_terrace','feihua_bridge']);
-function release(root:T.Object3D){const gs=new Set<T.BufferGeometry>(),ms=new Set<T.Material>(),ts=new Set<T.Texture>();root.traverse(n=>{if(n instanceof T.InstancedMesh)n.dispose();if(n instanceof T.Mesh){gs.add(n.geometry);for(const m of Array.isArray(n.material)?n.material:[n.material])ms.add(m);}});for(const m of ms){for(const v of Object.values(m))if(v instanceof T.Texture)ts.add(v);m.dispose();}gs.forEach(g=>g.dispose());ts.forEach(t=>t.dispose());}
+
+function release(root:T.Object3D){const gs=new Set<T.BufferGeometry>(),ms=new Set<T.Material>(),ts=new Set<T.Texture>();root.traverse(n=>{if(n instanceof T.InstancedMesh)n.dispose();if(n instanceof T.Mesh){gs.add(n.geometry);for(const m of Array.isArray(n.material)?n.material:[n.material])ms.add(m);}});for(const m of ms){for(const v of Object.values(m))if(v instanceof T.Texture&&!v.userData.aboSharedWallTexture)ts.add(v);m.dispose();}gs.forEach(g=>g.dispose());ts.forEach(t=>t.dispose());}
 type Mount={root:T.Object3D;original:T.Object3D[];refined:T.Group};
 /** One cancellable request per nearby object, with a shared two-request limit. */
 export class RefinementManager {
+ private exteriorWalls=new ExteriorWallMaterials();
  private cache=new Map<string,T.Group>();private mounted=new Map<string,Mount>();private running=new Map<string,AbortController>();private wanted=new Map<string,number>();private failures=new Set<string>();private disposed=false;private suspended=false;private visitListener?: (id:string)=>void;
  constructor(private owner:SceneController){}
  restore(){for(const id of this.mounted.keys())this.unmount(id);}
- private mount(id:string){const root=this.owner.node(id),template=this.cache.get(id);if(!root||!template||this.mounted.has(id))return false;const original=root.children.filter(n=>!n.userData.farmExtension&&(id==='landmark_feihua'||!(n instanceof T.Mesh&&n.geometry.userData.sourceKey==='shrine:signplane')));const refined=template.clone(true);refined.name=id+'-refined';refined.traverse(n=>n.userData.objectId=id);maskPilotScenicTrees(refined);root.remove(...original);root.add(refined);root.userData.modelVariant='refined';this.mounted.set(id,{root,original,refined});return true;}
+ private mount(id:string){const root=this.owner.node(id),template=this.cache.get(id);if(!root||!template||this.mounted.has(id))return false;const original=root.children.filter(n=>!n.name.startsWith('abo-outdoor-')&&!n.userData.farmExtension&&(id==='landmark_feihua'||!(n instanceof T.Mesh&&n.geometry.userData.sourceKey==='shrine:signplane')));const refined=template.clone(true);refined.name=id+'-refined';refined.traverse(n=>n.userData.objectId=id);maskPilotScenicTrees(refined);root.remove(...original);root.add(refined);root.userData.modelVariant='refined';this.mounted.set(id,{root,original,refined});this.owner.syncAssetMasks();return true;}
  private unmount(id:string){const mount=this.mounted.get(id);if(!mount)return false;mount.refined.traverse(n=>{if(n instanceof T.InstancedMesh)n.dispose();});mount.refined.removeFromParent();mount.root.add(...mount.original);mount.root.userData.modelVariant='low';this.mounted.delete(id);return true;}
  refresh(){if(this.disposed||this.suspended)return;const camera=this.owner.camera,target=this.owner.controls.target;const close=camera instanceof T.OrthographicCamera?camera.zoom>1.15:camera.position.distanceTo(target)<230;
   const desired=new Map<string,number>();if(close){camera.updateMatrixWorld();const frustum=new T.Frustum().setFromProjectionMatrix(new T.Matrix4().multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse));for(const o of this.owner.project.objects){if(!files[o.id]||o.id!==o.templateId)continue;const root=this.owner.node(o.id);if(!root)continue;root.updateWorldMatrix(true,false);const pos=root.getWorldPosition(new T.Vector3()),dist=Math.hypot(pos.x-target.x,pos.z-target.z);if(dist<85&&frustum.intersectsSphere(new T.Sphere(pos,Math.max(o.params.width,o.params.depth,o.params.wallHeight)*3)))desired.set(o.id,dist);}}
@@ -33,7 +38,14 @@ export class RefinementManager {
  startVisit(ids:string[],onReady:(id:string)=>void){this.visitListener=onReady;this.wanted=new Map(ids.filter(id=>!!files[id]).map((id,i)=>[id,i]));for(const id of this.wanted.keys()){this.failures.delete(id);if(this.cache.has(id)){this.mount(id);onReady(id);}}this.pump();return ()=>{if(this.visitListener!==onReady)return;this.visitListener=undefined;this.wanted.clear();for(const ctl of this.running.values())ctl.abort();};}
  private pump(){if(this.disposed)return;const next=[...this.wanted].filter(([id])=>!this.cache.has(id)&&!this.running.has(id)&&!this.failures.has(id)).sort((a,b)=>a[1]-b[1]);while(this.running.size<2&&next.length){const [id]=next.shift()!;const ctl=new AbortController();this.running.set(id,ctl);void this.load(id,ctl);}}
  private async load(id:string,ctl:AbortController){let scene:T.Group|undefined;try{const compressed=id.startsWith('shrine_');const path=urls[compressed?`../assets/models-optimized/${id}-exterior-meshopt-lossless.glb`:`../assets/models/${files[id]}.glb`];if(!path)throw new Error('模型资源不存在');const url=new URL(path,document.baseURI);const res=await fetch(url,{signal:ctl.signal});if(!res.ok)throw new Error(`HTTP ${res.status}`);const data=await res.arrayBuffer();if(ctl.signal.aborted||this.disposed)return;const loader=new GLTFLoader();if(compressed){const {MeshoptDecoder}=await import('three/addons/libs/meshopt_decoder.module.js');loader.setMeshoptDecoder(MeshoptDecoder);}const gltf=await loader.parseAsync(data,new URL('.',url).href);scene=gltf.scene;if(ctl.signal.aborted||this.disposed){release(scene);return;}
+  await this.exteriorWalls.apply(scene,id);if(ctl.signal.aborted||this.disposed){release(scene);return;}
+  if(id==='shrine_garden'){
+   const gs=await natureGeometries('shrub',ctl.signal);if(ctl.signal.aborted||this.disposed){gs.forEach(g=>g.dispose());release(scene);return;}
+   scene.traverse(n=>{if(n instanceof T.Mesh&&n.name.startsWith('shrine_garden_04_')&&/_(55745b|678063|789173)_/.test(n.name))n.visible=false;});
+   const dims=this.owner.project.objects.find(o=>o.id===id)?.params,w=dims?.width||8,d=dims?.depth||16;
+   for(let v=0;v<3;v++){const positions=Array.from({length:20},(_,i)=>i).filter(i=>i%3===v),material=new T.MeshStandardMaterial({color:['#55745b','#678063','#789173'][v],roughness:1,side:T.DoubleSide,vertexColors:true}),bushes=new T.InstancedMesh(gs[v],material,positions.length);bushes.name='custom-garden-shrubs-'+v;bushes.userData.noCollision=true;positions.forEach((i,j)=>{const side=i%2?-1:1,x=side*w*.4+(i%3)*.25,z=-d*.48+Math.floor(i/2)*d*.1;bushes.setMatrixAt(j,new T.Matrix4().compose(new T.Vector3(x,.78,z),new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),i*2.4),new T.Vector3(.95,.75,.85)));});bushes.instanceMatrix.needsUpdate=true;bushes.computeBoundingSphere();scene.add(bushes);}
+  }
   scene.traverse(n=>{if(n instanceof T.Mesh)for(const m of Array.isArray(n.material)?n.material:[n.material]){if(feihua.has(id))finishFeihuaMaterial(m);if(m.name.endsWith('_lamp')){m.userData.lightRole='lamp';if(m instanceof T.MeshStandardMaterial)m.emissiveMap=m.map;}if(m.name.endsWith('_window'))m.userData.lightRole='window';if(m instanceof T.MeshStandardMaterial){for(const t of [m.map,m.normalMap,m.roughnessMap])if(t)t.anisotropy=4;m.side=T.DoubleSide;}if(m.transparent){m.depthWrite=false;m.side=T.DoubleSide;m.forceSinglePass=true;}}});if(id==='landmark_feihua')scene.add(makeFeihuaJoinery());if(id.startsWith('scenic_')||id==='layout_treehouse')replaceBakedLeafCrowns(scene,this.owner.node(id));shadowSurfaces(scene);this.cache.set(id,scene);if(this.wanted.has(id)){this.mount(id);this.visitListener?.(id);}this.owner.updateLabelPositions();this.owner.atmosphere?.refresh();this.owner.invalidateShadows();this.owner.requestRender();
  }catch(error){if(!ctl.signal.aborted&&!this.disposed){this.failures.add(id);this.owner.host.dispatchEvent(new CustomEvent('refinement-error',{detail:{id,message:`${this.owner.project.objects.find(o=>o.id===id)?.name||id}精修模型加载失败，已保留低精度模型。`}}));console.warn('精修模型加载失败',id,error);}}finally{this.running.delete(id);this.pump();}}
- dispose(){this.disposed=true;for(const ctl of this.running.values())ctl.abort();this.restore();this.cache.forEach(release);this.cache.clear();this.wanted.clear();}
+ dispose(){this.disposed=true;for(const ctl of this.running.values())ctl.abort();this.restore();this.cache.forEach(release);this.exteriorWalls.dispose();this.cache.clear();this.wanted.clear();}
 }

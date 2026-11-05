@@ -49,6 +49,8 @@ export class FeihuaInteriorRefinement extends EventTarget {
     // One instance per exported component/material keeps the existing interaction
     // selection and animation code operating on the refined books/leaves/lamps.
     const geometry=node.geometry.clone().applyMatrix4(node.matrixWorld);
+    // Separate the veranda lamp from the adjacent office-door lamp as one complete fixture.
+    if(node.name.startsWith('31_外廊柱旁地灯_0_'))geometry.translate(1.38,0,0);
     const mapMaterial=(m:T.Material)=>{
      if(m.name.endsWith('_lamp')&&m instanceof T.MeshStandardMaterial){this.lampMaterials.add(m);m.emissiveMap=m.map;}
      if(m.name.endsWith('_window'))return this.room.glass;

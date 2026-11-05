@@ -1,3 +1,4 @@
+import {addAboCollisions,removeReplacedNativeProps} from '../models/abo-collision';
 import * as T from 'three';
 import {maskTrialTrees} from '../environment/vegetation-trial';
 import {CompoundWorld} from './CompoundWorld';
@@ -20,12 +21,13 @@ export class IslandWalkController {
   const size=island.project.terrain.size,bounds=new T.Box3(new T.Vector3(-size,-1000,-size),new T.Vector3(size,1000,size));
   this.world=new CompoundWorld(island.terrain,bounds,false,true);
   // Authored low-cost proxies preserve doors, posts, walkable bridges and existing building locations.
-  for(const object of island.project.objects){const node=island.node(object.id);if(!node)continue;node.updateWorldMatrix(true,true);const proxy=makeMesh(object);proxy.matrixAutoUpdate=false;proxy.matrix.copy(node.matrixWorld);proxy.matrixWorldNeedsUpdate=true;this.world.addObject(proxy,new Set(),bounds);disposeObjectInstances(proxy);}
+  for(const object of island.project.objects){const node=island.node(object.id);if(!node)continue;node.updateWorldMatrix(true,true);const proxy=makeMesh(object);removeReplacedNativeProps(proxy,node);proxy.matrixAutoUpdate=false;proxy.matrix.copy(node.matrixWorld);proxy.matrixWorldNeedsUpdate=true;this.world.addObject(proxy,new Set(),bounds);disposeObjectInstances(proxy);}
+  addAboCollisions(this.world,island.objects);addAboCollisions(this.world,island.environment);
   const focus=island.controls.target.clone(),base=island.node('base_office'),entry=entrance(island.project,'base_office'),fallback=entry?new T.Vector3(entry[0],0,entry[1]):base?.getWorldPosition(new T.Vector3())||new T.Vector3(116,0,100);
   const overview=island.camera instanceof T.OrthographicCamera&&island.camera.zoom<1.3;
   const spawn=this.world.spawn(overview?fallback:focus,.36,2.1)||this.world.spawn(fallback,.36,2.1);if(!spawn)throw new Error('附近没有找到可站立的位置，请先将沙盘视角移到陆地后重试。');
   this.renderer=new T.WebGLRenderer({antialias:true,powerPreference:island.project.settings.quality==='low'?'low-power':'high-performance'});this.renderer.setPixelRatio(Math.min(devicePixelRatio,island.project.settings.quality==='low'?1:1.5));this.renderer.outputColorSpace=T.SRGBColorSpace;host.append(this.renderer.domElement);
-  const walkEnvironment=island.environment.clone(true);this.scene.add(island.terrain.clone(),island.objects.clone(true),walkEnvironment);this.walkGrass=walkEnvironment.getObjectByName('island-fine-grass');if(this.walkGrass)this.walkGrass.visible=!this.walkGrass.userData.vegetationReplacement;
+  const walkEnvironment=island.environment.clone(true);this.scene.add(island.terrain.clone(),island.objects.clone(true),walkEnvironment);const boats=island.scene.getObjectByName('kenney-dock-boats');if(boats)this.scene.add(boats.clone(true));this.walkGrass=walkEnvironment.getObjectByName('island-fine-grass');if(this.walkGrass)this.walkGrass.visible=!this.walkGrass.userData.vegetationReplacement;
   // The FFT render targets belong to the editor renderer's WebGL context. Use an
   // independent static fallback in this renderer, even when the editor uses Ultra-Water.
   const water=island.water.mesh.clone();this.waterMaterial=island.water.material.clone();this.waterMaterial.uniforms.depthMap.value=island.water.material.uniforms.depthMap.value;this.waterMaterial.uniforms.ultraEnabled.value=0;this.waterMaterial.uniforms.waveTime.value=0;water.material=this.waterMaterial;water.visible=true;this.scene.add(water);

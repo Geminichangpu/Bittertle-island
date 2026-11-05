@@ -1,4 +1,5 @@
 import * as T from 'three';
+import {BEDROOM_BED_SHIFT_Z} from './bedroom-layout';
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
 import {roomKit,palette as p,type V} from './room-kit';
 import type {Builder} from '../generators/shrine';
@@ -92,7 +93,7 @@ export function bedroomKit(){
  const finish:typeof k.finish=(...args)=>{
   const room=k.finish(...args),canvas=document.createElement('canvas');canvas.width=canvas.height=64;const ctx=canvas.getContext('2d')!,gradient=ctx.createRadialGradient(32,32,5,32,32,32);gradient.addColorStop(0,'rgba(28,23,18,.25)');gradient.addColorStop(1,'rgba(28,23,18,0)');ctx.fillStyle=gradient;ctx.fillRect(0,0,64,64);
   const texture=new T.CanvasTexture(canvas),material=new T.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1}),geometry=new T.PlaneGeometry(1,1),patches=new T.InstancedMesh(geometry,material,3);
-  [[-5.55,-2.55,1.5,4.2],[-4,-2.55,1.25,1.15],[2.98,2.65,4.8,2.9]].forEach(([x,z,w,d],i)=>patches.setMatrixAt(i,new T.Matrix4().compose(new T.Vector3(x,.028,z),new T.Quaternion().setFromAxisAngle(new T.Vector3(1,0,0),-Math.PI/2),new T.Vector3(w,d,1))));
+  [[-5.55,-2.55,1.5,4.2],[-4,-2.55,1.25,1.15],[2.98,2.65+BEDROOM_BED_SHIFT_Z,4.8,2.9]].forEach(([x,z,w,d],i)=>patches.setMatrixAt(i,new T.Matrix4().compose(new T.Vector3(x,.028,z),new T.Quaternion().setFromAxisAngle(new T.Vector3(1,0,0),-Math.PI/2),new T.Vector3(w,d,1))));
   patches.userData.noCollision=true;patches.name='soft-furniture-contact';patches.renderOrder=1;room.root.add(patches);const dispose=room.dispose;room.dispose=()=>{dispose();texture.dispose();material.dispose();geometry.dispose();};return room;
  };
  return {...k,desk,shelf,plant,floor,wall,roof,chair,finish};

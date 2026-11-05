@@ -12,7 +12,7 @@ export const palette={wood:'#916340',dark:'#493126',trim:'#b58b5b',paper:'#e5d9b
 export function roomKit(refined=false){
  const profile=refined?stylizedMaterials():undefined;
  const geometries=new Map<string,T.BufferGeometry>(),materials=new Map<string,T.MeshStandardMaterial>();
- const cache:Cache={geo:(k,f)=>{if(!geometries.has(k))geometries.set(k,f());return geometries.get(k)!;},mat:(c,role)=>{const k=c+(role||'');if(!materials.has(k)){const m=new T.MeshStandardMaterial({color:c,roughness:.7,emissive:role?c:0,emissiveIntensity:0});profile?.configure(m,c,role);materials.set(k,m);}return materials.get(k)!;},sign:()=>cache.mat(palette.paper)};
+ const cache:Cache={geo:(k,f)=>{if(!geometries.has(k)){const g=f();g.userData.sourceKey=k;geometries.set(k,g);}return geometries.get(k)!;},mat:(c,role)=>{const k=c+(role||'');if(!materials.has(k)){const m=new T.MeshStandardMaterial({color:c,roughness:.7,emissive:role?c:0,emissiveIntensity:0});profile?.configure(m,c,role);materials.set(k,m);}return materials.get(k)!;},sign:()=>cache.mat(palette.paper)};
  const b=new Builder(cache),shell=new Builder(cache),ceiling=new Builder(cache),outside=new Builder(cache);
  const glass=cache.mat('#cde3e3','window'),lampMaterial=cache.mat('#ffe1a0','lamp');
  const woodColors=new Set<string>([palette.wood,palette.dark,palette.trim,'#ad8258','#b48a60','#a77d54','#6e402d']);

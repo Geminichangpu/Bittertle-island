@@ -1,3 +1,4 @@
+import {addAboCollisions,removeReplacedNativeProps} from '../models/abo-collision';
 import {InteractionManager} from '../interactions/InteractionManager';
 import {outdoorInteractions} from '../interactions/config';
 import * as T from 'three';
@@ -34,15 +35,16 @@ export class CompoundController{
   this.bounds.expandByVector(new T.Vector3(12,0,12));this.bounds.min.y=-1000;this.bounds.max.y=1000;
   this.renderer=new T.WebGLRenderer({antialias:true,powerPreference:island.project.settings.quality==='low'?'low-power':'high-performance'});this.renderer.setPixelRatio(Math.min(devicePixelRatio,island.project.settings.quality==='low'?1:1.5));this.renderer.outputColorSpace=T.SRGBColorSpace;host.append(this.renderer.domElement);
   // Clone object transforms/instances only. Shared source geometry and materials stay owned by the island.
-  this.scene.add(island.terrain.clone(),island.objects.clone(true),island.environment.clone(true));
+  this.scene.add(island.terrain.clone(),island.objects.clone(true),island.environment.clone(true));const boats=island.scene.getObjectByName('kenney-dock-boats');if(boats)this.scene.add(boats.clone(true));
   for(const node of island.scene.children)if(node instanceof T.Mesh&&node!==island.terrain&&((node.material as T.Material).userData?.sea))this.scene.add(node.clone());
   this.lighting=new IslandLighting(this.renderer,this.scene);this.lighting.setQuality(island.project.settings.quality);
   this.world=new CompoundWorld(island.terrain,this.bounds,id==='feihua_group');
+  addAboCollisions(this.world,island.objects);addAboCollisions(this.world,island.environment);
   // Collision uses the authored individual planks, walls and rail posts. The
   // refined GLB merges materials, whose bounding boxes would close open paths.
   for(const object of island.project.objects){
    const node=island.node(object.id);if(!node||!this.bounds.intersectsBox(new T.Box3().setFromObject(node)))continue;
-   const proxy=makeMesh(object);proxy.matrixAutoUpdate=false;proxy.matrix.copy(node.matrixWorld);proxy.matrixWorldNeedsUpdate=true;
+   const proxy=makeMesh(object);removeReplacedNativeProps(proxy,node);proxy.matrixAutoUpdate=false;proxy.matrix.copy(node.matrixWorld);proxy.matrixWorldNeedsUpdate=true;
    this.world.addObject(proxy,new Set(),this.bounds);disposeObjectInstances(proxy);
   }
   // The water in the decorative pond is not a walkable floor.

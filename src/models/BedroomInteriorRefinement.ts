@@ -2,6 +2,7 @@ import * as T from 'three';
 import {loadAbortableGLB} from './loadAbortableGLB';
 import bedroomUrl from '../assets/models-optimized/bedroom-interior-meshopt-lossless.glb?url';
 import type {InteriorRoom} from '../interiors/room-kit';
+import {BEDROOM_BED_SHIFT_Z} from '../interiors/bedroom-layout';
 
 function releaseAsset(root:T.Object3D){
  const gs=new Set<T.BufferGeometry>(),ms=new Set<T.Material>(),ts=new Set<T.Texture>();
@@ -45,10 +46,12 @@ export class BedroomInteriorRefinement extends EventTarget {
    const groups:Record<string,T.Group>={furniture:new T.Group(),walls:new T.Group(),ceiling:new T.Group()};
    scene.traverse(node=>{
     if(!(node instanceof T.Mesh))return;
+    if(node.name.startsWith('30_床侧三层矮书架'))return;
     const category=String(node.userData.roomCategory||'furniture');if(!groups[category])return;
     // One instance per exported component/material keeps the existing interaction
     // selection and animation code operating on the refined books/leaves/lamps.
     const geometry=node.geometry.clone().applyMatrix4(node.matrixWorld);
+    if(/^(10_床架|11_床头|12_床垫|13_床单|14_枕头|30_床侧|31_窗旁|51_高书架)/.test(node.name))geometry.translate(0,0,BEDROOM_BED_SHIFT_Z);
     const mapMaterial=(m:T.Material)=>{
      if(m.name.endsWith('_lamp')&&m instanceof T.MeshStandardMaterial){this.lampMaterials.add(m);m.emissiveMap=m.map;}
      if(m.name.endsWith('_window'))return this.room.glass;

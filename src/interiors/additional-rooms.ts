@@ -3,6 +3,7 @@ import type {IslandObject} from '../data/model';
 import {roomKit,palette as p,type RoomView} from './room-kit';
 import {teaService,stationery} from './furnishing-details';
 import {bedroomKit} from './bedroom-kit';
+import {BEDROOM_BED_SHIFT_Z} from './bedroom-layout';
 
 export function makeBedroom(o:IslandObject){
  const k=bedroomKit(),{b}=k,w=Number(o.params.width)||13,d=Number(o.params.depth)||11,h=Number(o.params.wallHeight)||5;
@@ -36,10 +37,12 @@ export function makeBedroom(o:IslandObject){
  // Study rotated onto the adjacent wall indicated by the reference arrow.
  b.scoped([-5.55,0,-2.55],Math.PI/2,()=>{k.desk(0,0,0,4.1,1.3);k.shelf(0,1.7,-.64,4.1,2.95);k.plant(1.45,1.6,.12);b.box([-1.4,.45,0],[.8,.7,.7],'#b0a58c');});b.scoped([-4,0,-2.55],-Math.PI/2,()=>k.chair(0,0,0));
  // Bed projects away from the inside long wall towards +X; foot space stays clear at x=6.5.
+ b.scoped([0,0,BEDROOM_BED_SHIFT_Z],0,()=>{
  b.box([2.98,.55,2.65],[4.7,.3,2.75],p.wood);for(const x of [.76,5.2])for(const zz of [1.42,3.88])b.box([x,.32,zz],[.18,.64,.18],p.dark);
  b.box([2.98,.92,2.65],[4.55,.45,2.65],'#e7dfce');b.box([3.65,1.19,2.65],[3.15,.12,2.68],'#f0e9db');b.box([.54,1.32,2.65],[.16,1.7,2.85],p.trim);
  for(const zz of [2,3.3])b.ball([1.25,1.25,zz],[.46,.15,.6],'#f5eee0');
- b.scoped([.7,0,.9],Math.PI/2,()=>k.shelf(0,0,0,.85,2.7));b.scoped([.7,0,4.72],Math.PI/2,()=>k.shelf(0,0,0,1.25,4.5));
+ b.scoped([.7,0,4.72],Math.PI/2,()=>k.shelf(0,0,0,1.25,4.5));
+ });
  // Static pleated cloth gathered at the tie, with a clear view through the broad panes.
  for(const cx of [1.42,5.8]){const points:number[]=[],indices:number[]=[],nx=18,ny=24;for(let j=0;j<=ny;j++){const y=.2+j/ny*4.4,spread=.22+.5*(1-Math.exp(-Math.pow((y-1.5)/.7,2)));for(let i=0;i<=nx;i++){const t=i/nx;points.push(cx+(t-.5)*spread,y,5.05+Math.sin(t*Math.PI*10)*.045);}}for(let j=0;j<ny;j++)for(let i=0;i<nx;i++){const a=j*(nx+1)+i;indices.push(a,a+1,a+nx+1,a+1,a+nx+2,a+nx+1);}const cloth=k.cache.mat('#efeee7');cloth.side=T.DoubleSide;b.emit('bedroom:curtain:'+cx,()=>{const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(points,3));g.setIndex(indices);g.computeVertexNormals();return g;},'#efeee7',[0,0,0],[1,1,1],new T.Quaternion(),cloth);b.box([cx,1.5,4.99],[.28,.13,.06],'#d5cfbe');}
  b.cylinder([.95,4.63,5.1],[6.2,4.63,5.1],.035,p.dark);
@@ -49,7 +52,7 @@ export function makeBedroom(o:IslandObject){
  b.box([4.6,.72,-4.8],[2.8,1.4,.85],p.wood);b.box([4.6,1.48,-4.8],[2.95,.12,.95],p.trim);
  for(const x of [3.93,5.27])for(const y of [.4,1.02]){b.box([x,y,-4.35],[1.2,.5,.06],p.trim);b.cylinder([x-.13,y,-4.29],[x+.13,y,-4.29],.025,p.dark);}
  k.plant(5.5,1.56,-4.75);b.box([3.8,1.74,-4.7],[.55,.43,.06],p.dark);b.box([3.8,1.74,-4.66],[.44,.32,.015],'#9bb3a0');b.box([4.4,.06,-2.95],[2.9,.045,1.45],'#a09b7d');b.cylinder([5.75,.08,-1.5],[5.75,.6,-1.5],.38,'#a88c60',16);b.ball([5.75,.65,-1.5],[.32,.13,.32],'#e1d7bf');
- k.lantern(2,4.2,-1,.65);for(let i=0;i<7;i++)k.outside.ball([-6+i,.3,4],[.8,.6,.8],i%2?'#6a8c56':'#8ca86a');
+ k.lantern(2,4.2,-1,.65);for(let i=0;i<7;i++)k.outside.ball([-7+i*.8,.3,4],[.8,.6,.8],i%2?'#6a8c56':'#8ca86a');
  return k.finish({w,h,d},[{id:'reference',label:'卧室全景',position:[6.05,3.2,-3.8],target:[.3,1.9,1]},{id:'bed',label:'床铺与侧窗',position:[5.8,2.7,-.3],target:[1.8,1.8,2.9]},{id:'study',label:'书桌与入口',position:[4,3.1,-2.5],target:[-3,1.9,-1.9]},{id:'desk-detail',label:'书桌细节',position:[-2.9,2.5,-3.25],target:[-5.55,1.9,-2.55]},{id:'shelf-detail',label:'书柜细节',position:[-3.4,3.35,-2.6],target:[-6.05,3.05,-2.55]},{id:'overview',label:'反 L 平面',position:[0,23,-.01],target:[0,0,0],cutaway:true}],[w/13,h/5,-d/11]);
 }
 

@@ -1,3 +1,4 @@
+import {turnOwnerMeetingChairs} from './owner-meeting-chairs';
 import * as T from 'three';
 import {loadAbortableGLB} from './loadAbortableGLB';
 import type {TowerFloor} from '../interiors/tower';
@@ -57,7 +58,7 @@ export class TowerInteriorRefinement extends EventTarget {
     const category=String(node.userData.roomCategory||'furniture');if(!groups[category])return;
     // One instance per exported component/material keeps the existing interaction
     // selection and animation code operating on the refined books/leaves/lamps.
-    const geometry=node.geometry.clone().applyMatrix4(node.matrixWorld);
+    let geometry=node.geometry.clone().applyMatrix4(node.matrixWorld);if(this.floor==='owner')geometry=turnOwnerMeetingChairs(geometry,node.name);
     const mapMaterial=(m:T.Material)=>{
      if(m.name.endsWith('_lamp')&&m instanceof T.MeshStandardMaterial){this.lampMaterials.add(m);m.emissiveMap=m.map;}
      if(m.name.endsWith('_window'))return this.room.glass;

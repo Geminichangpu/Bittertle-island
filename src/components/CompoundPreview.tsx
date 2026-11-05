@@ -17,8 +17,8 @@ export function CompoundPreview({island,id,onClose}:{island:SceneController;id:C
  const [places,setPlaces]=useState<{id:string;name:string}[]>([]),[room,setRoom]=useState<InteriorId|null>(null),[detail,setDetail]=useState<Hotspot|null>(null);
  useEffect(()=>{island.setActive(false);const element=host.current!;let c:CompoundController|undefined;
   const lost=(e:Event)=>setError((e as CustomEvent).detail),refinementFailed=(e:Event)=>setRefinementError((e as CustomEvent).detail.message);element.addEventListener('compound-error',lost);island.host.addEventListener('refinement-error',refinementFailed);
-  try{c=new CompoundController(element,island,id,setState,h=>{const inside=controller.current?.interiorFor(h.id);if(inside){controller.current?.setActive(false);setRoom(inside);}else setDetail(h);},onClose);controller.current=c;setPlaces(c.locations);if(import.meta.env.DEV)(window as any).__compound=c;}catch(e){setError(String(e));}
-  return()=>{element.removeEventListener('compound-error',lost);island.host.removeEventListener('refinement-error',refinementFailed);c?.dispose();controller.current=null;if(import.meta.env.DEV)delete (window as any).__compound;island.setActive(true);};
+  let cancelled=false;void island.prepareAboWalk().then(()=>{if(cancelled)return;try{c=new CompoundController(element,island,id,setState,h=>{const inside=controller.current?.interiorFor(h.id);if(inside){controller.current?.setActive(false);setRoom(inside);}else setDetail(h);},onClose);controller.current=c;setPlaces(c.locations);if(import.meta.env.DEV)(window as any).__compound=c;}catch(e){setError(String(e));}}).catch(e=>{if(!cancelled)setError(String(e));});
+  return()=>{cancelled=true;element.removeEventListener('compound-error',lost);island.host.removeEventListener('refinement-error',refinementFailed);c?.dispose();controller.current=null;if(import.meta.env.DEV)delete (window as any).__compound;island.setActive(true);};
  },[island,id]);
  function resume(){setRoom(null);island.setActive(false);controller.current?.setActive(true);}
  const name=COMPOUNDS.find(c=>c.id===id)!.name;
