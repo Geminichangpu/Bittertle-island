@@ -701,3 +701,13 @@ https://discord.gg/vJqnRUYRfT
 - Aerial Grass Rock：https://polyhaven.com/a/aerial_grass_rock
 - Rocky Trail，作者 Amal Kumar：https://polyhaven.com/a/rocky_trail
 - 许可：Poly Haven CC0 1.0，https://polyhaven.com/license 。项目中调整了分辨率和贴图格式。
+
+## 原有建筑与建筑材质
+
+根据项目制作记录，灯塔、基地、绯华楼、神社、琉璃塔、树屋及相关室内的建筑网格来自本项目程序化生成器，并在 Blender 中精修和导出；这些记录没有标明它们来自第三方建筑模型包。项目内的建筑制作记录可在仓库 docs/blender_workflow.md、docs/feihua-blender-refinement.md、docs/bedroom-blender-refinement.md、docs/residence-blender-refinement.md 和 docs/treehouse-blender-refinement.md 查阅。上述建筑使用的第三方贴图以及后续添置的家具、植物和其他模型按本声明各条分别列出。
+
+本次新增墙面贴图：
+- Plaster001，ambientCG：https://ambientcg.com/view?id=Plaster001
+- Plaster002，ambientCG：https://ambientcg.com/view?id=Plaster002
+- brown_planks_05，Poly Haven：https://polyhaven.com/a/brown_planks_05
+许可：CC0 1.0；项目中对部分颜色贴图进行低对比度处理。
