@@ -67,7 +67,7 @@ export function makeEnvironment(p:Project,terrainGeometry:T.BufferGeometry,onRea
   }return materials.get(color)!;
  };
  const b=new Builder({geo,mat,sign:mat});
- let suppress=false;const emit=b.emit.bind(b);b.emit=(...args:Parameters<Builder['emit']>)=>{if(!suppress)emit(...args);};
+ let suppress=false,treeEmission=false,floraEmission=false;const emit=b.emit.bind(b);b.emit=(...args:Parameters<Builder['emit']>)=>{if(treeEmission)args[0]='replace-tree:'+args[0];else if(floraEmission)args[0]='replace-flora:'+args[0];if(!suppress)emit(...args);};
  const globalTreeRoots:[number,number,number][]=[];
  const metrics={trees:0,bushes:0,grass:0,flowers:0,rocks:0,steps:0,roadSamples:0};
  const ground=(x:number,z:number)=>surface.height(x,z);
@@ -116,6 +116,7 @@ export function makeEnvironment(p:Project,terrainGeometry:T.BufferGeometry,onRea
   if(rnd()>patch*.8||!spaced(x,z,2.8))continue;
   suppress=inNaturePilot(p,x,z)||inNorthBeach(p,x,z);const color=palette[Math.floor(rnd()*palette.length)],r=1.1+rnd()*1.6;
   if(metrics.trees<600&&rnd()<.37&&shore>7&&y<36){
+   treeEmission=true;
    const h=3.6+rnd()*3.2,trunkRadius=.18+rnd()*.12;
    b.emit('env:tapered-trunk',()=>new T.CylinderGeometry(.66,1,1,10,3),'#766246',[x,y+(h*.72-.2)/2,z],[trunkRadius,h*.72+.2,trunkRadius]);
    for(let branch=0;branch<3;branch++){
@@ -125,15 +126,15 @@ export function makeEnvironment(p:Project,terrainGeometry:T.BufferGeometry,onRea
     b.emit('env:leaf-sprig',leafSprigGeometry,color,[x+Math.cos(a+.8)*r*1.05,y+h*.9,z+Math.sin(a+.8)*r*1.05],[.85,1,.85],new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),a+.8));
    }
    for(let j=0;j<4;j++){const a=j*2.4+attempt,rr=j===0?0:r*.6;leaf([x+Math.cos(a)*rr,y+h*.74+(j%2)*r*.4,z+Math.sin(a)*rr],[r*(.8+rnd()*.25),r*.8,r],j%2?color:palette[(Math.floor(rnd()*palette.length))]);}
-   if(!suppress)globalTreeRoots.push([x,y,z]);metrics.trees++;
+   if(!suppress)globalTreeRoots.push([x,y,z]);metrics.trees++;treeEmission=false;
   }else if(metrics.bushes<1900){for(let j=0;j<3;j++){const xx=x+(rnd()-.5)*r,zz=z+(rnd()-.5)*r;if(j===0)b.emit('env:bush:'+((Math.imul(attempt+71,2654435761)>>>0)%3),crownGeometry,color,[xx,y+.35+r*.28,zz],[r*.9,r*.62,r*.9],new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),(attempt*2.39996)%(Math.PI*2)));}metrics.bushes++;}
  }
  suppress=false;
  for(let attempt=0;attempt<6000;attempt++){
   suppress=false;
   const x=(rnd()-.5)*p.terrain.size,z=(rnd()-.5)*p.terrain.size,y=ground(x,z);if(p.terrain.campus&&inside([x,z],p.terrain.islet))continue;if(y===undefined||y>33||coastDistance(p.terrain,[x,z])<4||blocked(obstacles,x,z,1)||roadClearance(x,z)<.75)continue;
-  suppress=inNaturePilot(p,x,z)||inNorthBeach(p,x,z);if(metrics.grass<750){for(let j=0;j<3;j++)b.emit('env:blade',()=>{const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute([-.12,0,0,.08,.7,0,.12,0,0,0,0,-.1,0,.6,.1,0,0,.1],3));g.computeVertexNormals();return g;},j%2?'#8ba65e':'#afbc72',[x+(rnd()-.5),y-.04,z+(rnd()-.5)],[1,.5+rnd(),1],new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),rnd()*6.28));metrics.grass++;}
-  if(metrics.flowers<140&&roadClearance(x,z)<5&&rnd()>.5){for(let j=0;j<4;j++){const xx=x+(rnd()-.5),zz=z+(rnd()-.5),yy=ground(xx,zz)??y;b.cylinder([xx,yy,zz],[xx,yy+.5,zz],.025,'#70884e',5);leaf([xx,yy+.5,zz],[.16,.1,.16],j%2?'#f5ead1':'#d9b7c0');}metrics.flowers++;}
+  suppress=inNaturePilot(p,x,z)||inNorthBeach(p,x,z);if(metrics.grass<750){floraEmission=true;for(let j=0;j<3;j++)b.emit('env:blade',()=>{const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute([-.12,0,0,.08,.7,0,.12,0,0,0,0,-.1,0,.6,.1,0,0,.1],3));g.computeVertexNormals();return g;},j%2?'#8ba65e':'#afbc72',[x+(rnd()-.5),y-.04,z+(rnd()-.5)],[1,.5+rnd(),1],new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),rnd()*6.28));metrics.grass++;floraEmission=false;}
+  if(metrics.flowers<140&&roadClearance(x,z)<5&&rnd()>.5){floraEmission=true;for(let j=0;j<4;j++){const xx=x+(rnd()-.5),zz=z+(rnd()-.5),yy=ground(xx,zz)??y;b.cylinder([xx,yy,zz],[xx,yy+.5,zz],.025,'#70884e',5);leaf([xx,yy+.5,zz],[.16,.1,.16],j%2?'#f5ead1':'#d9b7c0');}metrics.flowers++;floraEmission=false;}
  }
  suppress=false;
  // Irregular boulder beaches. The west peak uses a continuous terrain finish instead of piled rocks.
@@ -157,6 +158,7 @@ export function makeEnvironment(p:Project,terrainGeometry:T.BufferGeometry,onRea
  const beachBuilder=new Builder({geo,mat,sign:mat});const beach=addNorthBeach(p,b,beachBuilder,surface,routes,obstacles);const beachFallback=beachBuilder.finish();beachFallback.name='beach-original-loungers';root.add(beachFallback);root.userData.northBeach=beach.points;addAboBeach(root,beachFallback,beach.loungers,onReady);
  const instances=b.finish();instances.traverse(n=>{n.userData.globalNatureInstances=true;});instances.name='植被、岩石与静态海浪';root.add(instances);
  const pilot=makePilotVegetation(p,surface,routes,obstacles,nature);root.add(pilot.root);root.userData.pilotRoots=pilot.roots;root.userData.pilotMetrics=pilot.root.userData.metrics;
+ root.userData.beachTreeRoots=beach.points.length>=3?[[beach.points[0].x,beach.points[0].y,beach.points[0].z+2]]:[];
  root.add(makeIslandGrass(p,surface,routes,obstacles));addVegetationTrial(root,p,surface,routes,obstacles,pilot.roots,globalTreeRoots,onReady);
  const natureAbort=new AbortController(),previousDispose=natureDisposers.get(root);let customBushes:T.BufferGeometry[]=[];
  natureDisposers.set(root,()=>{natureAbort.abort();customBushes.forEach(g=>g.dispose());previousDispose?.();});

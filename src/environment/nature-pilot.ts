@@ -28,9 +28,11 @@ export function makePilotVegetation(p:Project,surface:TerrainSurface,routes:Rout
  const geo=(key:string,make:()=>T.BufferGeometry)=>{if(!geometries.has(key)){const g=make();g.userData.sourceKey=key;geometries.set(key,g);}return geometries.get(key)!;};
  const mat=(color:string)=>{if(color==='#766246')return nature.material('bark','#e7d6bd');if(!materials.has(color)){const m=new T.MeshStandardMaterial({color,vertexColors:true,side:T.DoubleSide,roughness:1});m.name='样板叶簇';materials.set(color,m);}return materials.get(color)!;};
  const b=new Builder({geo,mat,sign:mat}),roots:[number,number,number][]=[],types={tall:0,broad:0,lean:0,palm:0,screwPine:0},palette=['#47644a','#668154','#81915d'];
+ let treeEmission=false;const treeEmit=b.emit.bind(b);b.emit=(...args:Parameters<Builder['emit']>)=>{if(treeEmission)args[0]='replace-tree:'+args[0];treeEmit(...args);};
  const clearObstacles=obstacles.filter(o=>o.id!=='scenic_cliff'),clusters=[[center.x-38,center.y+28,24],[center.x-12,center.y-63,26],[center.x+28,center.y-48,21]];
  const leaf=(x:number,y:number,z:number,sx:number,sy:number,sz:number,color:string,angle:number)=>b.emit('pilot:leaf',crownGeometry,color,[x,y,z],[sx,sy,sz],new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),angle));
  const plantTree=(x:number,y:number,z:number,treeRnd:()=>number)=>{
+  treeEmission=true;
   const kind=roots.length%3,angle=treeRnd()*Math.PI*2,h=kind===0?6.7+treeRnd()*2.4:4.4+treeRnd()*2.0,r=kind===0?1.35+treeRnd()*.35:1.8+treeRnd()*.65,lean=kind===2?1.6:0,dx=Math.cos(angle)*lean,dz=Math.sin(angle)*lean;
   const tropical=coastDistance(p.terrain,[x,z])<42&&y<28&&(x>center.x||z>center.y+10)&&roots.length%4<2;
   if(tropical&&roots.length%4===0){
@@ -49,7 +51,7 @@ export function makePilotVegetation(p:Project,surface:TerrainSurface,routes:Rout
   }
   // Enrich only the small forest-edge sample, retaining the same shared leaf geometry.
   if(!tropical&&Math.hypot(x-(center.x-12),z-(center.y+34))<21){for(let k=0;k<3;k++){const a=angle+k*2.4,xx=x+dx+Math.cos(a)*r*.85,zz=z+dz+Math.sin(a)*r*.85,yy=y+h*.65+(k%2)*.5;b.cylinder([x+dx*.3,y+h*.4,z+dz*.3],[xx,yy-.15,zz],.07,'#766246',7);leaf(xx,yy,zz,r*.7,r*.55,r*.72,palette[(roots.length+k)%3],a);}}
-  roots.push([x,y,z]);
+  roots.push([x,y,z]);treeEmission=false;
  };
  for(let attempt=0;attempt<2300&&roots.length<92;attempt++){
   const x=center.x+(rnd()-.5)*166,z=center.y+(rnd()-.5)*196,y=surface.height(x,z);if(y===undefined||!inNaturePilot(p,x,z)||!isLand(p.terrain,x,z)||coastDistance(p.terrain,[x,z])<7||blocked(clearObstacles,x,z,4)||roadDistance(routes,x,z)<4.5)continue;

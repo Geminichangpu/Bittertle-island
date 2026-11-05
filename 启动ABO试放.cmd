@@ -1,5 +1,4 @@
 @echo off
-cd /d "%~dp0"
-start "" "http://127.0.0.1:4185/"
-node scripts\serve.mjs dist 4185
+start "" "http://127.0.0.1:5186/"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0Start-Island.ps1"
 pause
