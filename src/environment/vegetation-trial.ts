@@ -35,8 +35,8 @@ export function addVegetationTrial(root:T.Group,p:Project,surface:TerrainSurface
   const make=(source:T.Group,places:Placement[],height:number)=>{
    source.updateMatrixWorld(true);const box=new T.Box3().setFromObject(source),size=box.getSize(new T.Vector3()),center=box.getCenter(new T.Vector3());if(!size.y)return;
    const norm=new T.Matrix4().makeScale(height/size.y,height/size.y,height/size.y).multiply(new T.Matrix4().makeTranslation(-center.x,-box.min.y,-center.z));
-   const chunks=new Map<string,Placement[]>();for(const q of places){const k=Math.floor(q.x/128)+','+Math.floor(q.z/128),a=chunks.get(k)||[];a.push(q);chunks.set(k,a);}
-   source.traverse(n=>{if(!(n instanceof T.Mesh))return;for(const places of chunks.values()){const mesh=new T.InstancedMesh(n.geometry,n.material,places.length);mesh.castShadow=false;mesh.receiveShadow=true;mesh.userData.noCollision=true;
+   const chunks=new Map<string,Placement[]>();for(const q of places){const k=Math.floor(q.x/32)+','+Math.floor(q.z/32),a=chunks.get(k)||[];a.push(q);chunks.set(k,a);}
+   source.traverse(n=>{if(!(n instanceof T.Mesh))return;for(const places of chunks.values()){const mesh=new T.InstancedMesh(n.geometry,n.material,places.length);mesh.castShadow=false;mesh.receiveShadow=true;mesh.userData.noCollision=true;mesh.userData.walkDetailRange=65;
     places.forEach((q,i)=>{const matrix=new T.Matrix4().compose(new T.Vector3(q.x,q.y,q.z),new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),q.angle),new T.Vector3(q.scale,q.scale,q.scale)).multiply(norm).multiply(n.matrixWorld);mesh.setMatrixAt(i,matrix);});mesh.computeBoundingSphere();group.add(mesh);}
    });
   };
@@ -50,7 +50,7 @@ export function addVegetationTrial(root:T.Group,p:Project,surface:TerrainSurface
     const source=sources[kind*3+level],layer=new T.Group();source.updateMatrixWorld(true);
     source.traverse(n=>{if(!(n instanceof T.Mesh))return;const mesh=new T.InstancedMesh(n.geometry,n.material,places.length);mesh.userData.noCollision=true;mesh.userData.plantSpecies=species[kind];mesh.userData.plantLod=level;mesh.receiveShadow=true;mesh.castShadow=level===0;
      places.forEach((q,i)=>mesh.setMatrixAt(i,new T.Matrix4().compose(new T.Vector3(q.x,q.y,q.z).sub(lod.position),new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),q.angle),new T.Vector3(q.scale,q.scale,q.scale)).multiply(n.matrixWorld)));mesh.computeBoundingSphere();layer.add(mesh);
-    });lod.addLevel(layer,level===0?0:level===1?55:130,.12);
+    });lod.addLevel(layer,level===0?0:level===1?30:80,.12);
    }group.add(lod);
   }
   const plants:Placement[]=[],flowers:Placement[]=[],grass=root.getObjectByName('island-fine-grass'),m=new T.Matrix4(),v=new T.Vector3();let index=0;

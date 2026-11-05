@@ -16,7 +16,7 @@ import type {SceneController} from '../scene/SceneController';
 export class IslandWalkController {
  readonly scene=new T.Scene();readonly camera=new T.PerspectiveCamera(70,1,.05,1800);
  readonly renderer:T.WebGLRenderer;readonly scheduler:DemandRenderer;readonly exploration:ExplorationController;readonly world:CompoundWorld;
- private walkGrass?:T.Object3D;private grassUpdateX=Infinity;private grassUpdateZ=Infinity;private lighting:IslandLighting;private resize:ResizeObserver;private unsubscribe:()=>void;private active=true;private waterMaterial?:T.ShaderMaterial;private feihuaInverse?:T.Matrix4;private feihuaUnit=1;
+ private walkDetails:{node:T.Object3D;center:T.Vector3;range:number}[]=[];private walkGrass?:T.Object3D;private grassUpdateX=Infinity;private grassUpdateZ=Infinity;private lighting:IslandLighting;private resize:ResizeObserver;private unsubscribe:()=>void;private active=true;private waterMaterial?:T.ShaderMaterial;private feihuaInverse?:T.Matrix4;private feihuaUnit=1;
  constructor(readonly host:HTMLElement,readonly island:SceneController,onState:(state:ExplorationState)=>void,onExit:()=>void){
   const group=island.node('feihua_group');if(group){group.updateWorldMatrix(true,false);this.feihuaInverse=group.matrixWorld.clone().invert();const scale=group.getWorldScale(new T.Vector3());this.feihuaUnit=Math.min(Math.abs(scale.x),Math.abs(scale.y),Math.abs(scale.z));}
   const size=island.project.terrain.size,bounds=new T.Box3(new T.Vector3(-size,-1000,-size),new T.Vector3(size,1000,size));
@@ -34,15 +34,27 @@ export class IslandWalkController {
   const water=island.water.mesh.clone();this.waterMaterial=island.water.material.clone();this.waterMaterial.uniforms.depthMap.value=island.water.material.uniforms.depthMap.value;this.waterMaterial.uniforms.ultraEnabled.value=0;this.waterMaterial.uniforms.waveTime.value=0;water.material=this.waterMaterial;water.visible=true;this.scene.add(water);
   this.lighting=new IslandLighting(this.renderer,this.scene);this.lighting.setQuality(island.project.settings.quality);
   const pending=island.environment.userData.vegetationTrialPromise as Promise<void>|undefined;
-  void pending?.then(()=>{if(!this.active||walkEnvironment.getObjectByName('vegetation-pilot'))return;const trial=island.environment.getObjectByName('vegetation-pilot');const roots=island.environment.userData.vegetationTrialRoots as [number,number,number][]|undefined;if(trial&&roots){maskTrialTrees(walkEnvironment,roots);walkEnvironment.add(trial.clone(true));this.lighting.invalidate();this.scheduler.requestRender();}});
+  void pending?.then(()=>{if(!this.active||walkEnvironment.getObjectByName('vegetation-pilot'))return;const trial=island.environment.getObjectByName('vegetation-pilot');const roots=island.environment.userData.vegetationTrialRoots as [number,number,number][]|undefined;if(trial&&roots){maskTrialTrees(walkEnvironment,roots);walkEnvironment.add(trial.clone(true));this.collectWalkDetails();this.lighting.invalidate();this.scheduler.requestRender();}});
   void island.sakuraReady?.then(()=>{if(!this.active)return;const mature=island.node('scenic_sakura')?.getObjectByName('sakura-mature-new'),young=island.objects.getObjectByName('sakura-young-new');if(!mature||!young)return;const vegetation=walkEnvironment.getObjectByName('vegetation-pilot'),gate=island.node('shrine_torii');if(vegetation){young.updateWorldMatrix(true,false);gate?.updateWorldMatrix(true,false);clearTreesNear(vegetation,young.getWorldPosition(new T.Vector3()),7.5,gate?.getWorldPosition(new T.Vector3()));}if(walkObjects.getObjectByName('sakura-mature-new')){this.lighting.invalidate();this.scheduler.requestRender();return;}walkObjects.traverse(n=>{if(n instanceof T.Mesh&&n.userData.objectId==='scenic_sakura'){const key=String(n.geometry.userData.sourceKey||n.userData.feature||'');if(key==='scenic:blossom'||key==='scenic:continuous-branch:scenic_sakura')n.visible=false;}});for(const source of [mature,young]){source.updateWorldMatrix(true,false);const clone=source.clone(true);clone.matrixAutoUpdate=false;clone.matrix.copy(source.matrixWorld);walkObjects.add(clone);}this.lighting.invalidate();this.scheduler.requestRender();});
   this.scheduler=new DemandRenderer(()=>{this.updateAvatar();this.exploration?.update(performance.now());this.updateWalkGrass();this.lighting.beforeDraw();this.renderer.render(this.scene,this.camera);if(this.exploration?.needsFrame)this.scheduler.requestRender();});
   const look=island.camera.getWorldDirection(new T.Vector3());look.y=0;if(look.lengthSq()<.001)look.set(0,0,-1);look.normalize();
   this.exploration=new ExplorationController(this.renderer.domElement,this.camera,this.world,{spawn,target:spawn.clone().add(look).add(new T.Vector3(0,1.8,0)),radius:.36,height:2.1,eye:1.8,step:.55,speed:7,points:[]},this.scheduler.requestRender,onState,()=>{},onExit);
+  this.collectWalkDetails();
   this.resize=new ResizeObserver(()=>this.resizeViewport());this.resize.observe(host);document.addEventListener('visibilitychange',this.visibility);this.renderer.domElement.addEventListener('webglcontextlost',this.lost);
   this.unsubscribe=useEnvironment.subscribe(()=>this.environment());this.environment();this.resizeViewport();this.exploration.start();
  }
- private updateWalkGrass(){if(!this.walkGrass||!this.exploration)return;const p=this.exploration.feet;if(Math.hypot(p.x-this.grassUpdateX,p.z-this.grassUpdateZ)<8)return;this.grassUpdateX=p.x;this.grassUpdateZ=p.z;for(const chunk of this.walkGrass.children){const center=chunk.userData.grassCenter as number[]|undefined;if(center)chunk.visible=Math.hypot(center[0]-p.x,center[1]-p.z)<64;}}
+ private collectWalkDetails(){
+  for(const detail of this.walkDetails)detail.node.visible=true;
+  this.walkDetails=[];this.scene.updateMatrixWorld(true);
+  this.scene.traverse(n=>{
+   if(!n.visible)return;
+   if(n.userData.aboAsset){this.walkDetails.push({node:n,center:n.getWorldPosition(new T.Vector3()),range:115});return;}
+   const range=n.userData.walkDetailRange;
+   if(typeof range==='number'&&n instanceof T.InstancedMesh){if(!n.boundingSphere)n.computeBoundingSphere();const sphere=n.boundingSphere?.clone().applyMatrix4(n.matrixWorld);if(sphere)this.walkDetails.push({node:n,center:sphere.center,range:range+sphere.radius});}
+  });
+  this.grassUpdateX=Infinity;this.grassUpdateZ=Infinity;
+ }
+ private updateWalkGrass(){if(!this.exploration)return;const p=this.exploration.feet;if(Math.hypot(p.x-this.grassUpdateX,p.z-this.grassUpdateZ)<8)return;this.grassUpdateX=p.x;this.grassUpdateZ=p.z;for(const chunk of this.walkGrass?.children||[]){const center=chunk.userData.grassCenter as number[]|undefined;if(center)chunk.visible=Math.hypot(center[0]-p.x,center[1]-p.z)<64;}for(const detail of this.walkDetails)detail.node.visible=Math.hypot(detail.center.x-p.x,detail.center.z-p.z)<detail.range;}
  private updateAvatar(){if(!this.exploration||!this.feihuaInverse)return;const p=this.exploration.feet.clone().applyMatrix4(this.feihuaInverse),inside=p.x>-38&&p.x<24&&p.z>-42&&p.z<45,person=this.feihuaUnit*.76,c=this.exploration.config;
   c.radius=inside?.36*person:.36;c.height=inside?3.1*person:2.1;c.step=inside?.55*this.feihuaUnit:.55;c.eye=T.MathUtils.lerp(c.eye,inside?2.9*person:1.8,.18);
  }
