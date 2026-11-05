@@ -13,6 +13,8 @@ const previousManifestText=await readExisting('public/viewer-template/manifest.j
 const previousManifest=previousManifestText?JSON.parse(previousManifestText):[];
 run(['node_modules/typescript/bin/tsc','--noEmit']);
 run(['node_modules/vite/bin/vite.js','build','--mode','viewer']);
+// Viewer builds disable publicDir; include runtime vegetation and sakura models explicitly.
+for(const dir of ['plant-art','flora-pack']){await mkdir(path.join('dist-viewer',dir),{recursive:true});for(const entry of await readdir(path.join('public',dir),{withFileTypes:true})){if(entry.isFile()&&entry.name.endsWith('.glb'))await copyFile(path.join('public',dir,entry.name),path.join('dist-viewer',dir,entry.name));}}
 const upgraded=text=>{if(text===null)return null;const p=JSON.parse(text);return p.terrain.heightmapRevision===1&&p.terrain.landscapeRevision===2&&p.environment?.revision===1&&(!p.objects.some(o=>o.id==='landmark_feihua')||p.groups?.some(g=>g.id==='feihua_group'))?text:JSON.stringify(upgradeM3(p),null,2);};
 const updatedExample=upgraded(existingExample),updatedViewer=upgraded(existingViewer);
 const demo=createDemo(),published=process.argv.includes('--use-project-layout')?JSON.stringify(demo,null,2):null;const data=published??updatedExample??JSON.stringify(demo,null,2);
