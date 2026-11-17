@@ -13,6 +13,9 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: 网页内容/源码
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -21,15 +24,17 @@ jobs:
       - uses: pnpm/action-setup@v4
         with:
           version: 10.19.0
+          package_json_file: 网页内容/源码/package.json
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: pnpm
+          cache-dependency-path: 网页内容/源码/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
       - run: pnpm build:viewer -- --use-project-layout
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist-viewer
+          path: 网页内容/源码/dist-viewer
       - id: deployment
         uses: actions/deploy-pages@v4

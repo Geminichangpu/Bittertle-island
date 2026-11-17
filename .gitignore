@@ -1,27 +1,5 @@
-node_modules/
-dist/
-dist-viewer/
-public/viewer-template/
-.browser-profile/
-reports/
-releases/
-*.log
-*.tsbuildinfo
-.DS_Store
-Thumbs.db
-# Editable masters remain on this computer; keep a separate backup.
-art_source/blender/
-# Original production textures stay local; keep provenance and license notes.
-assets/textures/**/*
-!assets/textures/**/
-!assets/textures/**/*.json
-!assets/textures/**/*.md
-!assets/textures/**/*.txt
-*.blend1
-*.blend2
-# Replaced source exports stay on this workstation; runtime Meshopt copies are tracked.
-src/assets/models/*-interior-refined-*.glb
-src/assets/models/shrine_*-exterior-refined-*.glb
-src/assets/models/scenic_sakura-refined-*.glb
-# Runtime uses the separate normal/roughness maps, not these original packed maps.
-src/assets/textures/island-nature/*-orm.jpg
+/AGENTS.md
+/codex/
+/.pnpm-store/
+/资源/
+/网页内容/展示版/

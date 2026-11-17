@@ -1,0 +1,78 @@
+import * as T from 'three';
+import {TIME_PRESETS,type TimeMode} from './time-presets';
+import {useEnvironment} from './time-state';
+import type {SceneController} from '../scene/SceneController';
+import {NightMeteors} from './NightMeteors';
+
+/** Reuses the existing scene, sun and materials. Switching costs one requested frame. */
+export class EnvironmentManager {
+ readonly meteors:NightMeteors;
+ mode:TimeMode=useEnvironment.getState().mode;
+ readonly lamps=Array.from({length:6},()=>{const l=new T.PointLight('#ffb566',0,16,2);l.castShadow=false;return l;});
+ private stop:()=>void;
+ private pathLights:T.Vector3[]=[];
+ private lastTarget=new T.Vector3(Infinity,Infinity,Infinity);
+ constructor(private owner:SceneController){
+  this.meteors=new NightMeteors(owner.host);
+  owner.scene.add(...this.lamps);this.apply(this.mode);owner.scheduler.setFrameLimit(useEnvironment.getState().fps);
+  let effectRevision=0;
+  const setEffect=(enabled:boolean)=>{const revision=++effectRevision;owner.water.setAnimated(false);if(!enabled)owner.water.setReflection(false);void owner.water.setUltra(enabled).then(ok=>{if(revision!==effectRevision)return;if(!ok&&useEnvironment.getState().waterEffect){useEnvironment.getState().setWaterEffect(false);owner.host.dispatchEvent(new CustomEvent('scene-error',{detail:'水面效果不可用，已回退原水面。'}));return;}if(ok&&enabled&&useEnvironment.getState().waterEffect)owner.water.setAnimated(true);});};
+  setEffect(useEnvironment.getState().waterEffect);
+  owner.water.setReflection(useEnvironment.getState().waterReflection);
+  owner.labels.visible=useEnvironment.getState().labelsVisible;owner.requestRender();
+  this.stop=useEnvironment.subscribe((s,old)=>{if(s.mode!==old.mode)this.apply(s.mode);if(s.fps!==old.fps)owner.scheduler.setFrameLimit(s.fps);if(s.waterEffect!==old.waterEffect)setEffect(s.waterEffect);if(s.waterReflection!==old.waterReflection)owner.water.setReflection(s.waterReflection);if(s.labelsVisible!==old.labelsVisible){owner.labels.visible=s.labelsVisible;owner.requestRender();}});
+ }
+ apply(mode:TimeMode){
+  this.mode=mode;const p=TIME_PRESETS[mode],s=this.owner;s.host.dataset.timeMode=mode;
+  this.meteors.setNight(mode==='night');
+  s.scene.background=new T.Color(p.sky);s.scene.fog=new T.Fog(p.fog,p.fogNear,p.fogFar);
+  s.lighting.sun.color.set(p.sun);s.lighting.sun.intensity=p.sunIntensity;s.lighting.sun.position.fromArray(p.sunPosition);
+  s.lighting.sky.color.set(p.ambient);s.lighting.sky.groundColor.set(p.ground);s.lighting.sky.intensity=p.ambientIntensity;s.renderer.toneMappingExposure=p.exposure;
+  s.water.material.uniforms.ultraSun.value.copy(s.lighting.sun.position).normalize();s.water.material.uniforms.ultraSunColor.value.copy(s.lighting.sun.color);s.water.material.uniforms.ultraSunStrength.value=Math.min(1,p.sunIntensity/2.7);
+  this.refresh();s.invalidateShadows();s.requestRender();
+ }
+ refresh(){
+  const p=TIME_PRESETS[this.mode],materials=new Set<T.Material>();
+  this.pathLights=[];
+  this.owner.scene.updateWorldMatrix(true,true);
+  this.owner.scene.traverse(n=>{
+   if(!(n instanceof T.Mesh))return;
+   const list=Array.isArray(n.material)?n.material:[n.material];list.forEach(m=>materials.add(m));
+   if(!list.some(m=>m.userData.pathLantern))return;
+   const local=new T.Matrix4();
+   for(let i=0;i<(n instanceof T.InstancedMesh?n.count:1);i++){
+    if(n instanceof T.InstancedMesh)n.getMatrixAt(i,local);
+    this.pathLights.push(new T.Vector3().applyMatrix4(local).applyMatrix4(n.matrixWorld));
+   }
+  });
+  for(const m of materials){
+   if(m instanceof T.MeshStandardMaterial&&m.userData.lightRole){const lamp=m.userData.lightRole==='lamp';m.emissive.set(lamp?p.lampColor:p.windowColor);m.emissiveIntensity=lamp?p.lampIntensity:p.windowIntensity;}
+   if(m instanceof T.MeshBasicMaterial&&m.userData.shore)m.color.set(p.shoreTint);
+   if(m instanceof T.ShaderMaterial&&m.userData.sea){m.uniforms.nearColor.value.set(p.seaNear);m.uniforms.farColor.value.set(p.seaFar);m.uniforms.detailStrength.value=p.seaDetail;}
+  }
+  this.updateLights();
+ }
+ followTarget(){
+  if(this.mode!=='day'&&this.lastTarget.distanceToSquared(this.owner.controls.target)>9)this.updateLights();
+ }
+ updateLights(){
+  const p=TIME_PRESETS[this.mode];this.lamps.forEach(l=>l.intensity=0);let slot=0;
+  const target=this.owner.controls.target;this.lastTarget.copy(target);
+  if(p.localIntensity){
+   const nearest=this.pathLights.filter(point=>point.distanceToSquared(target)<45**2)
+    .sort((a,b)=>a.distanceToSquared(target)-b.distanceToSquared(target)).slice(0,2);
+   for(const point of nearest){const light=this.lamps[slot++];light.position.copy(point);light.color.set(p.lampColor);light.intensity=p.localIntensity*.78;}
+  }
+  // Bounded local lighting. All other windows/lamps use instanced emissive surfaces.
+  for(const id of ['shrine_court','shrine_garden','landmark_feihua','layout_lighthouse','layout_shopping']){
+   const root=this.owner.node(id);if(!root)continue;root.updateWorldMatrix(true,true);let chosen:T.Mesh|undefined;
+   root.traverse(n=>{if(!chosen&&n instanceof T.Mesh&&!Array.isArray(n.material)&&n.material.userData.lightRole==='lamp')chosen=n;});
+   if(!chosen)continue;
+   const count=id==='shrine_court'&&chosen instanceof T.InstancedMesh?Math.min(2,chosen.count):1;
+   for(let i=0;i<count&&slot<this.lamps.length;i++){
+    const l=this.lamps[slot++];chosen.geometry.computeBoundingBox();chosen.geometry.boundingBox!.getCenter(l.position);if(chosen instanceof T.InstancedMesh){const matrix=new T.Matrix4();chosen.getMatrixAt(i,matrix);l.position.applyMatrix4(matrix);}l.position.applyMatrix4(chosen.matrixWorld);l.position.y+=.25;l.color.set(p.lampColor);l.intensity=p.localIntensity;
+   }
+  }
+ }
+ dispose(){this.stop();this.meteors.dispose();this.lamps.forEach(l=>{l.removeFromParent();l.dispose();});}
+}
