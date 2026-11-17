@@ -1,5 +1,5 @@
-import {addParkSlide} from './park-slide';
-import {crownGeometry,leafSprigGeometry} from '../environment/nature-geometry';
+import {addParkSlide} from './park-slide.ts';
+import {crownGeometry,leafSprigGeometry} from '../environment/nature-geometry.ts';
 import {makeNaturalCave} from './natural-cave.ts';
 import * as T from 'three';
 import {Builder,type Cache} from './shrine.ts';
