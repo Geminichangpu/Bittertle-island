@@ -10,11 +10,11 @@ import {maskPilotScenicTrees} from '../environment/nature-pilot';
 
 import {ExteriorWallMaterials} from './exterior-wall-materials';
 
-const urls=import.meta.glob(['../assets/models/*-refined-*.glb','!../assets/models/*-interior-*.glb','!../assets/models/shrine_*-exterior-refined-*.glb','!../assets/models/scenic_sakura-refined-*.glb','../assets/models-optimized/shrine_*-exterior-meshopt-lossless.glb'],{eager:true,query:'?url',import:'default'}) as Record<string,string>;
+const urls=import.meta.glob(['../assets/models-optimized/*-refined-*.glb','!../assets/models-optimized/landmark_liuli-exterior-refined-v1.glb','../assets/models-optimized/shrine_*-exterior-meshopt-lossless.glb'],{eager:true,query:'?url',import:'default'}) as Record<string,string>;
 const files:Record<string,string>={
  layout_lighthouse:'lighthouse-refined-v1',layout_treehouse:'treehouse-refined-v1',landmark_feihua:'landmark_feihua-refined-v1',feihua_annex:'feihua_annex-refined-v1',feihua_onsen:'feihua_onsen-refined-v1',feihua_terrace:'feihua_terrace-refined-v1',feihua_bridge:'feihua_bridge-refined-v1',
  shrine_main:'shrine_main-exterior-refined-v1',shrine_torii:'shrine_torii-exterior-refined-v1',shrine_temizu:'shrine_temizu-exterior-refined-v1',shrine_office:'shrine_office-exterior-refined-v1',shrine_residence:'shrine_residence-exterior-refined-v1',shrine_court:'shrine_court-exterior-refined-v1',shrine_garden:'shrine_garden-exterior-refined-v1',shrine_path:'shrine_path-exterior-refined-v1',
- base_office:'base_office-exterior-refined-v1',base_bedroom:'base_bedroom-exterior-refined-v1',base_pond:'base_pond-exterior-refined-v1',base_warehouse:'base_warehouse-exterior-refined-v1',landmark_liuli:'landmark_liuli-exterior-refined-v1',landmark_library:'landmark_library-exterior-refined-v1',layout_shopping:'layout_shopping-exterior-refined-v1',layout_market:'layout_market-exterior-refined-v1',
+ base_office:'base_office-exterior-refined-v1',base_bedroom:'base_bedroom-exterior-refined-v1',base_pond:'base_pond-exterior-refined-v1',base_warehouse:'base_warehouse-exterior-refined-v1',landmark_library:'landmark_library-exterior-refined-v1',layout_shopping:'layout_shopping-exterior-refined-v1',layout_market:'layout_market-exterior-refined-v1',
  // Sakura uses the authored instanced blossom sprays; the baked GLB contains the old solid balls.
  scenic_cliff:'scenic_cliff-refined-v5',scenic_academy:'scenic_academy-refined-v5',scenic_farm:'scenic_farm-refined-v5'
 };
@@ -36,9 +36,20 @@ export class RefinementManager {
  }
  retryFailed(){this.failures.clear();if(this.suspended)this.pump();else this.refresh();}
  setSuspended(value:boolean){this.suspended=value;if(value){this.wanted.clear();for(const ctl of this.running.values())ctl.abort();}else this.refresh();}
- startVisit(ids:string[],onReady:(id:string)=>void){this.visitListener=onReady;this.wanted=new Map(ids.filter(id=>!!files[id]).map((id,i)=>[id,i]));for(const id of this.wanted.keys()){this.failures.delete(id);if(this.cache.has(id)){this.mount(id);onReady(id);}}this.pump();return ()=>{if(this.visitListener!==onReady)return;this.visitListener=undefined;this.wanted.clear();for(const ctl of this.running.values())ctl.abort();};}
+ supports(id:string){return !!files[id];}
+ startVisit(ids:string[],onReady:(id:string)=>void){
+  const previous=this.visitListener===onReady?this.wanted:new Map<string,number>();
+  this.visitListener=onReady;this.wanted=new Map(ids.filter(id=>this.supports(id)).map((id,i)=>[id,i]));
+  for(const [id,ctl] of this.running)if(!this.wanted.has(id))ctl.abort();
+  for(const id of previous.keys())if(!this.wanted.has(id))this.unmount(id);
+  for(const id of this.wanted.keys()){
+   if(previous.has(id))continue;
+   this.failures.delete(id);if(this.cache.has(id)){this.mount(id);onReady(id);}
+  }
+  this.pump();return ()=>{if(this.visitListener!==onReady)return;this.visitListener=undefined;this.wanted.clear();for(const ctl of this.running.values())ctl.abort();};
+ }
  private pump(){if(this.disposed)return;const next=[...this.wanted].filter(([id])=>!this.cache.has(id)&&!this.running.has(id)&&!this.failures.has(id)).sort((a,b)=>a[1]-b[1]);while(this.running.size<2&&next.length){const [id]=next.shift()!;const ctl=new AbortController();this.running.set(id,ctl);void this.load(id,ctl);}}
- private async load(id:string,ctl:AbortController){let scene:T.Group|undefined;try{const compressed=id.startsWith('shrine_');const path=urls[compressed?`../assets/models-optimized/${id}-exterior-meshopt-lossless.glb`:`../assets/models/${files[id]}.glb`];if(!path)throw new Error('模型资源不存在');const url=new URL(path,document.baseURI);const res=await fetch(url,{signal:ctl.signal});if(!res.ok)throw new Error(`HTTP ${res.status}`);const data=await res.arrayBuffer();if(ctl.signal.aborted||this.disposed)return;const loader=new GLTFLoader(islandLoadingManager());if(compressed){const {MeshoptDecoder}=await import('three/addons/libs/meshopt_decoder.module.js');loader.setMeshoptDecoder(MeshoptDecoder);}const gltf=await loader.parseAsync(data,new URL('.',url).href);scene=gltf.scene;if(ctl.signal.aborted||this.disposed){release(scene);return;}
+ private async load(id:string,ctl:AbortController){let scene:T.Group|undefined;try{const path=urls[id.startsWith('shrine_')?`../assets/models-optimized/${id}-exterior-meshopt-lossless.glb`:`../assets/models-optimized/${files[id]}.glb`];if(!path)throw new Error('模型资源不存在');const url=new URL(path,document.baseURI);const res=await fetch(url,{signal:ctl.signal});if(!res.ok)throw new Error(`HTTP ${res.status}`);const data=await res.arrayBuffer();if(ctl.signal.aborted||this.disposed)return;const loader=new GLTFLoader(islandLoadingManager());{const {MeshoptDecoder}=await import('three/addons/libs/meshopt_decoder.module.js');loader.setMeshoptDecoder(MeshoptDecoder);}const gltf=await loader.parseAsync(data,new URL('.',url).href);scene=gltf.scene;if(ctl.signal.aborted||this.disposed){release(scene);return;}
   await this.exteriorWalls.apply(scene,id);if(ctl.signal.aborted||this.disposed){release(scene);return;}
   if(id==='shrine_garden'){
    const gs=await natureGeometries('shrub',ctl.signal);if(ctl.signal.aborted||this.disposed){gs.forEach(g=>g.dispose());release(scene);return;}

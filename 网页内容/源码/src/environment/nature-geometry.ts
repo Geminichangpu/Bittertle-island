@@ -1,21 +1,34 @@
 import {coastalRocks} from './coastal-rock-meshes.ts';
 import * as T from 'three';
 
-/** Shared 176-triangle leaf sprays replace the 180-triangle solid balls.
- * Opaque folded leaves need neither alpha blending nor additional textures/draw calls. */
-export function crownGeometry(){
- const vertices:number[]=[],colors:number[]=[];
- for(let i=0;i<44;i++){
-  const a=i*2.399963,lobe=i%5,spread=.32+.5*((i*17)%43)/43;
-  const center=new T.Vector3(Math.cos(a)*spread,Math.sin(i*1.7)*.4+(lobe===0?.3:0),Math.sin(a)*spread*.88);
-  const direction=new T.Vector3(Math.cos(a+.45)*.65,.15+Math.sin(i*.7)*.25,Math.sin(a+.45)*.65).normalize();
-  const across=new T.Vector3(-direction.z,.1*Math.cos(i),direction.x).normalize(),length=.55+(i%4)*.09,width=.22+(i%3)*.035;
-  const base=center.clone().addScaledVector(direction,-length*.46),tip=center.clone().addScaledVector(direction,length*.54);
-  const left=center.clone().addScaledVector(across,width),right=center.clone().addScaledVector(across,-width),ridge=center.clone().add(new T.Vector3(0,.07,0));
-  for(const triangle of [[base,left,ridge],[left,tip,ridge],[tip,right,ridge],[right,base,ridge]])for(const v of triangle){vertices.push(v.x,v.y,v.z);const shade=.73+.19*(v.y+1)/2+(i%3)*.035;colors.push(shade,shade,shade);}
+/** Curved blades with pointed tips, an off-centre midrib and separate leaf undersides. */
+function spray(count:number,canopy:boolean){
+ const positions:number[]=[],colors:number[]=[],uv:number[]=[],indices:number[]=[];
+ for(let leaf=0;leaf<count;leaf++){
+  const a=leaf*2.399963,phase=leaf*.7549,spread=.30+.54*((leaf*17)%43)/43;
+  const root=canopy?new T.Vector3(Math.cos(a)*spread,Math.sin(leaf*1.7)*.41,Math.sin(a)*spread*.88):new T.Vector3(Math.cos(a)*.078,leaf*.046,Math.sin(a)*.078);
+  const breadth=canopy?.145+(leaf%3)*.033:.10+(leaf%3)*.012,length=canopy?.64+(leaf%4)*.076:.44+(leaf%3)*.075;
+  const forward=new T.Vector3(Math.cos(a+.25),canopy?.18*Math.sin(leaf*.7):.20,Math.sin(a+.25)).normalize();
+  const across=new T.Vector3(-forward.z,.12*Math.cos(phase),forward.x).normalize();
+  if(canopy)root.addScaledVector(forward,-length*.43);
+  const index=positions.length/3;
+  for(let row=0;row<=6;row++){
+   const t=row/6,span=breadth*Math.max(.012,Math.sin(Math.PI*t**.86))*(row===2?.94:1);
+   const mid=root.clone().addScaledVector(forward,t*length);
+   mid.y+=Math.sin(Math.PI*t)*length*.16-t*t*length*.115;
+   mid.addScaledVector(across,Math.sin(Math.PI*t)*.023*Math.sin(phase));
+   for(const side of [-1,0,1]){
+    const p=mid.clone().addScaledVector(across,span*side);
+    p.y+=span*(side===0?.28:.18*side*Math.sin(phase+t*1.7));
+    positions.push(p.x,p.y,p.z);uv.push((side+1)/2,t);
+    const shade=.72+.12*t+.055*(leaf%3)+(side===0?.10:side===1?.035:0);colors.push(shade,shade,shade*.98);
+   }
+   if(row<6)for(let j=0;j<2;j++){const n=index+row*3+j;indices.push(n,n+1,n+4,n,n+4,n+3);}
+  }
  }
- const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(vertices,3));g.setAttribute('color',new T.Float32BufferAttribute(colors,3));g.computeVertexNormals();return g;
+ const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(positions,3));g.setAttribute('color',new T.Float32BufferAttribute(colors,3));g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));g.setIndex(indices);g.computeVertexNormals();return g;
 }
+export function crownGeometry(){return spray(27,true);}
 export function boulderGeometry(variant=0){
  const rock=coastalRocks[variant % coastalRocks.length];
  const geometry=new T.BufferGeometry();
@@ -24,17 +37,4 @@ export function boulderGeometry(variant=0){
  geometry.computeVertexNormals();
  return geometry;
 }
-/** Five curved leaf blades, folded around their midribs, batched as a single sprig. */
-export function leafSprigGeometry(){
- const positions:number[]=[],colors:number[]=[];
- for(let leaf=0;leaf<5;leaf++){
-  const a=leaf*2.4,ox=Math.cos(a)*.08,oz=Math.sin(a)*.08,len=.42+(leaf%2)*.16;
-  const rows:T.Vector3[][]=[];
-  for(let i=0;i<=4;i++){
-   const t=i/4,width=Math.sin(t*Math.PI)*.13;
-   rows.push([-1,0,1].map(side=>new T.Vector3(ox+Math.cos(a)*t*len-Math.sin(a)*width*side,leaf*.055+Math.sin(t*Math.PI)*.12+(side===0?.025:0),oz+Math.sin(a)*t*len+Math.cos(a)*width*side)));
-  }
-  for(let i=0;i<4;i++)for(let j=0;j<2;j++)for(const v of [rows[i][j],rows[i+1][j],rows[i][j+1],rows[i][j+1],rows[i+1][j],rows[i+1][j+1]]){positions.push(v.x,v.y,v.z);const s=.82+(leaf%3)*.07;colors.push(s,s,s);}
- }
- const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(positions,3));g.setAttribute('color',new T.Float32BufferAttribute(colors,3));g.computeVertexNormals();return g;
-}
+export function leafSprigGeometry(){return spray(5,false);}

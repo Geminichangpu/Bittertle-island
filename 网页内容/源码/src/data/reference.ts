@@ -34,7 +34,7 @@ export function createReferenceDemo():Project {
  return addReferenceLandmarks(arrangeShrineAndBase({schemaVersion:1,projectId:crypto.randomUUID(),projectName:'比特尔特岛 · 反 C 岛形与神社',world:{seaLevel:0},terrain:{size,resolution,heights,outer,bay,islet,topology:'open-bay'},objects,
   markers:[{id:'marker_shrine',name:'神社',locationId:'shrine',regionId:'shrine_precinct',description:'位于岛屿东侧山坡，较上一版向右上方略移。鸟居通向主殿，左侧手水舍逆时针转向；右侧小路连接南侧授予所与北侧居住庭院。',visible:true,position:[80,15,66]}],
   regions:[{id:'shrine_precinct',name:'神社境内',color:'#bda97b',visible:false,points:[[57,34],[115,24],[120,79],[103,87],[60,81]]}],
-  cameraPresets:[{id:'view_shrine_overview',name:'神社 · 建筑群',position:[128,74,127],target:[89,17,61],zoom:4.4,perspective:false},{id:'view_shrine_front',name:'神社 · 鸟居与主殿',position:[101,40,113],target:[78,21,55],zoom:6,perspective:false},{id:'view_shrine_garden',name:'神社 · 右侧庭院',position:[66,38,73],target:[99,18,44],zoom:7,perspective:false}],settings:{quality:'standard',labels:true}}));
+  cameraPresets:[{id:'view_shrine_overview',name:'神社 · 建筑群',position:[128,74,127],target:[89,17,61],zoom:4.4,perspective:false},{id:'view_shrine_front',name:'神社 · 鸟居与主殿',position:[101,40,113],target:[78,21,55],zoom:6,perspective:false},{id:'view_shrine_garden',name:'神社 · 右侧庭院',position:[66,38,73],target:[99,18,44],zoom:7,perspective:false}],settings:{quality:'low',labels:true}}));
 }
 
 /** Explicit, undoable upgrade. Keep user-created objects and old views; only remove known demo placeholders. */

@@ -1,4 +1,18 @@
 import {islandLoadingManager} from './island-loading-manager';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
-/** Fetch can be aborted when a room closes; parsing results are checked by callers. */
-export async function loadAbortableGLB(path:string,signal:AbortSignal){const url=new URL(path,document.baseURI);const response=await fetch(url,{signal});if(!response.ok)throw new Error(`HTTP ${response.status}`);const data=await response.arrayBuffer();if(signal.aborted)throw new DOMException('Aborted','AbortError');const {MeshoptDecoder}=await import('three/addons/libs/meshopt_decoder.module.js');if(signal.aborted)throw new DOMException('Aborted','AbortError');return new GLTFLoader(islandLoadingManager()).setMeshoptDecoder(MeshoptDecoder).parseAsync(data,url.protocol==='data:'||url.protocol==='blob:'?document.baseURI:new URL('.',url).href);}
+
+/** Fetch can be aborted when a room closes. Callers own successful parse results. */
+export async function loadAbortableGLB(path:string,signal:AbortSignal){
+ const url=new URL(path,document.baseURI);
+ const fetchBytes=async()=>{
+  const response=await fetch(url,{signal});
+  if(!response.ok)throw new Error(`HTTP ${response.status}`);
+  return response.arrayBuffer();
+ };
+ const [data,{MeshoptDecoder}]=await Promise.all([
+  fetchBytes(),import('three/addons/libs/meshopt_decoder.module.js'),
+ ]);
+ signal.throwIfAborted();
+ const base=url.protocol==='data:'||url.protocol==='blob:'?document.baseURI:new URL('.',url).href;
+ return new GLTFLoader(islandLoadingManager()).setMeshoptDecoder(MeshoptDecoder).parseAsync(data,base);
+}

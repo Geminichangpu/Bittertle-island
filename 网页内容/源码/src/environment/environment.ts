@@ -1,4 +1,5 @@
 import {addRoadLanterns} from './path-lanterns';
+import {collectStreetLamps,lampHalos,lampPools,streetFixtures} from './street-lighting';
 import {addFarmForage,addFarmSheep} from '../models/farm-models';
 import {natureGeometries} from '../models/custom-nature';
 import {addLocalLife} from './local-life';
@@ -62,7 +63,7 @@ export function makeEnvironment(p:Project,terrainGeometry:T.BufferGeometry,onRea
  const mat=(color:string,role?:'window'|'lamp')=>{
   if(role){
    const key=role+color;
-   if(!materials.has(key)){const m=new T.MeshStandardMaterial({color,roughness:.38});m.userData.lightRole=role;m.userData.pathLantern=role==='lamp'&&(color==='#f6ddac'||color==='#ffe4ac');materials.set(key,m);}
+   if(!materials.has(key)){const m=new T.MeshStandardMaterial({color,roughness:.38});m.userData.lightRole=role;if(role==='lamp'&&streetFixtures[color])m.userData.streetFixture=streetFixtures[color];materials.set(key,m);}
    return materials.get(key)!;
   }
   if(!materials.has(color)){
@@ -158,13 +159,18 @@ export function makeEnvironment(p:Project,terrainGeometry:T.BufferGeometry,onRea
  }
  metrics.rocks-=mountainRocks;
 
- const lifeBuilder=new Builder({geo,mat,sign:mat});root.userData.localLife=addLocalLife(p,lifeBuilder,surface,routes,obstacles);const lifeGroup=lifeBuilder.finish();lifeGroup.name='local-life-details';lifeGroup.userData.noCollision=true;lifeGroup.traverse(n=>{if(n instanceof T.Mesh&&String(n.geometry.userData.sourceKey||'').startsWith('life:cave-'))n.userData.naturePilotVegetation=true;});root.add(lifeGroup);addCentralCampus(p,b);addRoadLanterns(b,routes,surface,obstacles);const approach=campusApproach(p,surface,nature.material('paving','#d6e0e5'));if(approach)root.add(approach);
+ const lifeBuilder=new Builder({geo,mat,sign:mat});root.userData.localLife=addLocalLife(p,lifeBuilder,surface,routes,obstacles);const lifeGroup=lifeBuilder.finish();lifeGroup.name='local-life-details';lifeGroup.userData.noCollision=true;lifeGroup.traverse(n=>{if(n instanceof T.Mesh&&String(n.geometry.userData.sourceKey||'').startsWith('life:cave-'))n.userData.naturePilotVegetation=true;});root.add(lifeGroup);addCentralCampus(p,b);addRoadLanterns(b,routes,surface,obstacles,p.terrain);const approach=campusApproach(p,surface,nature.material('paving','#d6e0e5'));if(approach)root.add(approach);
  const crowded=(x:number,z:number,r:number)=>{const ix=Math.floor(x/5),iz=Math.floor(z/5),n=Math.ceil(r/5);for(let xx=ix-n;xx<=ix+n;xx++)for(let zz=iz-n;zz<=iz+n;zz++)for(const q of occupied.get(xx+','+zz)||[])if(Math.hypot(q[0]-x,q[1]-z)<r)return true;return false;};
  const farmBuilder=new Builder({geo,mat,sign:mat}),sheepBuilder=new Builder({geo,mat,sign:mat});root.userData.farmExtensions=addFarmExtensions(p,farmBuilder,sheepBuilder,surface,routes,obstacles,crowded);const farmGroup=farmBuilder.finish(),oldSheep=sheepBuilder.finish();oldSheep.name='farm-original-sheep';farmGroup.add(oldSheep);farmGroup.userData.farmExtension=true;root.userData.farmExtensionGroup=farmGroup;root.add(farmGroup);
  const farmObject=p.objects.find(o=>o.id==='scenic_farm');if(farmObject){const transform=(o:{position:number[];rotation:number[];scale:number[]})=>new T.Matrix4().compose(new T.Vector3().fromArray(o.position),new T.Quaternion().setFromEuler(new T.Euler(...o.rotation as [number,number,number])),new T.Vector3().fromArray(o.scale));const m=transform(farmObject),parent=p.groups?.find(g=>g.id===farmObject.parentId);if(parent)m.premultiply(transform(parent));const ctl=new AbortController(),previous=natureDisposers.get(root);natureDisposers.set(root,()=>{ctl.abort();previous?.();});void addFarmForage(farmGroup,m,ctl.signal).then(()=>onReady()).catch(error=>{if(!ctl.signal.aborted)console.warn('草料槽加载失败',error);});root.userData.farmSheepPromise=addFarmSheep(farmGroup,oldSheep,m,ctl.signal).then(()=>onReady()).catch(e=>{if(!ctl.signal.aborted)console.warn('农田羊模型加载失败',e);});}
 
  const beachBuilder=new Builder({geo,mat,sign:mat});const beach=addNorthBeach(p,b,beachBuilder,surface,routes,obstacles);const beachFallback=beachBuilder.finish();beachFallback.name='beach-original-loungers';root.add(beachFallback);root.userData.northBeach=beach.points;addAboBeach(root,beachFallback,beach.loungers,onReady);
  const instances=b.finish();instances.traverse(n=>{n.userData.globalNatureInstances=true;});instances.name='植被、岩石与静态海浪';root.add(instances);
+ const lamps=collectStreetLamps(root);root.userData.streetLamps=lamps;
+ if(lamps.length){
+  const heightUnderLamp=(x:number,z:number)=>isLand(p.terrain,x,z)?surface.height(x,z):undefined;
+  root.add(lampHalos(lamps),lampPools(lamps,heightUnderLamp));
+ }
  const pilot=makePilotVegetation(p,surface,routes,obstacles,nature);root.add(pilot.root);root.userData.pilotRoots=pilot.roots;root.userData.pilotMetrics=pilot.root.userData.metrics;
  root.userData.beachTreeRoots=beach.points.length>=3?[[beach.points[0].x,beach.points[0].y,beach.points[0].z+2]]:[];
  root.add(makeIslandGrass(p,surface,routes,obstacles));addVegetationTrial(root,p,surface,routes,obstacles,pilot.roots,globalTreeRoots,onReady);

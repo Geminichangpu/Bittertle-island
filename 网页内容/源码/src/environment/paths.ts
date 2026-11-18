@@ -92,7 +92,20 @@ export function planPaths(p:Project):Route[]{
  return planned;
 }
 
-export function roadDistance(routes:Route[],x:number,z:number){let d=Infinity;for(const r of routes)for(let i=1;i<r.points.length;i++){const a=r.points[i-1],b=r.points[i],vx=b[0]-a[0],vz=b[1]-a[1],t=Math.max(0,Math.min(1,((x-a[0])*vx+(z-a[1])*vz)/(vx*vx+vz*vz||1)));d=Math.min(d,Math.hypot(x-a[0]-vx*t,z-a[1]-vz*t)-r.width/2);}return d;}
+export function roadDistance(routes:Route[],x:number,z:number){
+ let closest=Infinity;
+ for(const route of routes){
+  let distanceSquared=Infinity;
+  for(let i=1;i<route.points.length;i++){
+   const a=route.points[i-1],b=route.points[i],dx=b[0]-a[0],dz=b[1]-a[1];
+   const u=Math.max(0,Math.min(1,((x-a[0])*dx+(z-a[1])*dz)/(dx*dx+dz*dz||1)));
+   const ox=x-a[0]-dx*u,oz=z-a[1]-dz*u;
+   distanceSquared=Math.min(distanceSquared,ox*ox+oz*oz);
+  }
+  closest=Math.min(closest,Math.sqrt(distanceSquared)-route.width/2);
+ }
+ return closest;
+}
 
 /** Keep the shopping route outside the shrine grounds, but leave the shrine's stepping-stone garden and lanes unpaved. */
 export function omitShrineBackRoad(p:Project,routes:Route[]):Route[]{

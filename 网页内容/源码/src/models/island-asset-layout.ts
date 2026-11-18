@@ -5,7 +5,13 @@ import reedBasket from '../assets/island-craft/reed-basket.glb?url';
 import selvedgeRug from '../assets/island-craft/selvedge-rug.glb?url';
 import celadonLamp from '../assets/island-craft/celadon-lamp.glb?url';
 import specimens from '../assets/island-craft/hecate-specimens.glb?url';
-const craft:Record<string,string>={'hecate-travel-map':travelChart,'hecate-globe':travelGlobe,'hebe-wardrobe-outfits':outfits,'hecate-specimens':specimens,wicker_basket_01:reedBasket,rug:selvedgeRug,table_lamp:celadonLamp};
+import loveseat from '../assets/island-craft/island-loveseat.glb?url';
+import settee from '../assets/island-craft/island-settee.glb?url';
+import threeSeat from '../assets/island-craft/island-three-seat.glb?url';
+import upholsteredChair from '../assets/island-craft/island-armchair.glb?url';
+import chaise from '../assets/island-craft/island-chaise.glb?url';
+const craft:Record<string,string>={'hecate-travel-map':travelChart,'hecate-globe':travelGlobe,'hebe-wardrobe-outfits':outfits,'hecate-specimens':specimens,wicker_basket_01:reedBasket,rug:selvedgeRug,table_lamp:celadonLamp,
+ sofa_furniture:loveseat,couch_medium:settee,couch_large:threeSeat,couch_small:upholsteredChair,couch_l:chaise};
 export type AssetPlacement={url:string;at:[number,number,number];height:number;angle?:number;fit?:[number,number,number];slot?:string;solid?:boolean;cut?:[number,number,number,number,number,number];prefixes?:string[];tint?:string;support?:string;materialTints?:Record<string,string>;curtainGap?:boolean;foliageOnly?:boolean;plantCut?:boolean;frameCut?:boolean;removeOnly?:boolean;cutMaterial?:string;interactive?:boolean};
 const cc0=import.meta.glob('../assets/cc0-test/*.glb',{eager:true,query:'?url',import:'default'}) as Record<string,string>;
 const abo=import.meta.glob('../assets/abo-test/*.glb',{eager:true,query:'?url',import:'default'}) as Record<string,string>;
@@ -37,10 +43,10 @@ export const islandAssetAdditions:Record<string,AssetPlacement[]>={
  bedroom:[p('wicker_basket_01',.9,.03,-4.65,.55,0,{fit:[.85,.55,.7],prefixes:['61_藤编收纳篮与白衬'],cut:[5.24,.04,-1.95,6.27,.8,-1.05]}),p('standing_picture_frame_01',3.8,1.55,-4.66,.54,-Math.PI/2,{solid:false,frameCut:true,prefixes:['03_保留陈设与地板_BR_9bb3a0_'],cut:[3.50,1.515,-4.745,4.10,1.965,-4.645]})],
  residence:[basket(-5,.2,-3.6),p('wooden_display_shelves_01',6.8,.2,-3.7,2.2,0),p('houseplant_2',6.8,2.4,-3.7,.45)],
  feihua:[p('bookcase_books',-10,7.7,-6.1,2.2),basket(-10,7.7,-4.7),p('houseplant_3',-8.2,7.7,-6.1,.7)],
- lobby:[sofa('couch_medium',-8,5),sofa('couch_large',-2,5),sofa('couch_small',-8,-3,Math.PI/2),p('ceiling_light',-8,13,5,2,0,{solid:false}),p('floor_light',-8.1,.03,9.4,2.4)],
+ lobby:[sofa('couch_medium',-8,5),sofa('couch_large',-2,5),{...sofa('couch_small',-8,-3,Math.PI/2),fit:[1.85,1.5,1.45]},p('ceiling_light',-8,13,5,2,0,{solid:false}),p('floor_light',-8.1,.03,9.4,2.4)],
  hecate:[p('shelf_large',7.42,.05,1.3,5.2,-Math.PI/2,{fit:[2.8,5.2,.8],cut:[6.9,.06,-.15,7.98,5.3,2.75]}),p('office_chair',5.7,.05,-3.5,2.1,Math.PI/2,{cut:[5.05,.06,-4.1,6.35,2.2,-2.9]}),p('houseplant_1',-2.3,.04,-5.6,.7)],
  hebe:[p('sofa_furniture',1.4,.08,-4.9,1.5,0,{fit:[3.8,1.5,1.4],cut:[-.8,.06,-5.7,3.5,1.7,-4.05]}),p('chandelier',1,5.4,-2.7,1.1,0,{solid:false}),p('chair',5.7,.05,-.1,2,Math.PI/2,{cut:[5,.06,-.8,6.4,2.25,.6]}),p('rug',3.4,.04,5.1,.02,0,{fit:[2.9,.02,2.5],solid:false})],
- dolly:[bed('bed_twin',.4),p('curtains_double',1.7,.15,-6.55,5.9,0,{fit:[8.7,5.9,.2],tint:'#f2ede4',curtainGap:true,solid:false,cut:[-3.3,.1,-6.7,6.8,6.2,-6.2]}),p('bookcase_books',6.65,.03,-6.3,5.7,0,{fit:[1.65,5.7,.75],materialTints:{DarkWood:'#d4e0e6',Wood1:'#e7e4dc',Wood2:'#edf1ee',Cover1:'#7395b5',Cover2:'#e4ddd0',Cover3:'#b5c9d6',Cover4:'#a6b9b0',Cover5:'#d5cbc8',Cover6:'#a1b0c1',Pages:'#f0ece1'},cut:[5.78,.06,-6.9,7.25,6.25,-5.7]})],
+ dolly:[bed('bed_twin',.4),p('curtains_double',1.7,.15,-6.55,5.9,0,{fit:[8.7,5.9,.2],tint:'#f2ede4',solid:false,cut:[-3.3,.1,-6.7,6.8,6.2,-6.2]}),p('bookcase_books',6.65,.03,-6.3,5.7,0,{fit:[1.65,5.7,.75],materialTints:{DarkWood:'#d4e0e6',Wood1:'#e7e4dc',Wood2:'#edf1ee',Cover1:'#7395b5',Cover2:'#e4ddd0',Cover3:'#b5c9d6',Cover4:'#a6b9b0',Cover5:'#d5cbc8',Cover6:'#a1b0c1',Pages:'#f0ece1'},cut:[5.78,.06,-6.9,7.25,6.25,-5.7]})],
  owner:[{...sofa('couch_l',-7,2.7,Math.PI/2),fit:[3.8,1.5,2.8],prefixes:['owner-sofa-west'],cut:[-7.90,.059,.48,-6.10,1.72,4.92]},{...sofa('couch_medium',-4,5.5,Math.PI),prefixes:['owner-sofa-south'],cut:[-6.22,.059,4.59,-1.78,1.72,6.42]},p('office_chair',2.2,.04,-5.1,2.2,0,{cut:[1.5,.06,-5.8,2.9,2.2,-4.4]}),p('drawer',6.3,.03,6.7,1.1,0,{materialTints:{DarkWood:'#cbd7df',Wood:'#e9edf0'}}),p('table_lamp',6.3,1.13,6.7,.8)],
 };
 // The lighthouse has a narrow entrance; its existing dedicated seating stays clear.
@@ -49,9 +55,6 @@ islandAssetAdditions.warehouseOutside.push(p('B078JM9XSJ',6,.25,-4,.5),p('B078JM
 islandAssetAdditions.academy.push(p('B07B8NW6C9',-10.48,1.2,3,1.3,Math.PI/2));
 islandAssetAdditions.townRestaurant.push(p('B07BLB6644',-4.2,1.4,1.3,.22),p('B07YPRSX86',4.4,.2,2.7,.9));
 islandAssetAdditions.townPark.push(p('B07YPRSX86',-5,0,-3,.9));
-for(const kind of ['lobby','owner','hebe'])for(const item of islandAssetAdditions[kind]){
- if(/\/(couch_|sofa_furniture)/.test(item.url))item.tint=kind==='hebe'?'#d5c9c8':'#dce4e9';
-}
 
 for(const kind of ['market','townRestaurant'])for(const item of islandAssetAdditions[kind])if(/B07MF1NJ7Q|B07BLB6644/.test(item.url))item.support='B07K12WN6V';
 for(const item of islandAssetAdditions.villaOutside)if(item.url.includes('table_lamp'))item.support='B01D3C7Z4A';

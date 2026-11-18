@@ -1,3 +1,4 @@
+import {materialDaylight} from './material-daylight';
 import * as T from 'three';
 
 /** Static daylight and a cached island-wide shadow map; camera changes reuse the map. */
@@ -5,8 +6,10 @@ export class IslandLighting {
  readonly sun=new T.DirectionalLight('#fff0d5',2.7);
  readonly sky=new T.HemisphereLight('#e9f4ff','#617660',1.5);
  shadowUpdates=0;
+ private readonly releaseDaylight:()=>void;
  private quality?:'low'|'standard';
  constructor(private renderer:T.WebGLRenderer,scene:T.Scene){
+  this.releaseDaylight=materialDaylight(renderer,scene,false);scene.environmentIntensity=.34;
   renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
   renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFShadowMap;renderer.shadowMap.autoUpdate=false;
   this.sun.position.set(-160,260,140);this.sun.castShadow=true;this.sun.shadow.autoUpdate=false;
@@ -22,7 +25,7 @@ export class IslandLighting {
  }
  invalidate(){this.renderer.shadowMap.needsUpdate=true;this.sun.shadow.needsUpdate=true;}
  beforeDraw(){if(this.renderer.shadowMap.needsUpdate)this.shadowUpdates++;}
- dispose(){this.sun.shadow.dispose();this.sun.removeFromParent();this.sun.target.removeFromParent();this.sky.removeFromParent();}
+ dispose(){this.releaseDaylight();this.sun.shadow.dispose();this.sun.removeFromParent();this.sun.target.removeFromParent();this.sky.removeFromParent();}
 }
 
 export function shadowSurfaces(root:T.Object3D){root.traverse(n=>{

@@ -16,6 +16,7 @@ export function interiorPlantPlacements(root:T.Group,id:string,floor=''):AssetPl
   if(id==='landmark_liuli'){
    item.materialTints={potted_plant_02_pot:'#e8e4dc',Brown:'#e8e4dc',Black:'#d4d9d7'};
    if(floor==='owner'&&y<.1){item.at=x<0?[-9.8,.035,7.4]:[9.4,.035,7.4];}
+   if(floor==='owner'&&Math.abs(x+6)<.12&&Math.abs(z+3.5)<.12){item.at=[-5.45,1.545,-3.55];item.height=.46;}
    if(floor==='owner'&&Math.abs(x+4)<.1&&Math.abs(z-3.1)<.1){item.at=[-3.05,y,3.1];item.height=.5;}
    if(floor==='lobby'&&Math.abs(y-.76)<.1&&z>6){item.at=[x-.7,y,z-.15];item.height=.48;}
    if(floor==='lobby'&&y<.1&&Math.abs(z-4)<.1){item.at=[x,.035,2.8];item.height=1.65;}
@@ -42,5 +43,5 @@ export function interiorPlantPlacements(root:T.Group,id:string,floor=''):AssetPl
   if(!(n instanceof T.Mesh)||!/(ceramic-pot|ceramic-planter)$/.test(String(n.geometry.userData.sourceKey)))return;
   n.geometry.computeBoundingBox();const record=(m:T.Matrix4)=>{const b=n.geometry.boundingBox!.clone().applyMatrix4(inverse.clone().multiply(n.matrixWorld).multiply(m)),size=b.getSize(new T.Vector3());add((b.min.x+b.max.x)/2,b.min.y,(b.min.z+b.max.z)/2,size.y,Math.max(size.x,size.z));};
   if(n instanceof T.InstancedMesh)for(let i=0;i<n.count;i++){n.getMatrixAt(i,matrix);record(matrix);}else record(new T.Matrix4());
- });if(id==='shrine_residence'&&placements.length)placements[0].prefixes=['43_柜顶小花盆_','44_墙角绿植_'];return placements;
+ });if(id==='shrine_residence')for(const item of placements){const x=item.at[0];item.prefixes=[x<0?'43_柜顶小花盆_':'44_墙角绿植_'];}return placements;
 }

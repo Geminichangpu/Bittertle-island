@@ -1,7 +1,6 @@
 import {addFarmCrops} from './farm-models';
 import bowl from '../assets/abo-test/B075HWDSDK.glb?url';
 import teaJar from '../assets/abo-test/B075HWTX4Z.glb?url';
-import darkVase from '../assets/abo-test/B07QD6ZV9Q.glb?url';
 import pairedVases from '../assets/abo-test/B07QHL8W81.glb?url';
 import ladder from '../assets/abo-test/B07WDJRMPG.glb?url';
 import seaVase from '../assets/abo-test/B078JGRLCJ.glb?url';
@@ -10,7 +9,6 @@ import foliageUrl from '../assets/cc0-test/potted_plant_02.glb?url';
 import {islandAssetAdditions,type AssetPlacement} from './island-asset-layout';
 import {loadAbortableGLB} from './loadAbortableGLB';
 import birdhouse from '../assets/abo-test/B07HPMBN4B.glb?url';
-import planter from '../assets/abo-test/B07ZVMQ9B9.glb?url';
 import vase from '../assets/abo-test/B07B8NZQ68.glb?url';
 import chair from '../assets/abo-test/B07B83KVGK.glb?url';
 import ceramic from '../assets/abo-test/B075HWDSZ1.glb?url';
@@ -25,14 +23,13 @@ import parkBench from '../assets/abo-test/B0857JZJPR.glb?url';
 
 type Placement=AssetPlacement;
 const farm:Placement[]=[
- {url:planter,at:[12.8,.14,-12.2],height:1.7,angle:.2},
  {url:birdhouse,at:[-15,1.5,-9],height:1.8,angle:-.5},
  {url:milkCan,at:[-15.5,.12,-12],height:1.1},
  {url:woodPlanter,at:[13,.12,-3.65],height:1},
  {url:woodPlanter,at:[15.9,.12,3.38],height:1},
 ];
 const warehouseOutside:Placement[]=[{url:ladder,at:[5.8,.25,-1.8],height:2.1,angle:Math.PI/2}];
-const lobby:Placement[]=[{url:darkVase,at:[-8,0,-8],height:1.1},{url:vase,at:[8.2,2.03,-3.1],height:.65}];
+const lobby:Placement[]=[{url:vase,at:[8.2,2.03,-3.1],height:.65}];
 const academy:Placement[]=[{url:ceramic,at:[-5.1,.2,9.3],height:1.1},{url:ceramic,at:[5.1,.2,9.3],height:1.1}];
 const shopping:Placement[]=[{url:ceramic,at:[-2,.65,9],height:1.05},{url:ceramic,at:[2,.65,9],height:1.05}];
 const market:Placement[]=[{url:ceramic,at:[-3,.45,7],height:.9},{url:ceramic,at:[3,.45,7],height:.9}];
@@ -61,17 +58,40 @@ export type AboTrialKind=keyof typeof choices;
 /** Small, separately owned trial: additions are loaded only with the target scene. */
 export async function loadAboTrial(kind:AboTrialKind,signal:AbortSignal,authoredPlants:AssetPlacement[]=[]){
  const group=new T.Group();group.name='abo-local-trial';group.userData.islandAssetGroup=true;group.userData.assetKind=kind;
- const sources=new Map<string,T.Group>();
  const original=choices[kind].filter(p=>!authoredPlants.length||!['officeFlowers','officeShelf','residenceCorner','residenceShelf'].includes(p.slot||''));
  const placements=[...original,...(islandAssetAdditions[kind]||[]),...authoredPlants];group.userData.requestedCount=placements.length;group.userData.failedAssets=[];
+ const sources=new Map<string,T.Group>();
+ const errors=new Map<string,unknown>();
+ const urls=[...new Set(placements.filter(p=>!p.removeOnly&&p.url).map(p=>p.url))];
+ for(let i=0;i<urls.length&&!signal.aborted;i+=3){
+  await Promise.all(urls.slice(i,i+3).map(async url=>{
+   try{sources.set(url,(await loadAbortableGLB(url,signal)).scene);}
+   catch(error){errors.set(url,error);}
+  }));
+ }
+ if(signal.aborted){
+  sources.forEach(disposeAboTrial);
+  throw new DOMException('Aborted','AbortError');
+ }
  for(const placement of placements){
   if(placement.removeOnly){const mask=new T.Group();mask.name='removed-native-prop';mask.userData.assetCut=placement.cut;mask.userData.assetPlantCut=placement.plantCut;mask.userData.assetPrefixes=placement.prefixes;mask.userData.assetSolid=false;mask.userData.aboSlot=placement.slot||'removedPlant';mask.userData.assetCutMaterial=placement.cutMaterial;group.add(mask);continue;}
   try{
    if(!placement.url)throw new Error('未找到配置的模型资源');
-   let source=sources.get(placement.url);if(!source){source=(await loadAbortableGLB(placement.url,signal)).scene;sources.set(placement.url,source);}
+   const source=sources.get(placement.url);
+   if(!source)throw errors.get(placement.url)??new Error('模型资源加载失败');
    const scene=source.clone(true);if(placement.foliageOnly){const remove:T.Object3D[]=[];scene.traverse(n=>{if(n instanceof T.Mesh&&!n.name.includes('leaves'))remove.push(n);});remove.forEach(n=>n.removeFromParent());}
    if(placement.url.includes('standing_picture_frame_01'))scene.traverse(n=>{if(!(n instanceof T.Mesh))return;const fix=(material:T.Material)=>{if(!(material instanceof T.MeshStandardMaterial)||material.name!=='standing_picture_frame_01_glass')return material;const glass=material.clone();glass.color.set('#ffffff');glass.map=null;glass.normalMap=null;glass.metalness=0;glass.roughness=.15;glass.transparent=true;glass.opacity=.12;glass.depthWrite=false;glass.needsUpdate=true;return glass;};n.material=Array.isArray(n.material)?n.material.map(fix):fix(n.material);});
-   if(placement.tint||placement.materialTints)scene.traverse(n=>{if(n instanceof T.Mesh){const tint=(m:T.Material)=>{const copy=m.clone();if(copy instanceof T.MeshStandardMaterial){if(placement.materialTints?.[m.name]||placement.tint)copy.color.set(placement.materialTints?.[m.name]||placement.tint!);if(placement.materialTints?.[m.name]&&(/^(Wood1|Wood2|DarkWood)$/.test(m.name)||m.name.endsWith('_pot')))copy.map=null;copy.roughness=.9;}return copy;};n.material=Array.isArray(n.material)?n.material.map(tint):tint(n.material);}});
+   if(placement.tint||placement.materialTints)scene.traverse(n=>{
+    if(!(n instanceof T.Mesh))return;
+    const tint=(source:T.Material)=>{
+     const color=placement.materialTints?.[source.name]||placement.tint;
+     if(!color||!(source instanceof T.MeshStandardMaterial))return source;
+     const copy=source.clone();copy.color.set(color);
+     if(placement.materialTints?.[source.name]&&source.name.endsWith('_pot'))copy.map=null;
+     return copy;
+    };
+    n.material=Array.isArray(n.material)?n.material.map(tint):tint(n.material);
+   });
    if(placement.curtainGap){scene.updateMatrixWorld(true);const bounds=new T.Box3().setFromObject(scene),cx=(bounds.min.x+bounds.max.x)/2,half=(bounds.max.x-bounds.min.x)/2;scene.traverse(n=>{if(!(n instanceof T.Mesh))return;const ms=Array.isArray(n.material)?n.material:[n.material];if(!ms.some(m=>m.name==='Couch_Blue'))return;const g=n.geometry.clone(),p=g.getAttribute('position'),inverse=n.matrixWorld.clone().invert(),v=new T.Vector3();for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i).applyMatrix4(n.matrixWorld);const d=v.x-cx;v.x=cx+Math.sign(d)*(half*.68+Math.abs(d)*.32);v.applyMatrix4(inverse);p.setXYZ(i,v.x,v.y,v.z);}g.computeVertexNormals();g.computeBoundingBox();g.computeBoundingSphere();n.geometry=g;});}
    const box=new T.Box3().setFromObject(scene),size=box.getSize(new T.Vector3());
    if(!Number.isFinite(size.y)||size.y<=0){disposeAboTrial(scene);continue;}
@@ -80,7 +100,7 @@ export async function loadAboTrial(kind:AboTrialKind,signal:AbortSignal,authored
    scene.position.set(-center.x*scale.x,-box.min.y*scale.y,-center.z*scale.z);
    const anchor=new T.Group();anchor.userData.aboAsset=placement.url;anchor.userData.aboSlot=placement.slot;anchor.userData.assetSolid=placement.solid!==false;anchor.userData.supportAsset=placement.support;anchor.userData.assetCut=placement.cut;anchor.userData.assetPlantCut=placement.plantCut;anchor.userData.assetCutMaterial=placement.cutMaterial;anchor.userData.assetInteractive=placement.interactive;anchor.userData.assetFrameCut=placement.frameCut;anchor.userData.assetPrefixes=placement.prefixes;anchor.position.fromArray(placement.at);anchor.rotation.y=placement.angle||0;anchor.add(scene);
    if(placement.url===birdhouse){const post=new T.Mesh(new T.BoxGeometry(.14,1.5,.14),new T.MeshStandardMaterial({color:'#795638',roughness:.9}));post.position.y=-.75;post.castShadow=true;post.receiveShadow=true;post.userData.noCollision=true;anchor.add(post);}
-   if((placement.url===ceramic&&!['residence','office'].includes(kind))||placement.url===whitePot||placement.url===woodPlanter||placement.url===planter){
+   if((placement.url===ceramic&&!['residence','office'].includes(kind))||placement.url===whitePot||placement.url===woodPlanter){
     let foliage=sources.get(foliageUrl);if(!foliage){foliage=(await loadAbortableGLB(foliageUrl,signal)).scene;sources.set(foliageUrl,foliage);}
     const leaves=new T.Group();foliage.traverse(n=>{if(n instanceof T.Mesh&&n.name.includes('leaves'))leaves.add(n.clone(true));});
     const leafBox=new T.Box3().setFromObject(leaves),leafSize=leafBox.getSize(new T.Vector3()),leafCenter=leafBox.getCenter(new T.Vector3()),factor=placement.height*.82/Math.max(leafSize.x,leafSize.z);
@@ -91,7 +111,7 @@ export async function loadAboTrial(kind:AboTrialKind,signal:AbortSignal,authored
   }catch(error){if(signal.aborted){disposeAboTrial(group);throw error;}group.userData.failedAssets.push({url:placement.url,error:String(error)});console.warn('岛屿模型加载失败',error);}
  }
  group.updateMatrixWorld(true);for(const item of group.children){if(!item.userData.supportAsset)continue;const support=group.children.filter(n=>String(n.userData.aboAsset).includes(item.userData.supportAsset)).sort((a,b)=>a.position.distanceToSquared(item.position)-b.position.distanceToSquared(item.position))[0];if(support){const ray=new T.Raycaster(new T.Vector3(item.position.x,1000,item.position.z),new T.Vector3(0,-1,0));const hit=ray.intersectObject(support,true)[0];if(hit){item.position.y=hit.point.y+.008;item.userData.supportResolved=true;}}}
- if(kind==='farm'){try{await addFarmCrops(group,signal);group.userData.customFarmCrops=true;}catch(error){if(signal.aborted)throw error;console.warn('农田作物加载失败，保留原作物',error);}}
+ if(kind==='farm'){try{await addFarmCrops(group,signal);group.userData.customFarmCrops=true;}catch(error){if(signal.aborted){disposeAboTrial(group);throw error;}console.warn('农田作物加载失败，保留原作物',error);}}
  group.userData.loadComplete=true;
  return group;
 }

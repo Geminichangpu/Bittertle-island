@@ -27,6 +27,10 @@ export function addParkSlide(b:Builder,x:number){
    for(let j=1;j<grip.length;j++)b.cylinder(grip[j-1],grip[j],.047,teal,12);
    for(const z of [-2.35,-1.76]){const h=.15+(z+2.51)*1.09;b.cylinder([side*.47,h,z],[side*.47,h+.58,z],.032,teal,10);}
   }
+  for(const side of [-1,1])for(const z of [-1.10,-.06])for(const y of [1.61,1.78]){
+   const x=side*.607;b.cylinder([x,y,z],[x+side*.024,y,z],.028,'#ae9a74',12);
+  }
+  for(let step=0;step<6;step++)for(let line=0;line<3;line++)b.box([0,.222+step*.235,-2.48+step*.216+line*.053],[.72,.009,.016],'#856b50');
   for(let j=0;j<6;j++)b.box([0,.17+j*.235,-2.42+j*.216],[.85,.095,.265],honey);
   for(let j=0;j<7;j++)b.box([0,1.50,-1.20+j*.203],[1.12,.10,.195],honey);
   const path=new T.CatmullRomCurve3([

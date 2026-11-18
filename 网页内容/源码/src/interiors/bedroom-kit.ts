@@ -76,8 +76,8 @@ export function bedroomKit(){
   }
  });}
  function floor(x:number,z:number,w:number,d:number,y=0){
-  b.box([x,y-.14,z],[w,.25,d],p.dark);const n=Math.ceil(w/.42),step=w/n;
-  for(let i=0;i<n;i++){let zz=-d/2;const first=1.1+(i%3)*.65;let j=0;while(zz<d/2-.01){const len=Math.min(j===0?first:2.45,d/2-zz);b.box([x-w/2+(i+.5)*step,y,z+zz+len/2],[step-.01,.04,len-.012],['#ad8258','#b48a60','#a77d54'][(i*7+j*3)%3]);zz+=len;j++;}}
+  b.box([x,y-.14,z],[w,.25,d],'#b5966c');const n=Math.ceil(w/.42),step=w/n;
+  for(let i=0;i<n;i++){let zz=-d/2;const first=1.1+(i%3)*.65;let j=0;while(zz<d/2-.01){const len=Math.min(j===0?first:2.45,d/2-zz);b.box([x-w/2+(i+.5)*step,y,z+zz+len/2],[step-.01,.04,len-.012],['#bf9e72','#c3a276','#c7a77b'][(i*7+j*3)%3]);zz+=len;j++;}}
  }
  function wall(x:number,z:number,w:number,h:number,y=0,angle=0,planks=false){
   if(!planks){k.wall(x,z,w,h,y,angle);return;}
@@ -98,4 +98,3 @@ export function bedroomKit(){
  };
  return {...k,desk,shelf,plant,floor,wall,roof,chair,finish};
 }
-

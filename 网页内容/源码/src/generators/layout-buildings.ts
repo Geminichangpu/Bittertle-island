@@ -1,3 +1,4 @@
+import {buildVillaHouse} from './villa-house.ts';
 import * as T from 'three';
 import type {IslandObject} from '../data/model.ts';
 import {Builder,type Cache} from './shrine.ts';
@@ -26,41 +27,7 @@ export function makeLayoutBuilding(o:IslandObject,cache:Cache){
   for(let i=0;i<8;i++){const a=i*Math.PI/4;for(const y of [lamp+1,lamp+2.6])b.beam([Math.cos(a)*w*.24,y,Math.sin(a)*w*.24],[Math.cos(a+Math.PI/4)*w*.24,y,Math.sin(a+Math.PI/4)*w*.24],.065,wood);b.beam([Math.cos(a)*w*.31,lamp+3.8,Math.sin(a)*w*.31],[0,lamp+5.7,0],.065,'#cf8960');}
   b.litBall([0,lamp+2,0],[.5,.75,.5],'#f3dda2');
  }else if(o.templateId==='layout_villa'){
-  // European coastal estate: central two-storey house and usable front/back gardens.
-  const hw=w*.68,hd=d*.40,centerZ=-3.5;
-  b.box([0,.12,0],[w,.24,d],'#91aa7c');b.box([0,.45,centerZ],[hw+1.3,.9,hd+1.3],'#c7c7ba');b.box([0,h*.48+.8,centerZ],[hw,h*.8,hd],wall);
-  for(const y of [1,h*.45+.75,h*.8+.8])b.box([0,y,centerZ+hd/2+.08],[hw+.35,.18,.22],'#d2c9b6');
-  gable([0,h*.8+.8,centerZ],hw,hd,2.3,wall);slateRoof(b,[0,h*.8+.8,centerZ],hd+1.6,hw+1.8,2.5,roof,Math.PI/2);
-  for(const x of [-hw*.37,-hw*.19,hw*.19,hw*.37])for(const y of [3.0,7.2]){b.ball([x,y+1.3,centerZ+hd/2+.13],[1.1,.55,.09],'#79959c');b.box([x,y,centerZ+hd/2+.12],[2.2,2.7,.12],'#79959c');b.box([x,y,centerZ+hd/2+.2],[.1,2.8,.1],'#f3efe3');for(const yy of [-1.1,1.1])b.box([x,y+yy,centerZ+hd/2+.22],[2.2,.1,.1],'#f3efe3');}
-  b.box([0,2.35,centerZ+hd/2+.16],[2.2,3.3,.18],'#79634d');for(const x of [-1.7,1.7]){b.cylinder([x,.85,centerZ+hd/2+.8],[x,4.3,centerZ+hd/2+.8],.18,'#e6e2d6',12);b.box([x,4.35,centerZ+hd/2+.8],[.5,.2,.5],'#ddd5c7');}
-  b.box([0,4.5,centerZ+hd/2+.8],[4.3,.25,1.8],'#e2ddcf');for(let i=0;i<9;i++)b.box([-1.85+i*.46,5.05,centerZ+hd/2+1.6],[.07,1,.07],'#e2ddcf');b.box([0,5.55,centerZ+hd/2+1.6],[4,.1,.1],'#e2ddcf');for(let i=0;i<3;i++)b.box([0,.2+i*.18,centerZ+hd/2+2-i*.35],[3.5,.2+i*.32,1], '#d6d0c1');
-  for(const side of [-1,1])for(const x of [hw*.19,hw*.37])for(const y of [3,7.2]){
-   b.box([side*x,y-1.42,centerZ+hd/2+.22],[2.56,.16,.48],'#baad94');
-   for(const edge of [-1,1])b.box([side*x+edge*1.15,y-.08,centerZ+hd/2+.16],[.13,2.68,.22],'#d6c9ae');
-  }
-  // Rear elevation: tall arched glazing, a sheltered ground-floor terrace and an upper balcony.
-  const back=centerZ-hd/2;
-  for(const x of [-hw*.34,-hw*.17,hw*.17,hw*.34])for(const y of [3,7.2]){
-   b.box([x,y,back-.12],[2.15,2.6,.12],'#79959c');b.ball([x,y+1.3,back-.13],[1.08,.55,.09],'#79959c');
-   b.box([x,y,back-.2],[.09,2.6,.08],'#f3efe3');for(const yy of [-1.25,1.25])b.box([x,y+yy,back-.2],[2.15,.1,.08],'#f3efe3');
-  }
-  b.box([0,2.4,back-.16],[2.1,3.3,.18],'#79634d');
-  b.box([0,.46,back-1.1],[8,.35,2.5],'#d6d0c1');
-  b.box([0,4.6,back-1.1],[8.2,.25,2.7],'#e2ddcf');
-  // Paired full-height glazed doors sit on the upper balcony slab.
-  const doorBottom=4.725,doorHeight=3.1,doorY=doorBottom+doorHeight/2;
-  for(const side of [-1,1]){
-   b.box([side*.57,doorY,back-.225],[1.03,doorHeight,.1],'#72949b');
-   b.box([side*1.13,doorY,back-.31],[.12,doorHeight+.14,.13],'#f3efe3');
-   b.box([side*.15,doorY,back-.34],[.06,doorHeight,.1],'#e5e0d3');
-   b.ball([side*.18,doorY-.08,back-.4],[.055,.11,.04],'#c3a36b');
-  }
-  b.box([0,doorY,back-.32],[.12,doorHeight,.14],'#f3efe3');
-  for(const y of [doorBottom,doorBottom+doorHeight])b.box([0,y,back-.31],[2.38,.12,.14],'#f3efe3');
-  for(const x of [-3.5,3.5]){b.cylinder([x,.65,back-2.1],[x,4.5,back-2.1],.17,'#e6e2d6',12);b.box([x,4.45,back-2.1],[.5,.22,.5],'#ddd5c7');}
-  for(let i=0;i<17;i++)b.box([-3.8+i*.475,5.12,back-2.35],[.075,.95,.075],'#e2ddcf');
-  b.box([0,5.6,back-2.35],[8,.12,.1],'#e2ddcf');for(const x of [-4,4])b.box([x,5.6,back-1.1],[.1,.12,2.5],'#e2ddcf');
-  for(const x of [-4,4])for(let i=0;i<5;i++)b.box([x,5.1,back-.25-i*.48],[.075,.95,.075],'#e2ddcf');
+  b.transformed(new T.Matrix4().makeScale(w/26,h/11,d/24),()=>buildVillaHouse(b,17.68,9.60,11,-3.5));
   // Estate perimeter keeps an opening in the front for the entrance.
   for(const side of [-1,1]){b.box([side*w/2,.6,0],[.22,1.2,d],'#d5d0bf');b.box([side*w*.34,.6,d/2],[w*.32,1.2,.22],'#d5d0bf');}b.box([0,.6,-d/2],[w,1.2,.22],'#d5d0bf');
   for(let i=0;i<6;i++)b.box([0,.2,d/2-1-i*.75],[2.4,.13,.68],i%2?'#d7d4c7':'#c8c8bc');

@@ -1,3 +1,4 @@
+import {buildLiuliTower} from './liuli-tower.ts';
 import * as T from 'three';
 import type {IslandObject} from '../data/model.ts';
 import {Builder,type Cache} from './shrine.ts';
@@ -12,38 +13,7 @@ export function makeLandmarkMesh(o:IslandObject,cache:Cache){
  const ring=(p:V,r:number,color:string,tube=.025)=>b.emit('landmark:ring:'+tube,()=>new T.TorusGeometry(1,tube,6,48).rotateX(Math.PI/2),color,p,[r,r,r]);
 
  if(o.templateId==='landmark_liuli'){
-  // Reference: blue glass corporate spire with sweeping white structural blades.
-  const r=Math.min(w,d);
-  for(let i=0;i<3;i++)cylinder([0,.15+i*.22,0],r*(.49-i*.025),.24,'#dfe7ea',undefined,64);
-  ring([0,.67,0],r*.43,'#a4bac7',.012);
-  b.emit('liuli:glass-core',()=>new T.CylinderGeometry(.68,1,1,8),roof,[0,h*.43,0],[r*.125,h*.83,r*.125]);
-  for(let side=0;side<8;side++)b.scoped([0,0,0],side*Math.PI/4,()=>{
-   const base=r*.115,top=base*.68;
-   b.beam([-r*.047,.65,base],[-r*.032,h*.845,top],.065,white);
-   b.beam([r*.047,.65,base],[r*.032,h*.845,top],.065,white);
-   for(let row=0;row<27;row++){
-    const u=row/27,yy=.9+u*h*.81,z=base+(top-base)*u;
-    b.box([0,yy,z+.025],[r*(.093-u*.025),.045,.07],'#95b7d2');
-    if(row%3===0)b.litBox([0,yy+.3,z+.04],[r*.034,h*.009,.025],'#92cbe6');
-   }
-  });
-  for(let k=0;k<6;k++)b.scoped([0,0,0],k*Math.PI/3,()=>{
-   const tip=h*(k%2?.73:.9),segments=40;
-   const profile=(u:number)=>r*(.09+.36*Math.pow(1-u,4));
-   b.emit(`liuli:corporate-fin:${r}:${tip}`,()=>{
-    const v:number[]=[],ix:number[]=[];
-    for(let i=0;i<=segments;i++){const u=i/segments,yy=.65+u*tip,z=profile(u),half=r*(.032*(1-u)+.002),thick=.2*(1-u)+.04;v.push(-half,yy,z,half,yy,z,-half,yy,z-thick,half,yy,z-thick);}
-    for(let i=0;i<segments;i++){const a=i*4,c=a+4;ix.push(a,c,a+1,a+1,c,c+1,a+2,a+3,c+2,a+3,c+3,c+2,a,a+2,c,a+2,c+2,c,a+1,c+1,a+3,a+3,c+1,c+3);}
-    ix.push(0,1,2,1,3,2);const a=segments*4;ix.push(a,a+2,a+1,a+1,a+2,a+3);
-    const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(v,3));g.setIndex(ix);g.computeVertexNormals();return g;
-   },k%2?wall:white,[0,0,0]);
-   for(let i=0;i<segments;i++){const u=i/segments,v=(i+1)/segments;b.cylinder([0,.65+u*tip,profile(u)+.03],[0,.65+v*tip,profile(v)+.03],.03,'#9ebdd4',6);}
-  });
-  // Forked crown, antenna and recessed glass entrance.
-  for(const side of [-1,1])b.beam([0,h*.84,0],[side*r*.1,h*.94,0],.16,white);
-  b.cylinder([0,h*.84,0],[0,h,0],.055,white,8);
-  b.box([0,1.55,r*.13],[r*.12,1.8,.12],'#70b0d5');b.box([0,1.55,r*.14],[.055,1.8,.09],white);
-  b.box([0,2.55,r*.18],[r*.19,.12,r*.15],white);
+  buildLiuliTower(b,cache,w,d,h);
  }else if(o.templateId==='landmark_library'){
   const r=Math.min(w,d)*.5;
   for(let i=0;i<3;i++)cylinder([0,.18+i*.28,0],r*(1.14-i*.065),.3,i%2?'#c9ccc0':wall,undefined,48);

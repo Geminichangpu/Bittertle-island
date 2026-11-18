@@ -54,8 +54,15 @@ export function addCentralCampus(p:Project,b:Builder){
  const fz=cz+14;
  b.cylinder([cx,y+.12,fz],[cx,y+.5,fz],2.6,'#e2e9e9',48);
  b.cylinder([cx,y+.51,fz],[cx,y+.55,fz],2.2,'#52b8d4',48);
- b.cylinder([cx,y+.55,fz],[cx,y+3.5,fz],.11,'#c3ecf2',12);
- for(let i=0;i<8;i++){const a=i*Math.PI/4;b.ball([cx+Math.cos(a)*.5,y+1.2,fz+Math.sin(a)*.5],[.06,.4,.06],'#b3e4ec');}
+ b.emit('campus:fountain-coping',()=>new T.LatheGeometry([[2.17,.49],[2.18,.56],[2.21,.61],[2.27,.62],[2.33,.59],[2.34,.49]].map(([r,h])=>new T.Vector2(r,h)),96),'#d6dbd2',[cx,y,fz]);
+ b.cylinder([cx,y+.53,fz],[cx,y+.68,fz],.245,'#9e9983',32);
+ b.emit('campus:water-column',()=>new T.LatheGeometry([[.080,.66],[.074,1.5],[.060,2.45],[.040,3.1],[.022,3.4],[.006,3.51]].map(([r,h])=>new T.Vector2(r,h)),24),'#c3ecf2',[cx,y,fz]);
+ for(let i=0;i<8;i++){const a=i*Math.PI/4,cos=Math.cos(a),sin=Math.sin(a);
+  b.cylinder([cx+.36*cos,y+.54,fz+.36*sin],[cx+.36*cos,y+.605,fz+.36*sin],.055,'#a28b62',12);
+  const jet=new T.QuadraticBezierCurve3(new T.Vector3(.36,.599,0),new T.Vector3(.66,2.18,0),new T.Vector3(1.25,.55,0));
+  b.emit('campus:arc-jet',()=>new T.TubeGeometry(jet,18,.018,6,false),'#bbdee0',[cx,y,fz],[1,1,1],new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),-a));
+ }
+
 }
 
 /** Broad sandstone steps follow the existing terrain between the campus and bridge. */

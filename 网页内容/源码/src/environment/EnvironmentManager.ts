@@ -3,6 +3,9 @@ import {TIME_PRESETS,type TimeMode} from './time-presets';
 import {useEnvironment} from './time-state';
 import type {SceneController} from '../scene/SceneController';
 import {NightMeteors} from './NightMeteors';
+import type {LampSite} from './street-lighting';
+
+const emptySites:LampSite[]=[];
 
 /** Reuses the existing scene, sun and materials. Switching costs one requested frame. */
 export class EnvironmentManager {
@@ -10,7 +13,7 @@ export class EnvironmentManager {
  mode:TimeMode=useEnvironment.getState().mode;
  readonly lamps=Array.from({length:6},()=>{const l=new T.PointLight('#ffb566',0,16,2);l.castShadow=false;return l;});
  private stop:()=>void;
- private pathLights:T.Vector3[]=[];
+ private pathLights:LampSite[]=[];
  private lastTarget=new T.Vector3(Infinity,Infinity,Infinity);
  constructor(private owner:SceneController){
   this.meteors=new NightMeteors(owner.host);
@@ -27,25 +30,21 @@ export class EnvironmentManager {
   this.meteors.setNight(mode==='night');
   s.scene.background=new T.Color(p.sky);s.scene.fog=new T.Fog(p.fog,p.fogNear,p.fogFar);
   s.lighting.sun.color.set(p.sun);s.lighting.sun.intensity=p.sunIntensity;s.lighting.sun.position.fromArray(p.sunPosition);
-  s.lighting.sky.color.set(p.ambient);s.lighting.sky.groundColor.set(p.ground);s.lighting.sky.intensity=p.ambientIntensity;s.renderer.toneMappingExposure=p.exposure;
+  s.lighting.sky.color.set(p.ambient);s.lighting.sky.groundColor.set(p.ground);s.lighting.sky.intensity=p.ambientIntensity;s.scene.environmentIntensity=mode==='day'?.39:mode==='dusk'?.23:.09;s.renderer.toneMappingExposure=p.exposure;
   s.water.material.uniforms.ultraSun.value.copy(s.lighting.sun.position).normalize();s.water.material.uniforms.ultraSunColor.value.copy(s.lighting.sun.color);s.water.material.uniforms.ultraSunStrength.value=Math.min(1,p.sunIntensity/2.7);
   this.refresh();s.invalidateShadows();s.requestRender();
  }
  refresh(){
   const p=TIME_PRESETS[this.mode],materials=new Set<T.Material>();
-  this.pathLights=[];
+  this.pathLights=this.owner.environment.userData.streetLamps||emptySites;
   this.owner.scene.updateWorldMatrix(true,true);
   this.owner.scene.traverse(n=>{
    if(!(n instanceof T.Mesh))return;
    const list=Array.isArray(n.material)?n.material:[n.material];list.forEach(m=>materials.add(m));
-   if(!list.some(m=>m.userData.pathLantern))return;
-   const local=new T.Matrix4();
-   for(let i=0;i<(n instanceof T.InstancedMesh?n.count:1);i++){
-    if(n instanceof T.InstancedMesh)n.getMatrixAt(i,local);
-    this.pathLights.push(new T.Vector3().applyMatrix4(local).applyMatrix4(n.matrixWorld));
-   }
   });
   for(const m of materials){
+   if(m instanceof T.ShaderMaterial&&m.userData.streetHalo){m.visible=this.mode!=='day';m.uniforms.strength.value=this.mode==='night'?.75:.28;}
+   if(m instanceof T.MeshBasicMaterial&&m.userData.streetPool){m.visible=this.mode!=='day';m.opacity=this.mode==='night'?.32:.10;}
    if(m instanceof T.MeshStandardMaterial&&m.userData.lightRole){const lamp=m.userData.lightRole==='lamp';m.emissive.set(lamp?p.lampColor:p.windowColor);m.emissiveIntensity=lamp?p.lampIntensity:p.windowIntensity;}
    if(m instanceof T.MeshBasicMaterial&&m.userData.shore)m.color.set(p.shoreTint);
    if(m instanceof T.ShaderMaterial&&m.userData.sea){m.uniforms.nearColor.value.set(p.seaNear);m.uniforms.farColor.value.set(p.seaFar);m.uniforms.detailStrength.value=p.seaDetail;}
@@ -59,9 +58,10 @@ export class EnvironmentManager {
   const p=TIME_PRESETS[this.mode];this.lamps.forEach(l=>l.intensity=0);let slot=0;
   const target=this.owner.controls.target;this.lastTarget.copy(target);
   if(p.localIntensity){
-   const nearest=this.pathLights.filter(point=>point.distanceToSquared(target)<45**2)
-    .sort((a,b)=>a.distanceToSquared(target)-b.distanceToSquared(target)).slice(0,2);
-   for(const point of nearest){const light=this.lamps[slot++];light.position.copy(point);light.color.set(p.lampColor);light.intensity=p.localIntensity*.78;}
+   const distance=(p:LampSite)=>(p.x-target.x)**2+(p.z-target.z)**2;
+   const nearest=this.pathLights.filter(point=>distance(point)<45**2)
+    .sort((a,b)=>distance(a)-distance(b)).slice(0,2);
+   for(const point of nearest){const light=this.lamps[slot++];light.position.set(point.x,point.y,point.z);light.color.set(p.lampColor);light.intensity=p.localIntensity*.45;}
   }
   // Bounded local lighting. All other windows/lamps use instanced emissive surfaces.
   for(const id of ['shrine_court','shrine_garden','landmark_feihua','layout_lighthouse','layout_shopping']){

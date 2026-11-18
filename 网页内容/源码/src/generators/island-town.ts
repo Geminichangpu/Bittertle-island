@@ -1,3 +1,4 @@
+import {awning,cabinJoinery,shelterFittings,clinkerDinghy} from './coastal-joinery.ts';
 import {addParkSlide} from './park-slide.ts';
 import {crownGeometry,leafSprigGeometry} from '../environment/nature-geometry.ts';
 import {makeNaturalCave} from './natural-cave.ts';
@@ -21,6 +22,16 @@ export function makeTownMesh(o:IslandObject,cache:Cache){
   for(const x of [-w*.4,0,w*.4])b.box([x,1.9,z+dd*.5+1.35],[.13,2.7,.13],wood);
   b.box([0,3.25,z+dd*.5+.75],[w*.95,.15,1.7],roof);
   for(let j=0;j<4;j++){const x=(j-1.5)*w*.19;box([x,1.8,z+dd*.5+.12],[w*.18,2.4,.1],j===1?'#7694a1':'#c8d7d2');box([x,1.8,z+dd*.5+.2],[.07,2.4,.08],wood);box([x,1.65,z+dd*.5+.23],[w*.18,.07,.07],wood);}
+  for(let j=0;j<4;j++){
+   const x=(j-1.5)*w*.19,edge=z+dd*.5+.265;
+   for(const side of [-1,1])box([x+side*w*.084,1.8,edge],[.057,2.38,.065],wood);
+   for(const y of [.75,1.02,2.9])box([x,y,edge],[w*.174,.057,.065],wood);
+   box([x+w*.065,1.55,edge+.043],[.045,.18,.028],'#887b59');
+  }
+  for(let j=0;j<Math.ceil(w*.9/.30);j++){
+   const n=Math.ceil(w*.9/.30);
+   box([-w*.45+(j+.5)*w*.9/n,.681,z+dd*.5+.72],[w*.9/n-.013,.032,1.57],j%3?'#ac8968':'#b49173');
+  }
   const variant=Number(o.id.match(/\d+$/)?.[0]||0)%3;
   const siding=['#a88d69','#839a96','#a68a76'][variant];
   // Recessed side casement and a projecting sill, sized to the cabin's long wall.
@@ -32,15 +43,23 @@ export function makeTownMesh(o:IslandObject,cache:Cache){
    box([0,-wh*.5-.08,.16],[ww+.36,.12,.42],siding);
    if(variant===1)for(const x of [-ww*.65,ww*.65])box([x,0,.06],[ww*.23,wh+.16,.12],siding);
   });
+  cabinJoinery(b,w,dd,h,z,variant,shop);
   for(const x of [-w*.4,w*.4])b.beam([x,2.77,z+dd*.5+1.35],[x,3.16,z+dd*.5+.83],.085,wood);
   for(let i=0;i<6;i++){const x=(i-2.5)*w*.15;box([x,.08,d*.42],[w*.13,.16,.75],i%2?'#bcbdb1':'#d0ccc0');}
   planters(-w*.36,d*.43);
   for(const x of [-w*.48,w*.48])box([x,.35,d*.32],[.25,.7,d*.34],'#b3b2a6');
-  if(shop){for(let i=0;i<7;i++)box([-w*.45+i*w*.15,3,z+dd*.5+1.8],[w*.14,.12,1.5],i%2?'#7599b7':'#f4eee0');for(const x of [-w*.25,w*.25]){dining.cylinder([x,0,d*.42],[x,1,d*.42],.1,wood,8);dining.box([x,1.05,d*.42],[1.6,.15,1.2],'#b18d68');for(const dx of [-.9,.9])dining.box([x+dx,.45,d*.42],[.5,.12,.5],wood);}}
+  if(shop){awning(b,w,z+dd*.5+1.8);for(const x of [-w*.25,w*.25]){dining.cylinder([x,0,d*.42],[x,1,d*.42],.1,wood,8);dining.box([x,1.05,d*.42],[1.6,.15,1.2],'#b18d68');for(const dx of [-.9,.9])dining.box([x+dx,.45,d*.42],[.5,.12,.5],wood);}}
  }else if(o.templateId==='layout_island_park'){
   box([0,.06,0],[w,.12,d],'#dbca9d');
   for(const side of [-1,1]){b.beam([-w*.32,.05,side*2.5],[-w*.32,3.4,0],.16,blue);b.beam([w*.12,.05,side*2.5],[w*.12,3.4,0],.16,blue);}b.box([-w*.1,3.4,0],[w*.48,.2,.2],blue);
   for(const x of [-w*.22,0]){for(const dx of [-.4,.4])b.cylinder([x+dx,3.35,0],[x+dx,1.1,0],.025,'#8d9090',5);box([x,1.05,0],[.9,.12,.5],'#c27e59');}
+  const linkGeometry=()=>new T.TorusGeometry(1,.18,5,12);
+  for(const x of [-w*.22,0])for(const dx of [-.4,.4]){
+   for(let j=0;j<24;j++){
+    const rot=new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),j%2?Math.PI/2:0);
+    b.emit('park:swing-link',linkGeometry,'#777d79',[x+dx,1.17+j*.0915,0],[.042,.071,.042],rot);
+   }
+  }
   addParkSlide(b,w*.31);
   parkBench.box([0,.4,-d*.43],[3,.15,.8],wood);for(const x of [-1,1])parkBench.box([x,.2,-d*.43],[.15,.4,.7],wood);
   // A timber shade pavilion frames the central bench. End bays stay open to the play lawn.
@@ -75,6 +94,13 @@ export function makeTownMesh(o:IslandObject,cache:Cache){
    b.beam([x,2.48,-d*.36],[x,3,-d*.36+.53],.095,wood);
    box([x,.39,-d*.36],[.31,.30,.31],'#8c9290');
   }for(const x of [-w*.45,w*.45])for(const z of [-d*.36,d*.36])box([x,1.5,z],[.16,3,.16],'#e8e9e0');slateRoof(b,[0,3,0],w+.8,d+.8,.8,blue);box([0,.65,-d*.25],[w*.7,.15,.65],blue);for(const x of [-w*.3,w*.3])box([x,.34,-d*.25],[.15,.65,.6],'#ece9dd');b.cylinder([w*.6,0,d*.2],[w*.6,3,d*.2],.08,wood,8);box([w*.6,2.8,d*.2],[1,.65,.1],'#eae9dc');box([w*.6,2.95,d*.27],[.85,.22,.04],blue);
+  for(const x of [-w*.45,w*.45])for(const z of [-d*.36,d*.36]){
+   box([x,.37,z],[.265,.225,.265],'#9faaa8');
+   b.beam([x,2.55,z],[x-Math.sign(x)*.47,2.97,z],.098,wood);
+   box([x,2.91,z],[.245,.12,.25],'#c6b99c');
+  }
+  shelterFittings(b,w,d,Number(o.id.match(/\d+$/)?.[0]||0)%4);
+  for(const j of [-1,0,1])box([0,.74,-d*.25+j*.19],[w*.70,.058,.16],j===0?'#7696a3':'#6e8e9d');
  }else if(o.templateId==='layout_island_pier'){
   // Open central walkway, segmented timber deck, mooring posts and working fishing details.
   for(let i=0;i<22;i++){const z=-d*.47+(i+.5)*d*.94/22;box([0,.55,z],[w,.17,d*.94/22-.035],i%3?'#bc986c':'#d0ae7e');}
@@ -85,9 +111,8 @@ export function makeTownMesh(o:IslandObject,cache:Cache){
   crate(b,-w*.33,.67,-d*.36,.85,.8);crate(b,w*.33,.67,-d*.36,.75,.75);box([-w*.34,1.18,-d*.36],[.8,.12,.68],'#698e91');
   // Small timber boat floats at sea level alongside the seaward half of the pier.
   const waterY=-o.position[1]+.16,bx=w*.83,bz=d*.52;
-  b.emit('town:fishing-hull',()=>{const g=new T.BufferGeometry(),v=[-1,0,-1.7,1,0,-1.7,-.8,0,1.1,.8,0,1.1,0,0,2.1,-.8,.48,-1.5,.8,.48,-1.5,-.62,.48,1.0,.62,.48,1.0,0,.48,1.9];g.setAttribute('position',new T.Float32BufferAttribute(v,3));g.setIndex([0,1,6,0,6,5,1,3,8,1,8,6,3,4,9,3,9,8,4,2,7,4,7,9,2,0,5,2,5,7,0,2,4,0,4,3,0,3,1]);g.computeVertexNormals();return g;},'#a65d40',[bx,waterY,bz],[1,1,1]);
-  box([bx,waterY+.45,bz-.35],[1.5,.12,.28],'#e8d3ad');box([bx,waterY+.47,bz+.55],[1.25,.12,.25],'#e8d3ad');
-  b.cylinder([bx-.8,waterY+.5,bz+1.1],[w*.38,.9,d*.4],.035,'#d8c596',6);
+  clinkerDinghy(b,bx,waterY,bz);
+  b.cylinder([bx-.56,waterY+.46,bz+1.1],[w*.38,.9,d*.4],.035,'#d8c596',6);
   for(let i=0;i<3;i++){const z=-d*.05+i*1.1;b.cylinder([w*.48,.72,z],[w*.48,.3,z],.1,'#464f4e',8);}
  }else if(o.templateId==='layout_island_cave'){
   // Boulders form a short tunnel with an actual open centre and a vine-covered rim.

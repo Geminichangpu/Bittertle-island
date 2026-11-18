@@ -1,4 +1,3 @@
-import {turnOwnerMeetingChairs} from './owner-meeting-chairs';
 import * as T from 'three';
 import {loadAbortableGLB} from './loadAbortableGLB';
 import type {TowerFloor} from '../interiors/tower';
@@ -58,7 +57,7 @@ export class TowerInteriorRefinement extends EventTarget {
     const category=String(node.userData.roomCategory||'furniture');if(!groups[category])return;
     // One instance per exported component/material keeps the existing interaction
     // selection and animation code operating on the refined books/leaves/lamps.
-    let geometry=node.geometry.clone().applyMatrix4(node.matrixWorld);if(this.floor==='owner')geometry=turnOwnerMeetingChairs(geometry,node.name);
+    const geometry=node.geometry.clone().applyMatrix4(node.matrixWorld);
     const mapMaterial=(m:T.Material)=>{
      if(m.name.endsWith('_lamp')&&m instanceof T.MeshStandardMaterial){this.lampMaterials.add(m);m.emissiveMap=m.map;}
      if(m.name.includes('bbdbe6')&&m instanceof T.MeshStandardMaterial){m.transparent=true;m.opacity=.19;m.depthWrite=false;m.side=T.FrontSide;return m;}
@@ -67,7 +66,7 @@ export class TowerInteriorRefinement extends EventTarget {
      return m;
     };
     const material=Array.isArray(node.material)?node.material.map(mapMaterial):mapMaterial(node.material);
-    const mesh=new T.Mesh(geometry,material);mesh.name=node.name;mesh.userData={...node.userData};geometry.computeBoundingBox();geometry.computeBoundingSphere();mesh.castShadow=material!==this.room.glass;mesh.receiveShadow=true;groups[category].add(mesh);this.instances.push(mesh);
+    const mesh=new T.Mesh(geometry,material);mesh.name=node.name;mesh.userData={...node.userData};geometry.computeBoundingBox();geometry.computeBoundingSphere();mesh.castShadow=!node.userData.floorFinish&&material!==this.room.glass;mesh.receiveShadow=true;groups[category].add(mesh);this.instances.push(mesh);
    });
    this.replacements=Object.entries(targets).map(([category,target])=>({target,original:target.children.filter(n=>!(n instanceof T.Mesh&&n.geometry.userData.preserveNativeLabel)),group:groups[category]}));
    this.status='ready';this.swap(this.enabled);this.onChange();this.syncLighting();this.dispatchEvent(new Event('change'));

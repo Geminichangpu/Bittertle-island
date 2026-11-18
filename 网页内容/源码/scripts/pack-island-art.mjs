@@ -10,7 +10,7 @@ const packages=path.join(root,'reports/performance/tools/node_modules');
 const localImport=name=>import(pathToFileURL(path.join(packages,name)).href);
 const require=createRequire(import.meta.url);
 const sharp=require(path.join(packages,'sharp'));
-const {NodeIO}=await localImport('@gltf-transform/core/dist/index.js');
+const {NodeIO,GLB_BUFFER}=await localImport('@gltf-transform/core/dist/index.js');
 const {ALL_EXTENSIONS,EXTMeshoptCompression}=await localImport('@gltf-transform/extensions/dist/index.js');
 const {MeshoptEncoder,MeshoptDecoder}=await localImport('meshoptimizer/index.js');
 await Promise.all([MeshoptEncoder.ready,MeshoptDecoder.ready]);
@@ -23,6 +23,12 @@ const hash=data=>createHash('sha256').update(data).digest('hex').slice(0,32);
 const align=n=>Math.ceil(n/4)*4;
 
 async function saveSurface(data,image,alpha){
+ // Authored shared maps already carry their content digest. Preserve the
+ // original encoded channels when publishing a GLB from its editable master.
+ if(image.name===hash(data)+'.jpg'||image.name===hash(data)+'.png'){
+  await writeFile(path.join(maps,image.name),data);
+  return image.name;
+ }
  const linear=/rough|metal|orm|normal|nor_gl|occlusion/i.test(image.name||'');
  const key=hash(data)+'/'+(linear?'linear':alpha?'alpha':'opaque');
  if(cached.has(key))return cached.get(key);
@@ -88,8 +94,9 @@ async function publishLocal(file,data){
 }
 const masters=path.resolve(root,'../../资源/src/assets/models');
 const optimized=path.join(root,'src/assets/models-optimized');
+const exteriorsOnly=process.argv.includes('--exteriors-only');
 const rooms=process.argv.slice(2).filter(arg=>arg.startsWith('--room=')).map(arg=>arg.slice(7)+'-interior-refined-v1.glb');
-for(const name of process.argv.includes('--public-only')?[]:await readdir(masters)){
+for(const name of process.argv.includes('--public-only')||exteriorsOnly?[]:await readdir(masters)){
  if(rooms.length&&!rooms.includes(name))continue;
  if(!/(?:-interior|^shrine_.+-exterior)-refined-v1\.glb$/.test(name))continue;
  const doc=await io.read(path.join(masters,name));
@@ -98,7 +105,27 @@ for(const name of process.argv.includes('--public-only')?[]:await readdir(master
  await publishLocal(dest,await splitImages(Buffer.from(await io.writeBinary(doc))));
  console.log('Packed',name);
 }
-for(const dir of rooms.length?[]:[path.join(root,'src/assets/models'),path.join(root,'public/flora-pack'),path.join(root,'public/plant-art')]){
+// These editable exteriors retain split public images. Supply those bytes to the compressor
+// and keep the original image digests so web clients share them with the rooms.
+if(!rooms.length&&!process.argv.includes('--public-only')){
+ const exteriorSources=path.join(root,'src/assets/models');
+ for(const name of await readdir(exteriorSources)){
+  if(!/-refined-v\d+\.glb$/.test(name)||name.startsWith('scenic_sakura')||name.includes('-interior-')||name.startsWith('shrine_'))continue;
+  const source=await readFile(path.join(exteriorSources,name)),length=source.readUInt32LE(12);
+  const json=JSON.parse(source.subarray(20,20+length).toString('utf8'));
+  const resources={[GLB_BUFFER]:source.subarray(28+length)};
+  for(const image of json.images||[]){
+   if(!image.uri)continue;
+   if(!/^island-surfaces\/[a-f\d]{32}\.(png|jpg)$/.test(image.uri))throw Error('Unknown exterior image '+image.uri);
+   resources[image.uri]??=await readFile(path.join(maps,path.basename(image.uri)));image.name=path.basename(image.uri);
+  }
+  const doc=await io.readJSON({json,resources});doc.createExtension(EXTMeshoptCompression).setRequired(true);
+  const bytes=await splitImages(Buffer.from(await io.writeBinary(doc)));
+  await publishLocal(path.join(optimized,name),bytes);
+  console.log('Packed exterior',name,source.length,'->',bytes.length);
+ }
+}
+for(const dir of rooms.length||exteriorsOnly?[]:[path.join(root,'src/assets/models'),path.join(root,'src/assets/island-craft'),path.join(root,'public/flora-pack'),path.join(root,'public/plant-art')]){
  for(const name of await readdir(dir)){
   if(!name.endsWith('.glb'))continue;
   const file=path.join(dir,name),original=await readFile(file);
@@ -107,4 +134,3 @@ for(const dir of rooms.length?[]:[path.join(root,'src/assets/models'),path.join(
  }
 }
 console.log('Shared surface encodes:',cached.size);
-
