@@ -2,6 +2,7 @@ import {addAboCollisions,removeReplacedNativeProps} from '../models/abo-collisio
 import * as T from 'three';
 import {maskTrialTrees} from '../environment/vegetation-trial';
 import {clearTreesNear} from '../scene/sakura';
+import {YOUNG_CLEAR_RADIUS} from '../environment/remaster-canopy';
 import {CompoundWorld} from './CompoundWorld';
 import {entrance} from '../environment/paths';
 import {ExplorationController,type ExplorationState} from '../interiors/ExplorationController';
@@ -45,13 +46,23 @@ export class IslandWalkController {
   // independent static fallback in this renderer, even when the editor uses Ultra-Water.
   const water=island.water.mesh.clone();this.waterMaterial=island.water.material.clone();this.waterMaterial.uniforms.depthMap.value=island.water.material.uniforms.depthMap.value;this.waterMaterial.uniforms.ultraEnabled.value=0;this.waterMaterial.uniforms.waveTime.value=0;water.material=this.waterMaterial;water.visible=true;this.scene.add(water);
   this.lighting=new IslandLighting(this.renderer,this.scene);this.lighting.setQuality(island.project.settings.quality);
+  const clearWalkTrees=()=>{
+   const vegetation=walkEnvironment.getObjectByName('vegetation-pilot'),young=island.objects.getObjectByName('sakura-young-new');
+   if(!vegetation||!young)return;
+   const mature=island.node('scenic_sakura'),gate=island.node('shrine_torii');
+   clearTreesNear(vegetation,young.getWorldPosition(new T.Vector3()),YOUNG_CLEAR_RADIUS,gate?.getWorldPosition(new T.Vector3()),mature?.getWorldPosition(new T.Vector3()));
+  };
   const pending=island.environment.userData.vegetationTrialPromise as Promise<void>|undefined;
-  void pending?.then(()=>{if(!this.active||walkEnvironment.getObjectByName('vegetation-pilot'))return;const trial=island.environment.getObjectByName('vegetation-pilot');const roots=island.environment.userData.vegetationTrialRoots as [number,number,number][]|undefined;if(trial&&roots){maskTrialTrees(walkEnvironment,roots);walkEnvironment.add(trial.clone(true));this.collectWalkDetails();this.lighting.invalidate();this.scheduler.requestRender();}});
-  void island.sakuraReady?.then(()=>{if(!this.active)return;const mature=island.node('scenic_sakura')?.getObjectByName('sakura-mature-new'),young=island.objects.getObjectByName('sakura-young-new');if(!mature||!young)return;const vegetation=walkEnvironment.getObjectByName('vegetation-pilot'),gate=island.node('shrine_torii');if(vegetation){young.updateWorldMatrix(true,false);gate?.updateWorldMatrix(true,false);clearTreesNear(vegetation,young.getWorldPosition(new T.Vector3()),7.5,gate?.getWorldPosition(new T.Vector3()));}if(walkObjects.getObjectByName('sakura-mature-new')){this.lighting.invalidate();this.scheduler.requestRender();return;}walkObjects.traverse(n=>{if(n instanceof T.Mesh&&n.userData.objectId==='scenic_sakura'){const key=String(n.geometry.userData.sourceKey||n.userData.feature||'');if(key==='scenic:blossom'||key==='scenic:continuous-branch:scenic_sakura')n.visible=false;}});for(const source of [mature,young]){source.updateWorldMatrix(true,false);const clone=source.clone(true);clone.matrixAutoUpdate=false;clone.matrix.copy(source.matrixWorld);walkObjects.add(clone);}this.lighting.invalidate();this.scheduler.requestRender();});
+  void pending?.then(()=>{if(!this.active||walkEnvironment.getObjectByName('vegetation-pilot'))return;const trial=island.environment.getObjectByName('vegetation-pilot');const roots=island.environment.userData.vegetationTrialRoots as [number,number,number][]|undefined;if(trial&&roots){maskTrialTrees(walkEnvironment,roots);walkEnvironment.add(trial.clone(true));clearWalkTrees();this.collectWalkDetails();this.lighting.invalidate();this.scheduler.requestRender();}});
+  void island.sakuraReady?.then(()=>{if(!this.active)return;const mature=island.node('scenic_sakura')?.getObjectByName('sakura-mature-new'),young=island.objects.getObjectByName('sakura-young-new');if(!mature||!young)return;clearWalkTrees();if(walkObjects.getObjectByName('sakura-mature-new')){this.lighting.invalidate();this.scheduler.requestRender();return;}walkObjects.traverse(n=>{if(n instanceof T.Mesh&&n.userData.objectId==='scenic_sakura'){const key=String(n.geometry.userData.sourceKey||n.userData.feature||'');if(key==='scenic:blossom'||key==='scenic:continuous-branch:scenic_sakura')n.visible=false;}});for(const source of [mature,young]){source.updateWorldMatrix(true,false);const clone=source.clone(true);clone.matrixAutoUpdate=false;clone.matrix.copy(source.matrixWorld);walkObjects.add(clone);}this.lighting.invalidate();this.scheduler.requestRender();});
   this.scheduler=new DemandRenderer(()=>{this.updateAvatar();this.exploration?.update(performance.now());this.updateWalkGrass();this.streamBuildings();this.lighting.beforeDraw();this.renderer.render(this.scene,this.camera);if(this.exploration?.needsFrame)this.scheduler.requestRender();});
   const look=new T.Vector3(0,0,-1);
-  if(bedroomNode)look.transformDirection(bedroomNode.matrixWorld);
-  look.y=0;look.normalize();
+  const entryBuilding=bedroomNode??island.node('base_office');
+  if(entryBuilding){
+   const center=entryBuilding.getWorldPosition(new T.Vector3());
+   const outward=new T.Vector3(spawn.x-center.x,0,spawn.z-center.z);
+   if(outward.lengthSq()>1e-8)look.copy(outward).normalize();
+  }
   this.exploration=new ExplorationController(this.renderer.domElement,this.camera,this.world,{spawn,target:spawn.clone().add(look).add(new T.Vector3(0,1.8,0)),radius:.36,height:2.1,eye:1.8,step:.55,speed:7,points:[]},this.scheduler.requestRender,onState,()=>{},onExit);
   this.collectWalkDetails();
   this.resize=new ResizeObserver(()=>this.resizeViewport());this.resize.observe(host);document.addEventListener('visibilitychange',this.visibility);this.renderer.domElement.addEventListener('webglcontextlost',this.lost);

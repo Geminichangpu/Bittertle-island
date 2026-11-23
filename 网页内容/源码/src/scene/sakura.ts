@@ -2,16 +2,27 @@ import {islandLoadingManager} from '../models/island-loading-manager';
 import * as T from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {TerrainSurface} from '../environment/surface';
+import {inCherryClearing,YOUNG_CLEAR_RADIUS} from '../environment/remaster-canopy';
 import type {SceneController} from './SceneController';
 
 const originals=new WeakMap<T.InstancedMesh,T.Matrix4[]>();
 /** Clear tree instances only, in every LOD; retain original matrices for later moves. */
-export function clearTreesNear(root:T.Object3D,center:T.Vector3,radius=7.5,gate?:T.Vector3){
- root.updateWorldMatrix(true,true);let removed=0;
- root.traverse(n=>{if(!(n instanceof T.InstancedMesh)||!n.userData.plantSpecies)return;
-  let saved=originals.get(n);if(!saved){saved=[];for(let i=0;i<n.count;i++){const m=new T.Matrix4();n.getMatrixAt(i,m);saved.push(m);}originals.set(n,saved);}
-  const v=new T.Vector3(),zero=new T.Vector3(0,0,0);
-  saved.forEach((original,i)=>{const m=original.clone();v.setFromMatrixPosition(m).applyMatrix4(n.matrixWorld);let between=false;if(gate){const dx=center.x-gate.x,dz=center.z-gate.z,t=((v.x-gate.x)*dx+(v.z-gate.z)*dz)/(dx*dx+dz*dz);between=t>0&&t<1&&Math.hypot(v.x-(gate.x+t*dx),v.z-(gate.z+t*dz))<3;}if(between||Math.hypot(v.x-center.x,v.z-center.z)<radius){m.scale(zero);if(n.userData.plantLod===0)removed++;}n.setMatrixAt(i,m);});n.instanceMatrix.needsUpdate=true;
+export function clearTreesNear(root:T.Object3D,center:T.Vector3,radius=YOUNG_CLEAR_RADIUS,gate?:T.Vector3,mature?:T.Vector3){
+ root.updateWorldMatrix(true,true);
+ let removed=0;
+ const sites={young:center,mature,gate},v=new T.Vector3(),zero=new T.Vector3(0,0,0);
+ root.traverse(n=>{
+  if(!(n instanceof T.InstancedMesh)||!n.userData.plantSpecies)return;
+  let saved=originals.get(n);
+  if(!saved){saved=[];for(let i=0;i<n.count;i++){const m=new T.Matrix4();n.getMatrixAt(i,m);saved.push(m);}originals.set(n,saved);}
+  const footprints=n.userData.plantFootprints as [number,number,number][]|undefined;
+  saved.forEach((original,i)=>{
+   const m=original.clone(),point=footprints?.[i];
+   if(point)v.set(point[0],0,point[1]);else v.setFromMatrixPosition(m);
+   v.applyMatrix4(n.matrixWorld);
+   if(inCherryClearing(v.x,v.z,point?.[2]??0,sites,radius)){m.scale(zero);if(n.userData.plantLod===0)removed++;}
+   n.setMatrixAt(i,m);
+  });n.instanceMatrix.needsUpdate=true;
  });return removed;
 }
 
@@ -57,7 +68,7 @@ export class SakuraAssets {
   pos.y=new TerrainSurface(this.owner.terrain.geometry).height(pos.x,pos.z)??pos.y;
   this.owner.objects.updateWorldMatrix(true,false);young.position.copy(this.owner.objects.worldToLocal(pos));
   young.userData.placement='15m east and 12m south of torii';young.updateMatrixWorld(true);
-  const environment=this.owner.environment,clear=()=>{if(this.disposed||this.owner.environment!==environment)return;const group=environment.getObjectByName('vegetation-pilot');if(group){young!.updateWorldMatrix(true,false);gate.updateWorldMatrix(true,false);clearTreesNear(group,young!.getWorldPosition(new T.Vector3()),7.5,gate.getWorldPosition(new T.Vector3()));this.owner.invalidateShadows();this.owner.requestRender();}};
+  const environment=this.owner.environment,clear=()=>{if(this.disposed||this.owner.environment!==environment)return;const group=environment.getObjectByName('vegetation-pilot');if(group){young!.updateWorldMatrix(true,false);gate.updateWorldMatrix(true,false);clearTreesNear(group,young!.getWorldPosition(new T.Vector3()),YOUNG_CLEAR_RADIUS,gate.getWorldPosition(new T.Vector3()),mature?.getWorldPosition(new T.Vector3()));this.owner.invalidateShadows();this.owner.requestRender();}};
   clear();const pending=environment.userData.vegetationTrialPromise as Promise<void>|undefined;if(pending&&!this.pendingEnvironments.has(environment)){this.pendingEnvironments.add(environment);void pending.then(clear);}
  }
  dispose(){this.disposed=true;if(!this.templates)return;const geometries=new Set<T.BufferGeometry>(),materials=new Set<T.Material>(),textures=new Set<T.Texture>();for(const t of this.templates)t.traverse(o=>{if(o instanceof T.Mesh){geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:[o.material]){materials.add(m);for(const v of Object.values(m))if(v instanceof T.Texture)textures.add(v);}}});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());this.templates=undefined;}

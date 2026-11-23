@@ -13,8 +13,10 @@ import chaise from '../assets/island-craft/island-chaise.glb?url';
 const craft:Record<string,string>={'hecate-travel-map':travelChart,'hecate-globe':travelGlobe,'hebe-wardrobe-outfits':outfits,'hecate-specimens':specimens,wicker_basket_01:reedBasket,rug:selvedgeRug,table_lamp:celadonLamp,
  sofa_furniture:loveseat,couch_medium:settee,couch_large:threeSeat,couch_small:upholsteredChair,couch_l:chaise};
 export type AssetPlacement={url:string;at:[number,number,number];height:number;angle?:number;fit?:[number,number,number];slot?:string;solid?:boolean;cut?:[number,number,number,number,number,number];prefixes?:string[];tint?:string;support?:string;materialTints?:Record<string,string>;curtainGap?:boolean;foliageOnly?:boolean;plantCut?:boolean;frameCut?:boolean;removeOnly?:boolean;cutMaterial?:string;interactive?:boolean};
-const cc0=import.meta.glob('../assets/cc0-test/*.glb',{eager:true,query:'?url',import:'default'}) as Record<string,string>;
-const abo=import.meta.glob('../assets/abo-test/*.glb',{eager:true,query:'?url',import:'default'}) as Record<string,string>;
+// These legacy props have no placement in any room. Keep their editable source
+// assets, but avoid shipping them with every viewer export.
+const cc0=import.meta.glob(['../assets/cc0-test/*.glb','!../assets/cc0-test/bed_double.glb','!../assets/cc0-test/bed_king.glb','!../assets/cc0-test/armchair_01.glb','!../assets/cc0-test/sofa_02.glb'],{eager:true,query:'?url',import:'default'}) as Record<string,string>;
+const abo=import.meta.glob(['../assets/abo-test/*.glb','!../assets/abo-test/B07QD6ZV9Q.glb','!../assets/abo-test/B07JLBDT51.glb','!../assets/abo-test/B07ZVMQ9B9.glb'],{eager:true,query:'?url',import:'default'}) as Record<string,string>;
 const url=(id:string)=>craft[id]||cc0[`../assets/cc0-test/${id}.glb`]||abo[`../assets/abo-test/${id}.glb`];
 const p=(id:string,x:number,y:number,z:number,height:number,angle=0,extra:Partial<AssetPlacement>={}):AssetPlacement=>({url:url(id),at:[x,y,z],height,angle,...extra});
 const basket=(x:number,y:number,z:number)=>p('wicker_basket_01',x,y,z,.35);

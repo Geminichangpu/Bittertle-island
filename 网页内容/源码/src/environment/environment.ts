@@ -1,4 +1,7 @@
 import {addRoadLanterns} from './path-lanterns';
+import {makeRemasterVegetation} from './remaster-vegetation';
+import {makeSettlementLife} from './settlement-life';
+import {isNaturalLandform} from '../terrain/natural-landform';
 import {collectStreetLamps,lampHalos,lampPools,streetFixtures} from './street-lighting';
 import {addFarmForage,addFarmSheep} from '../models/farm-models';
 import {natureGeometries} from '../models/custom-nature';
@@ -173,10 +176,16 @@ export function makeEnvironment(p:Project,terrainGeometry:T.BufferGeometry,onRea
  }
  const pilot=makePilotVegetation(p,surface,routes,obstacles,nature);root.add(pilot.root);root.userData.pilotRoots=pilot.roots;root.userData.pilotMetrics=pilot.root.userData.metrics;
  root.userData.beachTreeRoots=beach.points.length>=3?[[beach.points[0].x,beach.points[0].y,beach.points[0].z+2]]:[];
- root.add(makeIslandGrass(p,surface,routes,obstacles));addVegetationTrial(root,p,surface,routes,obstacles,pilot.roots,globalTreeRoots,onReady);
+ root.add(makeIslandGrass(p,surface,routes,obstacles));
  const natureAbort=new AbortController(),previousDispose=natureDisposers.get(root);let customBushes:T.BufferGeometry[]=[];
  natureDisposers.set(root,()=>{natureAbort.abort();customBushes.forEach(g=>g.dispose());previousDispose?.();});
  root.userData.customBushesPromise=natureGeometries('shrub',natureAbort.signal).then(gs=>{if(natureAbort.signal.aborted){gs.forEach(g=>g.dispose());return;}customBushes=gs;root.traverse(n=>{if(!(n instanceof T.Mesh))return;const key=String(n.geometry.userData.sourceKey||'');if(key.startsWith('env:bush:'))n.geometry=gs[Number(key.slice(-1))];else if(key==='life:shrub')n.geometry=gs[1];});root.userData.customBushesReady=true;onReady();}).catch(e=>{if(!natureAbort.signal.aborted)console.warn('室外灌木加载失败',e);});
+ const settlementLife=makeSettlementLife(p,surface,routes,obstacles);
+ root.add(settlementLife);
+ const forest=makeRemasterVegetation(p,surface,routes,obstacles,settlementLife.userData.clearings);
+ root.add(forest.root);
+ addVegetationTrial(root,p,surface,routes,obstacles,pilot.roots,globalTreeRoots,onReady,forest.planting);
+ if(isNaturalLandform(p.terrain))root.traverse(n=>{if(n instanceof T.Mesh&&String(n.geometry.userData.sourceKey||'').startsWith('replace-tree:'))n.visible=false;});
  root.userData.routes=routes;root.userData.metrics=metrics;
  root.userData.environmentRevision=p.environment.revision;
  return root;

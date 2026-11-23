@@ -14,58 +14,74 @@ export class TerrainFinish {
  readonly material=new T.MeshStandardMaterial({vertexColors:true,side:T.DoubleSide,roughness:.96});
  private uniforms={landReady:{value:0},landCenter:{value:new T.Vector2()},landField:{value:this.neutral as T.Texture},landSoil:{value:this.neutral as T.Texture},landSoilNormal:{value:this.neutralNormal as T.Texture},landSoilRough:{value:this.neutral as T.Texture},landRock:{value:this.neutral as T.Texture},landRockNormal:{value:this.neutralNormal as T.Texture},landRockRough:{value:this.neutral as T.Texture},landPeak:{value:this.neutral as T.Texture},landPeakNormal:{value:this.neutralNormal as T.Texture},landPeakRough:{value:this.neutral as T.Texture}};
  constructor(){
-  this.neutral.needsUpdate=this.neutralNormal.needsUpdate=true;this.material.map=this.neutral;this.material.normalMap=this.neutralNormal;this.material.roughnessMap=this.neutral;this.material.name='样板草土碎石混合地表';
-  this.material.customProgramCacheKey=()=> 'nature-pilot-ground-v2-mountain';
+  this.neutral.needsUpdate=this.neutralNormal.needsUpdate=true;this.material.map=this.neutral;this.material.normalMap=this.neutralNormal;this.material.roughnessMap=this.neutral;this.material.name='沿海草甸、沙滩与露岩';
+  this.material.customProgramCacheKey=()=> 'bittertle-ground-coastal-relief-v2';
   this.material.onBeforeCompile=shader=>{
    Object.assign(shader.uniforms,this.uniforms);
-   shader.vertexShader='varying vec3 vLandPosition;varying vec3 vLandNormal;\n'+shader.vertexShader;
-   shader.vertexShader=shader.vertexShader.replace('#include <worldpos_vertex>','#include <worldpos_vertex>\nvLandPosition=(modelMatrix*vec4(transformed,1.)).xyz;vLandNormal=normalize(mat3(modelMatrix)*objectNormal);');
-   shader.fragmentShader=`varying vec3 vLandPosition;varying vec3 vLandNormal;
+   shader.vertexShader='attribute float terrainShore; varying float vLandShore; varying vec3 vLandPosition;varying vec3 vLandNormal;\n'+shader.vertexShader;
+   shader.vertexShader=shader.vertexShader.replace('#include <worldpos_vertex>','#include <worldpos_vertex>\nvLandPosition=(modelMatrix*vec4(transformed,1.)).xyz;vLandNormal=normalize(mat3(modelMatrix)*objectNormal);vLandShore=terrainShore;');
+   shader.fragmentShader=`varying float vLandShore;varying vec3 vLandPosition;varying vec3 vLandNormal;
     uniform float landReady;uniform vec2 landCenter;uniform sampler2D landField;uniform sampler2D landSoil;uniform sampler2D landSoilNormal;uniform sampler2D landSoilRough;uniform sampler2D landRock;uniform sampler2D landRockNormal;uniform sampler2D landRockRough;uniform sampler2D landPeak;uniform sampler2D landPeakNormal;uniform sampler2D landPeakRough;
-    float landRegion;float mountainRegion;float landFine;float landSoilWeight;float landRockWeight;vec2 landUV;vec3 landAxis;
+    float landRegion;float mountainRegion;float bedrockBlend;float landFine;float landSoilWeight;float landRockWeight;vec2 landUV;vec3 landAxis;
+    float landHash(vec2 cell){vec3 p=fract(vec3(cell.xyx)*.1031);p+=dot(p,p.yzx+33.33);return fract((p.x+p.y)*p.z);}
+    float landNoise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(landHash(i),landHash(i+vec2(1,0)),f.x),mix(landHash(i+vec2(0,1)),landHash(i+vec2(1)),f.x),f.y);}
     vec3 triplanar(sampler2D tex,vec3 p,vec3 w){return texture2D(tex,p.zy*.18).rgb*w.x+texture2D(tex,p.xz*.18).rgb*w.y+texture2D(tex,p.xy*.18).rgb*w.z;}
+    vec3 blendedBedrock(sampler2D coast,sampler2D ridge,vec3 p,vec3 w){
+     if(bedrockBlend<=0.)return triplanar(coast,p,w);
+     if(bedrockBlend>=1.)return triplanar(ridge,p,w);
+     return mix(triplanar(coast,p,w),triplanar(ridge,p,w),bedrockBlend);
+    }
+    vec3 bedrockNormalAt(vec2 uv){
+     if(bedrockBlend<=0.)return texture2D(landRockNormal,uv).xyz*2.-1.;
+     if(bedrockBlend>=1.)return texture2D(landPeakNormal,uv).xyz*2.-1.;
+     return mix(texture2D(landRockNormal,uv).xyz,texture2D(landPeakNormal,uv).xyz,bedrockBlend)*2.-1.;
+    }
    `+shader.fragmentShader;
    shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>','');
    shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
-    landRegion=(1.-smoothstep(.72,1.,length((vLandPosition.xz-landCenter)/vec2(105.,120.))))*landReady*smoothstep(.8,2.8,vLandPosition.y);
-    mountainRegion=(1.-smoothstep(.65,1.,length((vLandPosition.xz-vec2(-129.,21.))/vec2(38.,43.))))*smoothstep(6.,18.,vLandPosition.y)*landReady;
-    landRegion=max(max(landRegion,mountainRegion),.58*landReady*smoothstep(.85,3.2,vLandPosition.y));
+    float slope=1.-abs(normalize(vLandNormal).y);
+    float lowShore=(1.-smoothstep(1.,8.,vLandShore))*(1.-smoothstep(2.,6.,vLandPosition.y));
+    landRegion=landReady*(.30+.63*smoothstep(.7,5.,vLandPosition.y))*(1.-.81*lowShore);
+    mountainRegion=landReady*smoothstep(9.,32.,vLandPosition.y)*(.55+.45*smoothstep(.09,.30,slope));
     float footprint=max(length(dFdx(vLandPosition)),length(dFdy(vLandPosition)));
     landFine=1.-smoothstep(.09,.65,footprint);
-    float macro=.5+.5*sin(vLandPosition.x*.09+sin(vLandPosition.z*.055)*1.7)*cos(vLandPosition.z*.075-vLandPosition.x*.025);
+    float macro=.60*landNoise(vLandPosition.xz*.036+vec2(5.2,-2.3))+.29*landNoise(vLandPosition.xz*.102)+.11*landNoise(vLandPosition.xz*.3);
+    bedrockBlend=smoothstep(.15,.83,mountainRegion+(macro-.5)*.38);
     landUV=vLandPosition.xz*.18+vec2(sin(vLandPosition.z*.035),cos(vLandPosition.x*.04))*.2;
     vec2 fieldUV=(vLandPosition.xz-landCenter)/240.+.5;
     vec2 field=texture2D(landField,fieldUV).rg*float(all(greaterThanEqual(fieldUV,vec2(0.))) && all(lessThanEqual(fieldUV,vec2(1.))));
-    float slope=1.-abs(normalize(vLandNormal).y);
-    landSoilWeight=clamp(max(field.r*.62,field.g*.38)+pow(macro,5.)*.2+smoothstep(.07,.36,slope)*.28,0.,.8);
-    landRockWeight=smoothstep(.16,.59,slope+(macro-.5)*.14);
-    float mountainStone=max(smoothstep(24.,55.,vLandPosition.y+(macro-.5)*9.),smoothstep(.17,.48,slope)*.82);
-    landRockWeight=mix(landRockWeight,mountainStone,mountainRegion);
+    landSoilWeight=clamp(max(field.r*.62,field.g*.38)+smoothstep(.52,.83,macro)*.23+smoothstep(.07,.36,slope)*.25,0.,.8);
+    landRockWeight=smoothstep(.12,.46,slope+(macro-.5)*.20);
+    float mountainStone=max(smoothstep(24.,44.,vLandPosition.y+(macro-.5)*15.),smoothstep(.17,.48,slope)*.82);
+    float cover=smoothstep(.38,.70,macro)*(1.-smoothstep(.20,.53,slope));
+    landRockWeight=mix(landRockWeight,mountainStone,mountainRegion)*(1.-.40*cover);
     landAxis=pow(abs(normalize(vLandNormal)),vec3(4.));landAxis/=max(dot(landAxis,vec3(1.)),.0001);
     if(landRegion>.001){
      vec3 grassA=texture2D(map,landUV).rgb,grassB=texture2D(map,mat2(.8,-.6,.6,.8)*landUV*.73+vec2(.37,.61)).rgb;
-     vec3 grass=mix(diffuseColor.rgb,mix(grassA,grassB,macro)*vec3(.77,1.,.64),.22+landFine*.35)*( .91+macro*.15);
+     vec3 grass=mix(diffuseColor.rgb,mix(grassA,grassB,macro)*vec3(.88,.99,.72),.19+landFine*.35)*(.84+macro*.28);
      vec3 soil=texture2D(landSoil,landUV*.72+vec2(.3)).rgb*vec3(.95,.82,.62);
-     vec3 rock=(mountainRegion>.001?triplanar(landPeak,vLandPosition,landAxis):triplanar(landRock,vLandPosition,landAxis))*vec3(.91,.92,.87);
-     // Restrained rock strata and sheltered green patches on the existing mountain material.
-     float strata=.5+.5*sin(vLandPosition.y*.34+vLandPosition.x*.045+sin(vLandPosition.z*.09)*1.2);
+     vec3 rock=blendedBedrock(landRock,landPeak,vLandPosition,landAxis)*vec3(.91,.94,.90);
+     float granite=dot(rock,vec3(.2126,.7152,.0722));
+     rock=mix(vec3(granite*.98,granite,granite*.96),rock,.57+.14*bedrockBlend);
+     // Thin bedding follows height on exposed faces; flatter pockets retain moss.
+     float strata=.5+.5*sin(vLandPosition.y*.34+vLandPosition.x*.065+sin(vLandPosition.z*.06)*1.2+macro*2.3);
      float moss=mountainRegion*(1.-smoothstep(.16,.46,slope))*(1.-smoothstep(28.,54.,vLandPosition.y))*(.08+.13*macro);
-     rock*=mix(1.0,.84+.22*strata,mountainRegion*.7);
+     rock*=mix(1.0,.87+.17*strata,max(mountainRegion,.5*smoothstep(.15,.4,slope)));
      rock=mix(rock,grass*vec3(.79,.91,.74),moss);
      diffuseColor.rgb=mix(diffuseColor.rgb,mix(mix(grass,soil,landSoilWeight),rock,landRockWeight),landRegion);
     }`);
    shader.fragmentShader=shader.fragmentShader.replace('#include <roughnessmap_fragment>',`#include <roughnessmap_fragment>
     if(landRegion>.001){
      float grassRough=texture2D(roughnessMap,landUV).g,soilRough=texture2D(landSoilRough,landUV*.72+vec2(.3)).g;
-     float rockRough=mountainRegion>.001?triplanar(landPeakRough,vLandPosition,landAxis).g:triplanar(landRockRough,vLandPosition,landAxis).g;
+     float rockRough=blendedBedrock(landRockRough,landPeakRough,vLandPosition,landAxis).g;
      roughnessFactor=mix(roughnessFactor,max(.68,mix(.92,mix(mix(grassRough,soilRough,landSoilWeight),rockRough,landRockWeight),landFine)),landRegion);
     }`);
    shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_maps>',`
     if(landRegion>.001&&landFine>.01){
      vec3 gn=texture2D(normalMap,landUV).xyz*2.-1.,sn=texture2D(landSoilNormal,landUV*.72+vec2(.3)).xyz*2.-1.;
      vec3 nm=mix(gn,sn,landSoilWeight);nm.xy*=.36;vec3 groundNormal=normalize(tbn*nm);
-     vec3 nx=texture2D(landRockNormal,vLandPosition.zy*.18).xyz*2.-1.,ny=texture2D(landRockNormal,vLandPosition.xz*.18).xyz*2.-1.,nz=texture2D(landRockNormal,vLandPosition.xy*.18).xyz*2.-1.;nx.xy*=.28;ny.xy*=.28;nz.xy*=.28;
-     if(mountainRegion>.001){nx=texture2D(landPeakNormal,vLandPosition.zy*.18).xyz*2.-1.;ny=texture2D(landPeakNormal,vLandPosition.xz*.18).xyz*2.-1.;nz=texture2D(landPeakNormal,vLandPosition.xy*.18).xyz*2.-1.;nx.xy*=.28;ny.xy*=.28;nz.xy*=.28;}
+     vec3 nx=bedrockNormalAt(vLandPosition.zy*.18),ny=bedrockNormalAt(vLandPosition.xz*.18),nz=bedrockNormalAt(vLandPosition.xy*.18);
+     nx.xy*=.25;ny.xy*=.25;nz.xy*=.25;
      vec3 rockNormal=normalize(getTangentFrame(-vViewPosition,normal,vLandPosition.zy*.18)*nx*landAxis.x+getTangentFrame(-vViewPosition,normal,vLandPosition.xz*.18)*ny*landAxis.y+getTangentFrame(-vViewPosition,normal,vLandPosition.xy*.18)*nz*landAxis.z);
      normal=normalize(mix(normal,mix(groundNormal,rockNormal,landRockWeight),landRegion*landFine));
     }`);

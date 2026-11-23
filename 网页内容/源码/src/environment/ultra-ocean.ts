@@ -19,9 +19,16 @@ export class UltraOcean {
   const coast=[mainCoast(project.terrain),project.terrain.islet].flat();
   const extent=2*Math.max(...coast.flatMap(p=>[Math.abs(p[0]),Math.abs(p[1])]))+160;
   // 128² keeps first-use work bounded; no surveyed seabed is available.
-  this.shore=bakeShoreMap((x:number,z:number)=>isLand(project.terrain,x,z)?1:-Math.max(.25,Math.min(18,coastDistance(project.terrain,[x,z])*.42)),extent,128);
+  this.shore=bakeShoreMap((x:number,z:number)=>{
+   if(isLand(project.terrain,x,z))return 1;
+   const nearDepth=Math.max(.25,Math.min(60,coastDistance(project.terrain,[x,z])*.42));
+   // Match shoreSample's 60 m outer-ocean depth before the finite shore map ends.
+   // Without this transition, the map boundary draws a dark square in wide views.
+   const edge=T.MathUtils.smoothstep(Math.max(Math.abs(x),Math.abs(z))/(extent*.5),.8,1);
+   return -T.MathUtils.lerp(nearDepth,60,edge);
+  },extent,128);
   const previous=renderer.getRenderTarget();
-  try{this.sim=new OceanSim(renderer,defaultOceanParams());}finally{renderer.setRenderTarget(previous);}
+  try{this.sim=new OceanSim(renderer,{...defaultOceanParams(),windSpeed:6.2,waveScale:.32,choppiness:.32});}finally{renderer.setRenderTarget(previous);}
   this.surface=new OceanSurface(this.sim,this.shore,{cube:null,cubeSize:1,sunDir:new T.Vector3(),sunColor:new T.Color()},{});
   this.surface.material.dispose();
   const uniforms={...T.UniformsUtils.clone(T.UniformsLib.fog),...this.surface.uniforms,
@@ -54,14 +61,14 @@ export class UltraOcean {
      float fine=1.0-smoothstep(.6,3.0,max(length(dFdx(vXZ)),length(dFdy(vXZ))));
      vec2 slope=texture(uSlope0,vXZ/uLength.x).xy*.5+texture(uSlope1,vXZ/uLength.y).xy*mix(.3,1.0,fine)+texture(uSlope2,vXZ/uLength.z).xy*.45*fine;
      Shore shore=shoreWaves(vXZ,sh,max(length(dFdx(vXZ)),length(dFdy(vXZ))));slope+=shore.slope;
-     vec3 n=normalize(vec3(-slope.x*1.8,1.0,-slope.y*1.8));
+     vec3 n=normalize(vec3(-slope.x*.85,1.0,-slope.y*.85));
      float sun=pow(max(dot(n,normalize(ultraSun)),0.0),48.0);
      vec3 color=mix(nearColor*vec3(.81,1.08,.98),farColor,1.0-exp(-depth*.12));
-     color*=1.0+clamp(dot(slope,vec2(.55,.32)),-.3,.3)*.7;
-     color+=ultraSunColor*sun*.22*ultraSunStrength*mix(.3,1.0,fine);
+     color*=1.0+clamp(dot(slope,vec2(.55,.32)),-.3,.3)*.23;
+     color+=ultraSunColor*sun*.075*ultraSunStrength*mix(.3,1.0,fine);
      if(islandReflectionEnabled>.5){vec4 rp=islandReflectionMatrix*vec4(vWorld,1.0);vec2 uv=rp.xy/rp.w+slope*.002;if(rp.w>0.0&&all(greaterThan(uv,vec2(0.0)))&&all(lessThan(uv,vec2(1.0)))){float edge=smoothstep(0.0,.16,uv.x)*smoothstep(0.0,.16,uv.y)*smoothstep(0.0,.16,1.0-uv.x)*smoothstep(0.0,.16,1.0-uv.y);color=mix(color,texture(islandReflection,uv).rgb,.1*edge);}}
      float foam=clamp(shore.foam+shore.residual*.35,0.0,1.0)*(1.0-smoothstep(35.0,85.0,distance));
-     color=mix(color,vec3(.78,.91,.88),foam*.8);
+     color=mix(color,vec3(.78,.91,.88),foam*.46);
      gl_FragColor=vec4(color,1.0);
      #include <tonemapping_fragment>
      #include <colorspace_fragment>

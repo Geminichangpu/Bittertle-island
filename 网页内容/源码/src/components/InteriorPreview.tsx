@@ -33,7 +33,7 @@ export function InteriorPreview({island,buildingId,onClose,returnToCompound=fals
  },[island,buildingId,floor,attempt]);
  return <section className="interior-preview" role="dialog" aria-modal="true" aria-label={definition.name+'室内'}>
   <div ref={host} style={{visibility:modelReady&&!error?'visible':'hidden'}} className="interior-canvas" data-building-id={buildingId}/>
-  <div className="interior-heading"><span className="pill">M8–M9 / ISLAND LIFE</span><h1>{definition.name}{isTower&&' · '+floorLabel}</h1><p>{walk.active?'WASD 移动 · 鼠标观察 · Shift 加速 · E 查看 · ESC 退出':'拖动观察 · 滚轮缩放 · '+(views.find(v=>v.id===view)?.label||'独立室内预览')}</p></div>
+  <div className="interior-heading"><span className="pill">岛上日常</span><h1>{definition.name}{isTower&&' · '+floorLabel}</h1><p>{walk.active?'WASD 移动 · 鼠标观察 · Shift 加速 · E 查看 · ESC 退出':'拖动观察 · 滚轮缩放 · '+(views.find(v=>v.id===view)?.label||'独立室内预览')}</p></div>
   <InteractionHUD host={host} manager={()=>controller.current?.interactions}/>
   <EnvironmentControls/><button className="interior-exit" onClick={leave}>{returnToCompound?'返回建筑群漫游':'返回岛屿'} · {definition.exit}</button>
   {isTower&&<div className="tower-elevator"><button aria-expanded={liftOpen} onClick={()=>{controller.current?.view('elevator');setView('elevator');setLiftOpen(!liftOpen);}}>电梯 · 选择楼层</button>{liftOpen&&<div className="tower-floor-list" role="group" aria-label="电梯楼层"><strong>请选择目的地</strong>{TOWER_FLOORS.map(f=><button autoFocus={f.id===floor} key={f.id} aria-pressed={floor===f.id} onClick={()=>{setFloor(f.id);setLiftOpen(false);}}>{f.label}{floor===f.id?' · 当前':''}</button>)}</div>}</div>}
@@ -41,7 +41,7 @@ export function InteriorPreview({island,buildingId,onClose,returnToCompound=fals
   {walk.active&&<><span className="walk-reticle" aria-hidden="true">+</span><div className="walk-hint" role="status">{walk.hint||walk.message||'WASD 移动 · E 查看附近物件'}</div><div className="walk-touch" aria-label="漫游方向">{[['KeyW','前进'],['KeyA','左移'],['KeyS','后退'],['KeyD','右移']].map(([code,label])=><button key={code} aria-label={label} onPointerDown={e=>{e.preventDefault();e.currentTarget.setPointerCapture(e.pointerId);controller.current?.exploration.touch(code,true);}} onPointerUp={()=>controller.current?.exploration.touch(code,false)} onPointerCancel={()=>controller.current?.exploration.touch(code,false)}>{label}</button>)}<button onClick={()=>{if(!controller.current?.interactions.interactFocused())controller.current?.exploration.interact();}}>查看 / 使用</button></div></>}
   {detail&&<div className="walk-detail" role="dialog" aria-label="物件说明"><h2>{detail.label}</h2><p>{detail.description}</p><button autoFocus onClick={()=>{setDetail(null);void controller.current?.exploration.capturePointer();}}>继续探索</button></div>}
   <div className="interior-actions">{views.map(v=><button key={v.id} aria-pressed={view===v.id} onClick={()=>{controller.current?.view(v.id);setView(v.id);}}>{v.label}</button>)}<button onClick={()=>{const url=controller.current?.capture();if(url){const a=document.createElement('a');a.href=url;a.download=definition.name+'-'+(isTower?floorLabel+'-':'')+(views.find(v=>v.id===view)?.label||'室内')+'.png';a.click();}}}>室内截图</button></div>
-  {!modelReady&&!error&&<div className="loading" role="status">正在加载精修室内…</div>}
+  {!modelReady&&!error&&<div className="loading" role="status">正在载入室内场景…</div>}
   {error&&<div className="error" role="alert">{error}<button onClick={()=>setAttempt(n=>n+1)}>重试室内模型</button></div>}
  </section>;
 }

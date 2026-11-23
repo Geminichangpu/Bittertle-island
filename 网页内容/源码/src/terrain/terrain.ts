@@ -2,7 +2,8 @@ import {gradeSettlement} from './settlement-grade.ts';
 import {villageHeight,villageCuts} from './village.ts';
 import {scenicCoastHeight,scenicHighland,scenicCoastCuts} from './scenic-coast.ts';
 import * as THREE from 'three';
-import {mergeVertices} from 'three/addons/utils/BufferGeometryUtils.js';
+import {triangulateContours} from './contour-mesh.ts';
+import {beachAffinity,ease,landscapeNoise} from './natural-landform.ts';
 import type {Point,Terrain} from '../data/model.ts';
 import {feihuaMountainHeight,feihuaMountainCuts} from './feihua-mountain.ts';
 export function inside(p:Point,poly:Point[]){let yes=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a[1]>p[1])!==(b[1]>p[1])&&p[0]<(b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1])+a[0])yes=!yes;}return yes;}
@@ -81,6 +82,16 @@ export function sampleHeight(t:Terrain,x:number,z:number,includeBay=true):number
    apronWeight=Math.max(apronWeight,w);apronLevel+=w*pad.level;apronSum+=w;
   }
   if(apronSum)result=THREE.MathUtils.lerp(result,apronLevel/apronSum,apronWeight);
+  // The low-bay grading also reaches the bridge landing. Match the foundation after
+  // that grading, feathering out from all four edges of the existing abutment.
+  if(t.flatBayRevision===1 && lowBayCoast(t,x,z)) {
+   const landing=t.pads?.find(p=>p.ownerId==='island_bridge:east');
+   if(landing) {
+    const dx=Math.max(landing.minX-x,0,x-landing.maxX), dz=Math.max(landing.minZ-z,0,z-landing.maxZ);
+    const weight=(1-ease(.18,landing.feather+2.5,Math.hypot(dx,dz)))*ease(0,1.3,d);
+    result=THREE.MathUtils.lerp(result,landing.level,weight);
+   }
+  }
   const beach=baseBeach(t,x,z);
   if(beach>0){
    const beachGrade=.9+(t.grading!.baseLevel-.9)*THREE.MathUtils.smoothstep(d,0,17);
@@ -88,56 +99,70 @@ export function sampleHeight(t:Terrain,x:number,z:number,includeBay=true):number
   }
   return result;
 }
-/** Smooth the lighting on a narrow triangulation join near the bay; heights stay unchanged. */
-function smoothBayJoinNormals(g:THREE.BufferGeometry,t:Terrain){
- if(!t.scenicCoast||!t.village)return;
- const pos=g.getAttribute('position'),normal=g.getAttribute('normal');if(!pos||!normal)return;
- const ax=123,az=-12,bx=76,bz=30,dx=bx-ax,dz=bz-az,length2=dx*dx+dz*dz;
- for(let i=0;i<pos.count;i++){
-  const x=pos.getX(i),z=pos.getZ(i);if(x<69||x>130||z< -19||z>37)continue;
-  const u=THREE.MathUtils.clamp(((x-ax)*dx+(z-az)*dz)/length2,0,1),d=Math.hypot(x-(ax+u*dx),z-(az+u*dz));
-  const weight=1-THREE.MathUtils.smoothstep(d,4,7);if(weight<=0||coastDistance(t,[x,z])<2||!isLand(t,x-1,z)||!isLand(t,x+1,z)||!isLand(t,x,z-1)||!isLand(t,x,z+1))continue;
-  let nx=sampleHeight(t,x-1,z)-sampleHeight(t,x+1,z),ny=2,nz=sampleHeight(t,x,z-1)-sampleHeight(t,x,z+1),len=Math.hypot(nx,ny,nz);nx/=len;ny/=len;nz/=len;
-  nx=THREE.MathUtils.lerp(normal.getX(i),nx,weight);ny=THREE.MathUtils.lerp(normal.getY(i),ny,weight);nz=THREE.MathUtils.lerp(normal.getZ(i),nz,weight);len=Math.hypot(nx,ny,nz)||1;normal.setXYZ(i,nx/len,ny/len,nz/len);
- }
- normal.needsUpdate=true;
-}
-export function terrainGeometry(t:Terrain,beautify=false){
-  const vertices:number[]=[],colors:number[]=[]; const sand=new THREE.Color('#e9d6a1'),grass=new THREE.Color('#8aa975'),high=new THREE.Color('#969789'),peak=new THREE.Color('#c2c2b5');
-  function emit(a:Point,b:Point,c:Point){
-   if(Math.abs((b[0]-a[0])*(c[1]-a[1])-(c[0]-a[0])*(b[1]-a[1]))<1e-10)return;
-   for(const p of [a,c,b]){const d=coastDistance(t,p),h=d<.001&&!onCampus(t,p)&&!scenicHighland(t,...p)?.9:sampleHeight(t,...p);vertices.push(p[0],h,p[1]);const beach=baseBeach(t,...p)>.20&&d<16;const northBeach=t.landscapeRevision&&p[0]>8&&p[0]<84&&p[1]<-100&&d<15;const color=(d<3.5&&!scenicHighland(t,...p))||beach||northBeach?sand:grass.clone().lerp(high,Math.max(0,Math.min(1,(h-16)/20))).lerp(peak,Math.max(0,Math.min(1,(h-35)/15)));if(beautify&&d>=3.5&&!beach&&!northBeach){const patch=Math.sin(p[0]*.075+Math.sin(p[1]*.08))*Math.cos(p[1]*.065)*.5+.5;color.lerp(new THREE.Color(patch>.48?'#789a59':'#b0bd7d'),.32);if(p[0]<-105&&h>25)color.lerp(new THREE.Color('#9b9b87'),Math.min(.8,(h-25)/20));
-    // Subtle, patchy north-mountain color variation; the land shape is unchanged.
-    const mountain=Math.max(0,1-((p[0]+45)/75)**2-((p[1]+107)/42)**2);if(mountain>0&&h>5){const shade=Math.sin(p[0]*.19+p[1]*.11)*Math.cos(p[1]*.17);color.lerp(new THREE.Color(shade>.25?'#a9ad83':'#718d64'),Math.min(.26,mountain*.26));}}
-    colors.push(color.r,color.g,color.b);}
+const grassShade = new THREE.Color('#78916a');
+const sunGrass = new THREE.Color('#b0b87a');
+const pineHeath = new THREE.Color('#738668');
+const drySand = new THREE.Color('#e4d4a8');
+const shingle = new THREE.Color('#a6a494');
+const bareStone = new THREE.Color('#94978b');
+const darkStone = new THREE.Color('#818b81');
+
+function shadeTerrain(g: THREE.BufferGeometry, t: Terrain) {
+  const pos=g.getAttribute('position'), normals=g.getAttribute('normal');
+  const shores=g.getAttribute('terrainShore'), colours=g.getAttribute('color');
+  const color=new THREE.Color(), rock=new THREE.Color(), gravel=new THREE.Color();
+  for (let i=0;i<pos.count;i++) {
+    const x=pos.getX(i), y=pos.getY(i), z=pos.getZ(i), coast=shores.getX(i);
+    const slope=1-Math.max(0,normals.getY(i));
+    const field=.63*landscapeNoise(x/34+5.1,z/34-2.1)+.37*landscapeNoise(x/12-7.6,z/12+4.8);
+    color.copy(grassShade).lerp(sunGrass,ease(.18,.85,field));
+    color.lerp(pineHeath,ease(13,39,y)*(.24+.34*(1-field)));
+    rock.copy(darkStone).lerp(bareStone,field);
+    color.lerp(rock,ease(.10,.49,slope+(field-.5)*.14)*.93);
+    const campus=onCampus(t,[x,z]);
+    if (!campus) {
+      const beach = Math.max(beachAffinity(x,z),baseBeach(t,x,z));
+      const width = 1.5+1.8*field+beach*(10+4*field);
+      const lowShore=(1-ease(width*.44,width+1.1,coast))*(1-ease(2.1+2*beach,4.4+5*beach,y));
+      gravel.copy(shingle).lerp(drySand,.25+.73*beach);
+      color.lerp(gravel,lowShore*(1-.3*ease(.12,.5,slope)));
+    }
+    colours.setXYZ(i,color.r,color.g,color.b);
   }
-  // Insert terrace boundaries into the actual mesh, not just the height sampler.
-  // Otherwise a large triangle straddling a pad can lift through a floor or leave an air gap.
-  const cuts=[...new Set((t.pads||[]).flatMap(p=>[p.minX,p.maxX]))].map(v=>[0,v]).concat([...new Set((t.pads||[]).flatMap(p=>[p.minZ,p.maxZ]))].map(v=>[1,v])).concat(feihuaMountainCuts(t)).concat(scenicCoastCuts(t)).concat(villageCuts(t));
-  function terraceTriangles(a:Point,b:Point,c:Point){
-   let polygons:Point[][]=[[a,b,c]];const minX=Math.min(a[0],b[0],c[0]),maxX=Math.max(a[0],b[0],c[0]),minZ=Math.min(a[1],b[1],c[1]),maxZ=Math.max(a[1],b[1],c[1]);
-   // Extend each cut through every crossed triangle so neighbouring edges have identical vertices.
-   // Local rectangle-only cuts create T junctions and visible water cracks on graded slopes.
-   for(const [axis,value] of cuts){
-    if(value<=(axis===0?minX:minZ)||value>=(axis===0?maxX:maxZ))continue;
-     const next:Point[][]=[];
-     for(const poly of polygons){
-      if(!poly.some(v=>v[axis]<value-1e-8)||!poly.some(v=>v[axis]>value+1e-8)){next.push(poly);continue;}
-      const left:Point[]=[],right:Point[]=[];
-      for(let i=0;i<poly.length;i++){
-       const x=poly[i],y=poly[(i+1)%poly.length],dx=x[axis]-value,dy=y[axis]-value;
-       if(dx<=0)left.push(x);if(dx>=0)right.push(x);
-       if(dx*dy<0){const u=dx/(dx-dy),v:Point=[x[0]+u*(y[0]-x[0]),x[1]+u*(y[1]-x[1])];left.push(v);right.push(v);}
-      }
-      if(left.length>=3)next.push(left);if(right.length>=3)next.push(right);
-     }
-     polygons=next;
-   }
-   for(const poly of polygons)for(let i=1;i<poly.length-1;i++)emit(poly[0],poly[i],poly[i+1]);
-  }
-  function triangle(a:Point,b:Point,c:Point,depth:number){if(depth){const ab:Point=[(a[0]+b[0])/2,(a[1]+b[1])/2],bc:Point=[(b[0]+c[0])/2,(b[1]+c[1])/2],ca:Point=[(c[0]+a[0])/2,(c[1]+a[1])/2];triangle(a,ab,ca,depth-1);triangle(ab,b,bc,depth-1);triangle(ca,bc,c,depth-1);triangle(ab,bc,ca,depth-1);return;}
-    terraceTriangles(a,b,c);}
-  for(const [outer,holes] of [[mainCoast(t),t.topology==='open-bay'?[]:[t.bay]],[t.islet,[]]] as [Point[],Point[][]][]){const contour=outer.map(p=>new THREE.Vector2(...p)),hs=holes.map(r=>r.map(p=>new THREE.Vector2(...p)));const all=[...outer,...holes.flat()];THREE.ShapeUtils.triangulateShape(contour,hs).forEach(ids=>triangle(all[ids[0]],all[ids[1]],all[ids[2]],t.heightmapRevision?5:4));}
-  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));if(beautify){const merged=mergeVertices(g,.0001);g.dispose();merged.computeVertexNormals();smoothBayJoinNormals(merged,t);return merged;}g.computeVertexNormals();return g;
+  colours.needsUpdate=true;
 }
-export function updateTerrainHeights(g:THREE.BufferGeometry,t:Terrain){const pos=g.getAttribute('position'),colors=g.getAttribute('color'),sand=new THREE.Color('#e9d6a1'),grass=new THREE.Color('#8aa975'),high=new THREE.Color('#768f70');for(let i=0;i<pos.count;i++){const x=pos.getX(i),z=pos.getZ(i),d=coastDistance(t,[x,z]),h=d<.001&&!onCampus(t,[x,z])&&!scenicHighland(t,x,z)?.9:sampleHeight(t,x,z);pos.setY(i,h);const c=(d<3.5&&!scenicHighland(t,x,z)||baseBeach(t,x,z)>.20&&d<16)?sand:h>21?high:grass;colors.setXYZ(i,c.r,c.g,c.b);}pos.needsUpdate=true;colors.needsUpdate=true;g.computeVertexNormals();smoothBayJoinNormals(g,t);g.computeBoundingSphere();}
+
+function meshHeight(t: Terrain, x: number, z: number, shore: number) {
+  return shore<.001 && !onCampus(t,[x,z]) && !scenicHighland(t,x,z) ? .9 : sampleHeight(t,x,z);
+}
+
+export function terrainGeometry(t: Terrain, _beautify=false) {
+  // Shared grid edges follow the coast and each foundation exactly. Long ear-clipping
+  // diagonals can otherwise cut straight through the new hills between two distant vertices.
+  const cuts=(t.pads||[]).flatMap(p=>[[0,p.minX],[0,p.maxX],[1,p.minZ],[1,p.maxZ]])
+    .concat(feihuaMountainCuts(t),scenicCoastCuts(t),villageCuts(t));
+  const {points,indices}=triangulateContours(t,mainCoast(t),cuts);
+  const vertices=new Float32Array(points.length*3), shores=new Float32Array(points.length);
+  for (let i=0;i<points.length;i++) {
+    const [x,z]=points[i], d=coastDistance(t,points[i]);
+    shores[i]=d;
+    vertices[i*3]=x; vertices[i*3+1]=meshHeight(t,x,z,d); vertices[i*3+2]=z;
+  }
+  const g=new THREE.BufferGeometry();
+  g.setIndex(indices);
+  g.setAttribute('position',new THREE.BufferAttribute(vertices,3));
+  g.setAttribute('color',new THREE.BufferAttribute(new Float32Array(vertices.length),3));
+  g.setAttribute('terrainShore',new THREE.BufferAttribute(shores,1));
+  g.computeVertexNormals(); shadeTerrain(g,t); g.computeBoundingSphere();
+  return g;
+}
+
+export function updateTerrainHeights(g: THREE.BufferGeometry, t: Terrain) {
+  const pos=g.getAttribute('position'), shores=g.getAttribute('terrainShore');
+  for (let i=0;i<pos.count;i++) {
+    const x=pos.getX(i), z=pos.getZ(i);
+    pos.setY(i,meshHeight(t,x,z,shores.getX(i)));
+  }
+  pos.needsUpdate=true;
+  g.computeVertexNormals(); shadeTerrain(g,t); g.computeBoundingSphere();
+}

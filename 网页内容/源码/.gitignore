@@ -27,3 +27,9 @@ src/assets/models/scenic_sakura-refined-*.glb
 src/assets/textures/island-nature/*-orm.jpg
 /Codex/
 /本地资源/
+
+# Natural viewer build and hosted preview
+.openai/*
+!.openai/hosting.json
+public/project.json
+src/assets/models/

@@ -1,4 +1,5 @@
 import {upgradeM3} from './m3-upgrade.ts';
+import {sculptReferenceIsland} from '../terrain/natural-landform.ts';
 import authoredLayout from '../../比特尔特岛-布局.json' with {type:'json'};
 import {landmarkTemplates} from './landmarks.ts';
 import {baseTemplates} from './base-layout.ts';
@@ -11,7 +12,7 @@ export type Marker={id:string;followId?:string;parentId?:string;name:string;loca
 export type CameraPreset={id:string;name:string;position:Vec3;target:Vec3;zoom:number;perspective:boolean};
 export type GroundPad={ownerId:string;minX:number;maxX:number;minZ:number;maxZ:number;level:number;feather:number};
 export type LandscapeGrade={base:Point;hill:Point;baseRect:[number,number,number,number];baseLevel:number;hillLevel:number};
-export type Terrain={flatBayRevision?:1;farmAcademyRevision?:1;roadsideStopRevision?:1|2;settlementGradeRevision?:1;village?:{revision:1;center:Point;level:number;halfSize:Point};scenicCoast?:{revision:1|2|3;center:Point;level:number;sakura:Point;sakuraLevel:number};feihua?:{revision:1;origin:Vec3;rotationY:number;scale:Vec3;width:number;depth:number};campus?:{revision:1;center:Point;radius:number;level:number};size:number;resolution:number;heights:number[];outer:Point[];bay:Point[];islet:Point[];topology?:'open-bay';heightmapRevision?:1;landscapeRevision?:1|2;grading?:LandscapeGrade;pads?:GroundPad[]};
+export type Terrain={naturalLandformRevision?:1;flatBayRevision?:1;farmAcademyRevision?:1;roadsideStopRevision?:1|2;settlementGradeRevision?:1;village?:{revision:1;center:Point;level:number;halfSize:Point};scenicCoast?:{revision:1|2|3;center:Point;level:number;sakura:Point;sakuraLevel:number};feihua?:{revision:1;origin:Vec3;rotationY:number;scale:Vec3;width:number;depth:number};campus?:{revision:1;center:Point;radius:number;level:number};size:number;resolution:number;heights:number[];outer:Point[];bay:Point[];islet:Point[];topology?:'open-bay';heightmapRevision?:1;landscapeRevision?:1|2;grading?:LandscapeGrade;pads?:GroundPad[]};
 export type Project={schemaVersion:1;islandTownRevision?:1|2|3;northEstateRevision?:1|2;expansionRevision?:1;settlementPlacementRevision?:1;environment?:{revision:1;seed:number};layoutRevision?:number;groups?:LayoutGroup[];projectId:string;projectName:string;world:{seaLevel:number};terrain:Terrain;objects:IslandObject[];markers:Marker[];regions:{id:string;name:string;color:string;visible:boolean;points:Point[]}[];cameraPresets:CameraPreset[];settings:{quality:'low'|'standard';labels:boolean}};
 export function makeObject(templateId:string,index=0):IslandObject{return {id:crypto.randomUUID(),category:templateId==='tree'||templateId==='rock'?'nature':'building',templateId,name:({...shrineTemplates,...baseTemplates,...landmarkTemplates,house_gable:'双坡住宅',house_hip:'四坡住宅',shop:'海边商店',warehouse:'仓库',shrine:'神社',academy:'学院',pier:'码头',tree:'树木',rock:'岩石'} as Record<string,string>)[templateId]||'建筑',position:[95,0,index*14-40],rotation:[0,0,0],scale:[1,1,1],snapToGround:true,locked:false,regionId:'village',locationId:'',params:{width:10,depth:8,wallHeight:6,roofColor:'#cf795d',wallColor:'#f6edcf'}};}
 const ring=(rx:number,rz:number,cx=0,cz=0,n=16):Point[]=>Array.from({length:n},(_,i)=>{let a=i/n*Math.PI*2;return [cx+Math.cos(a)*rx*(1+.035*Math.sin(3*a)),cz+Math.sin(a)*rz*(1+.04*Math.cos(5*a))];});
@@ -23,6 +24,6 @@ export function createLegacyDemo():Project {
   for(let i=0;i<5;i++){const o=makeObject('rock');o.id=`rock_${i}`;o.position=[-114+i*4,0,12+i*3];o.scale=[2,3+i*.4,2];objects.push(o);}
   return {schemaVersion:1,projectId:crypto.randomUUID(),projectName:'比特尔特岛 · 岛屿规划',world:{seaLevel:0},terrain:{size,resolution,heights,outer:ring(143,116),bay:ring(84,65,0,-4),islet:ring(23,16,9,0,12)},objects,markers:[{id:'marker_shrine',name:'神社预定地',locationId:'shrine',regionId:'west',description:'西侧岩峰旁的静谧地点，作为剧情构图参考。',visible:true,position:[-109,0,42]},{id:'marker_village',name:'沿岸住宅区',locationId:'village',regionId:'village',description:'沿内湾布置的住宅与步行空间。',visible:true,position:[105,0,25]},{id:'marker_islet',name:'湾中小岛',locationId:'islet',regionId:'bay',description:'与主岛分离，保留中央水域。',visible:true,position:[9,0,0]}],regions:[],cameraPresets:[],settings:{quality:'low',labels:true}};
 }
-export function createDemo():Project{return upgradeM3(structuredClone(authoredLayout) as unknown as Project);}
+export function createDemo():Project{const project=upgradeM3(structuredClone(authoredLayout) as unknown as Project);sculptReferenceIsland(project.terrain);project.settings.quality='standard';return project;}
 
 

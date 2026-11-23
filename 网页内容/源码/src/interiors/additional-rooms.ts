@@ -148,7 +148,12 @@ export function makeFeihua(o:IslandObject){
  b.box([.1,7.8,-4.8],[1.7,1.2,1.3],'#6e402d');for(const yy of [7.45,7.85,8.23]){b.box([.1,yy,-4.12],[1.55,.3,.04],p.wood);b.cylinder([-.08,yy,-4.05],[.28,yy,-4.05],.025,p.gold);}k.lantern(.1,9,-4.8,.85);k.lantern(.4,8.1,3.7,1);
  for(const zz of [-5.8,-3.3,-.8,1.7,4.2])k.shoji(-12.8,13,zz,2.2,1.25,Math.PI/2,true);
  for(const xx of [-11.5,-8.5,-5.5,-2.5,.5])k.ceiling.box([xx,13.75,0],[.12,.2,15.7],p.dark);k.lantern(-5.5,12.65,0,1.65);
- k.outside.box([0,-2,42],[100,.1,55],'#4f9aab');for(let i=0;i<12;i++)k.outside.ball([-18+i*2,-1,26+i*.7],[5,3+i%3,6],i%2?'#4f7657':'#74965c');
+ k.outside.box([0,-2,42],[100,.1,55],'#4f9aab');
+ // A low body and an offset crown share each maritime cloud placement with the textured view.
+ for(const [x,y,z,width,height] of [[-29,7.6,45,5.4,1.25],[-15,4,33,4.7,1.35],[-2,3.2,28,3.6,.85],[7,8.5,47,5.1,1.45],[24,5.5,40,6.2,1.15],[38,7.4,19,4.8,1.1]]){
+  k.outside.ball([x,y,z],[width,height,width*.36],'#f7faf3');
+  k.outside.ball([x-width*.2,y+height*.56,z-.3],[width*.56,height*.85,width*.32],'#f7faf3');
+ }
  // Small lived-in objects on the reception, writing and tea surfaces.
  b.scoped([9,0,4.3],-Math.PI/2,()=>stationery(b,-.8,1.59,0,.9));
  stationery(b,-4.3,8.77,-4.55,1.05,p.purple);

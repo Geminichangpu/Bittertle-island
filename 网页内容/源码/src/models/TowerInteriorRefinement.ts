@@ -9,6 +9,29 @@ import ownerUrl from '../assets/models-optimized/tower-owner-interior-meshopt-lo
 const urls:Record<TowerFloor,string>={lobby:lobbyUrl,hecate:hecateUrl,hebe:hebeUrl,dolly:dollyUrl,owner:ownerUrl};
 import type {InteriorRoom} from '../interiors/room-kit';
 
+const oldScreens=[3,6.5].map(x=>new T.Box3(new T.Vector3(x-.58,1.92,-3.245),new T.Vector3(x+.58,2.58,-3.155)));
+const oldKeyboards=[3,6.5].map(x=>new T.Box3(new T.Vector3(x-.43,1.955,-2.805),new T.Vector3(x+.43,2.005,-2.495)));
+
+/** The second blue panel shares a GLB mesh with the pen cup and stationery. */
+function removeOriginalTerminalParts(name:string,geometry:T.BufferGeometry){
+ if(!name.startsWith('furniture_区域_'))return true;
+ const regions=name.endsWith('_304e72_plain_surface')?oldScreens:name.endsWith('_a9c0cf_plain_metal')?oldKeyboards:undefined;
+ if(!regions)return true;
+ geometry.computeBoundingBox();
+ const bounds=geometry.boundingBox!;
+ if(!regions.some(region=>region.intersectsBox(bounds)))return true;
+ if(regions.some(region=>region.containsBox(bounds)))return false;
+ const pos=geometry.getAttribute('position'),index=geometry.index;
+ const a=new T.Vector3(),b=new T.Vector3(),c=new T.Vector3(),keep:number[]=[];
+ for(let i=0;i<(index?.count??pos.count);i+=3){
+  const ia=index?index.getX(i):i,ib=index?index.getX(i+1):i+1,ic=index?index.getX(i+2):i+2;
+  a.fromBufferAttribute(pos,ia);b.fromBufferAttribute(pos,ib);c.fromBufferAttribute(pos,ic);
+  if(!regions.some(region=>region.containsPoint(a)&&region.containsPoint(b)&&region.containsPoint(c)))keep.push(ia,ib,ic);
+ }
+ geometry.setIndex(keep);
+ return keep.length>0;
+}
+
 function releaseAsset(root:T.Object3D){
  const gs=new Set<T.BufferGeometry>(),ms=new Set<T.Material>(),ts=new Set<T.Texture>();
  root.traverse(n=>{if(n instanceof T.Mesh){gs.add(n.geometry);for(const m of Array.isArray(n.material)?n.material:[n.material])ms.add(m);}});
@@ -55,9 +78,11 @@ export class TowerInteriorRefinement extends EventTarget {
    scene.traverse(node=>{
     if(!(node instanceof T.Mesh))return;
     const category=String(node.userData.roomCategory||'furniture');if(!groups[category])return;
+    if(this.floor==='lobby'&&node.name.startsWith('20_键盘键帽_'))return;
     // One instance per exported component/material keeps the existing interaction
     // selection and animation code operating on the refined books/leaves/lamps.
     const geometry=node.geometry.clone().applyMatrix4(node.matrixWorld);
+    if(this.floor==='lobby'&&!removeOriginalTerminalParts(node.name,geometry)){geometry.dispose();return;}
     const mapMaterial=(m:T.Material)=>{
      if(m.name.endsWith('_lamp')&&m instanceof T.MeshStandardMaterial){this.lampMaterials.add(m);m.emissiveMap=m.map;}
      if(m.name.includes('bbdbe6')&&m instanceof T.MeshStandardMaterial){m.transparent=true;m.opacity=.19;m.depthWrite=false;m.side=T.FrontSide;return m;}

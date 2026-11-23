@@ -20,9 +20,14 @@ import type {Project,CameraPreset,Marker} from '../data/model';
 import {terrainGeometry,sampleHeight,updateTerrainHeights} from '../terrain/terrain';
 import type {Terrain} from '../data/model';
 import {makeMesh,disposeObjectCaches,pruneMaterials,disposeObjectInstances} from '../generators/objects';
+const defaultOrbitLimit = 650;
+const defaultFarPlane = 2000;
+
 export class SceneController {
  refinement!:RefinementManager;water:SampleWater;terrainFinish=new TerrainFinish();
  private overview=false; private sakura?:SakuraAssets;
+ private cameraFlight=0; private fittedPreset:'all'|'top'|null=null; private seaRetreat=0;
+ private depthBounds=new T.Box3();private depthProject?:Project;private depthGeometry?:T.BufferGeometry;private depthVersion=-1;
  private removeDiagnostics?:()=>void;private disposed=false;
  private aboOutdoorLoads:Promise<void>[]=[];private aboOutdoorAbort=new AbortController();private aboOutdoorTemplates=new Map<AboTrialKind,T.Group>();private aboOutdoorClones=new Map<string,T.Group>();private aboOutdoorPending=new Set<AboTrialKind>();private aboOutdoorFailures=new Set<AboTrialKind>();
  private proceduralWalls?:ProceduralWallMaterials;private dockBoats?:DockBoats;
@@ -32,7 +37,7 @@ export class SceneController {
  terrain:T.Mesh; objectNodes=new Map<string,T.Object3D>(); groupNodes=new Map<string,T.Group>(); objects=new T.Group(); labels=new T.Group(); regions=new T.Group(); project:Project; private resize:ResizeObserver; private intersection:IntersectionObserver; private inViewport=true; private active=true; private lastFrame=0; stats={frames:0,calls:0,triangles:0,geometries:0,textures:0,fps:0,pending:false};
  onStats:(s:SceneController['stats'])=>void=()=>{};
  constructor(public host:HTMLElement,project:Project){
-  this.project=project;this.scene.background=new T.Color('#b8d9df');this.camera=new T.OrthographicCamera(-200,200,150,-150,.1,2000);
+  this.project=project;this.scene.background=new T.Color('#b8d9df');this.camera=new T.OrthographicCamera(-200,200,150,-150,.1,defaultFarPlane);
   this.renderer=new T.WebGLRenderer({antialias:true,powerPreference:project.settings.quality==='low'?'low-power':'high-performance'});this.renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));this.renderer.outputColorSpace=T.SRGBColorSpace;host.append(this.renderer.domElement);
   this.lighting=new IslandLighting(this.renderer,this.scene);this.lighting.setQuality(project.settings.quality);
   this.water=new SampleWater(project,()=>this.requestRender(),this.renderer);this.scene.add(this.water.mesh);
@@ -46,17 +51,18 @@ export class SceneController {
   if(import.meta.env.DEV&&new URLSearchParams(location.search).get('sample')==='shrine')this.showShrineSample();
  }
  contextLost=(e:Event)=>{e.preventDefault();this.scheduler.setVisible(false);this.atmosphere.meteors.setVisible(false);this.water.setVisible(false);this.host.dispatchEvent(new CustomEvent('scene-error',{detail:'WebGL 上下文已丢失。请刷新页面重试；本地存档仍保留。'}));};
- newControls(){const c=new OrbitControls(this.camera,this.renderer.domElement);c.enableDamping=false;c.minDistance=30;c.maxDistance=650;c.minZoom=.45;c.maxZoom=24;c.maxTargetRadius=this.project.terrain.size*.6;c.maxPolarAngle=Math.PI/2-.06;c.addEventListener('change',()=>{this.updateMeteorView();this.refinement?.refresh();this.requestRender();});return c;}
+ newControls(){const c=new OrbitControls(this.camera,this.renderer.domElement);c.enableDamping=false;c.minDistance=30;c.maxDistance=defaultOrbitLimit;c.minZoom=.45;c.maxZoom=24;c.maxTargetRadius=this.project.terrain.size*.6;c.maxPolarAngle=Math.PI/2-.06;c.addEventListener('start',()=>{cancelAnimationFrame(this.cameraFlight);this.fittedPreset=null;});c.addEventListener('change',()=>{this.updateMeteorView();this.refinement?.refresh();this.requestRender();});return c;}
  private updateMeteorView(){
   if(!this.controls)return;
+  this.updateSeaCoverage();
   this.atmosphere?.followTarget();
   this.water?.setView(this.camera,this.controls.target);
   updatePilotDetails(this.environment,this.camera,this.controls.target);
   updateIslandGrass(this.environment,this.camera,this.controls.target);
-  const close=this.camera instanceof T.OrthographicCamera?this.camera.zoom>1.15:this.camera.position.distanceTo(this.controls.target)<230;
+  const close=this.camera instanceof T.OrthographicCamera?this.camera.zoom>1.85:this.camera.position.distanceTo(this.controls.target)<230;
   requestAboBeach(this.environment,this.controls.target,close);this.pumpAboOutdoor();
   const size=this.project.terrain.size,target=this.controls.target,offset=this.camera.position.clone().sub(target);
-  const wide=this.camera instanceof T.OrthographicCamera?this.camera.zoom<=320/size*1.15:offset.length()/this.camera.zoom>=size*.9;
+  const wide=this.overview|| (this.camera instanceof T.OrthographicCamera?this.camera.zoom<=320/size*1.15:offset.length()/this.camera.zoom>=size*.9);
   const centered=Math.hypot(target.x,target.z)<=size*.15;
   const angled=Math.hypot(offset.x,offset.z)>Math.abs(offset.y)*.25;
   this.atmosphere?.meteors.setOverview(this.overview&&wide&&centered&&angled);
@@ -66,12 +72,96 @@ export class SceneController {
  invalidateShadows(){this.lighting.invalidate();this.water?.invalidateReflection();this.atmosphere?.updateLights();}
  setActive(active:boolean){this.active=active;this.controls.enabled=active;this.refinement?.setSuspended(!active);this.updateVisibility();}
  updateVisibility=()=>{const visible=this.active&&!document.hidden&&this.inViewport;this.scheduler.setVisible(visible);this.atmosphere?.meteors.setVisible(visible);this.water.setVisible(visible);};
- resizeViewport(){const w=this.host.clientWidth,h=this.host.clientHeight;if(!w||!h)return;this.renderer.setSize(w,h);if(this.camera instanceof T.OrthographicCamera){const extent=Math.max(180,170*h/w);this.camera.left=-extent*w/h;this.camera.right=extent*w/h;this.camera.top=extent;this.camera.bottom=-extent;}else this.camera.aspect=w/h;this.camera.updateProjectionMatrix();this.requestRender();}
- draw(){this.water.beforeDraw(this.scene,this.camera,[this.labels,this.regions]);this.lighting.beforeDraw();this.renderer.render(this.scene,this.camera);const now=performance.now(),delta=now-this.lastFrame;this.lastFrame=now;this.stats={frames:this.scheduler.frames+1,calls:this.renderer.info.render.calls,triangles:this.renderer.info.render.triangles,geometries:this.renderer.info.memory.geometries,textures:this.renderer.info.memory.textures,fps:delta<250?Math.round(1000/delta):0,pending:false};this.onStats({...this.stats});}
+ resizeViewport(){
+  const w=this.host.clientWidth,h=this.host.clientHeight;if(!w||!h)return;
+  this.renderer.setSize(w,h);
+  if(this.camera instanceof T.OrthographicCamera){const extent=Math.max(180,170*h/w);this.camera.left=-extent*w/h;this.camera.right=extent*w/h;this.camera.top=extent;this.camera.bottom=-extent;}
+  else this.camera.aspect=w/h;
+  if(this.fittedPreset)this.fitIsland();
+  this.camera.updateProjectionMatrix();this.updateMeteorView();this.requestRender();
+ }
+ private fitIsland(){
+  const camera=this.camera;camera.updateMatrixWorld();
+  const bounds=new T.Box2(),point=new T.Vector3();let slopeX=0,slopeY=0;
+  const include=(x:number,y:number,z:number)=>{
+   point.set(x,y,z).applyMatrix4(camera.matrixWorldInverse);
+   bounds.expandByPoint(new T.Vector2(point.x,point.y));
+   if(camera instanceof T.PerspectiveCamera&&point.z<0){slopeX=Math.max(slopeX,Math.abs(point.x/point.z));slopeY=Math.max(slopeY,Math.abs(point.y/point.z));}
+  };
+  for(const [x,z] of [...this.project.terrain.outer,...this.project.terrain.islet])include(x,sampleHeight(this.project.terrain,x,z),z);
+  const positions=this.terrain.geometry.getAttribute('position');
+  for(let i=0;i<positions.count;i+=11)if(positions.getY(i)>1)include(positions.getX(i),positions.getY(i),positions.getZ(i));
+  include(9,52,0);
+  const margin=this.host.clientWidth<700?.79:.83;
+  if(camera instanceof T.OrthographicCamera){
+   const size=bounds.getSize(new T.Vector2());
+   camera.zoom=margin*Math.min((camera.right-camera.left)/Math.max(size.x,1),(camera.top-camera.bottom)/Math.max(size.y,1));
+  }else{
+   const tan=Math.tan(T.MathUtils.degToRad(camera.fov/2));
+   camera.zoom=margin*Math.min(tan*camera.aspect/Math.max(slopeX,.001),tan/Math.max(slopeY,.001));
+  }
+ }
+ private logicalEye(){
+  return this.camera.position.clone().addScaledVector(this.camera.getWorldDirection(new T.Vector3()),this.seaRetreat);
+ }
+ private updateSeaCoverage(){
+  const camera=this.camera,eye=camera.position,direction=camera.getWorldDirection(new T.Vector3()),corner=new T.Vector3();
+  camera.updateProjectionMatrix();
+  if(camera instanceof T.OrthographicCamera&&direction.y<-.0001){
+   // Derive the required depth from the current zoom, pose and viewport, including after manual orbit.
+   const sea=this.project.world.seaLevel,waveMargin=2/-direction.y;
+   let closest=Infinity,farthest=-Infinity;
+   for(const x of [-1,1])for(const y of [-1,1]){
+    corner.set(x,y,-1).unproject(camera);
+    const depth=camera.near+(sea-corner.y)/direction.y;
+    closest=Math.min(closest,depth);farthest=Math.max(farthest,depth);
+   }
+   const geometry=this.terrain.geometry,version=(geometry.getAttribute('position') as T.BufferAttribute).version;
+   if(this.depthProject!==this.project||this.depthGeometry!==geometry||this.depthVersion!==version){
+    geometry.computeBoundingBox();this.depthBounds.copy(geometry.boundingBox!).expandByObject(this.objects).expandByScalar(2);
+    this.depthProject=this.project;this.depthGeometry=geometry;this.depthVersion=version;
+   }
+   const {min,max}=this.depthBounds;
+   corner.set(direction.x>=0?min.x:max.x,direction.y>=0?min.y:max.y,direction.z>=0?min.z:max.z);
+   const nearestLand=corner.sub(eye).dot(direction);
+   // Visible land is in both the island bounds and the viewport below its highest point.
+   const landFront=Math.max(nearestLand,closest-(max.y-sea)/-direction.y);
+   const front=Math.min(closest-waveMargin,landFront);
+   const shift=Math.max(-this.seaRetreat,camera.near+1-front);
+   const far=Math.max(defaultFarPlane,farthest+shift+waveMargin+1);
+   if(Math.abs(shift)>1e-6){
+    this.seaRetreat=Math.max(0,this.seaRetreat+shift);
+    eye.addScaledVector(direction,-shift);camera.updateMatrixWorld();
+   }
+   this.controls.maxDistance=Math.max(defaultOrbitLimit,eye.distanceTo(this.controls.target)+.01);
+   if(Math.abs(camera.far-far)>.0001){camera.far=far;camera.updateProjectionMatrix();}
+  }
+  // The static ocean is a plane with world-space shading. Cover the complete frustum even
+  // when a low angle on a tall viewport puts the visible water outside its original edges.
+  let extentX=0,extentZ=0;
+  for(const depth of [-1,1])for(const x of [-1,1])for(const y of [-1,1]){
+   corner.set(x,y,depth).unproject(camera);extentX=Math.max(extentX,Math.abs(corner.x));extentZ=Math.max(extentZ,Math.abs(corner.z));
+  }
+  const water=this.water.mesh,{width,height}=water.geometry.parameters;
+  water.scale.set(Math.max(1,(extentX+2)*2/width),Math.max(1,(extentZ+2)*2/height),1);
+ }
+ draw(){
+  this.updateSeaCoverage();
+  const fog=this.scene.fog,depthBias=this.seaRetreat;
+  const adjustedFog=fog instanceof T.Fog&&depthBias>1e-6?fog:null;
+  const near=adjustedFog?.near??0,far=adjustedFog?.far??0;
+  if(adjustedFog){adjustedFog.near=near+depthBias;adjustedFog.far=far+depthBias;}
+  try{
+   this.water.beforeDraw(this.scene,this.camera,[this.labels,this.regions]);this.lighting.beforeDraw();this.renderer.render(this.scene,this.camera);
+  }finally{
+   // Keep each time preset’s authored fog distances outside this render pass.
+   if(adjustedFog){adjustedFog.near=near;adjustedFog.far=far;}
+  }
+  const now=performance.now(),delta=now-this.lastFrame;this.lastFrame=now;this.stats={frames:this.scheduler.frames+1,calls:this.renderer.info.render.calls,triangles:this.renderer.info.render.triangles,geometries:this.renderer.info.memory.geometries,textures:this.renderer.info.memory.textures,fps:delta<250?Math.round(1000/delta):0,pending:false};this.onStats({...this.stats});}
  node(id:string|null){return id?(this.objectNodes.get(id)||this.groupNodes.get(id)):undefined;}
  private outdoorKind(o:Project['objects'][number]):AboTrialKind|undefined{const authored:Record<string,AboTrialKind>={base_warehouse:'warehouseOutside',scenic_farm:'farm',scenic_academy:'academy',layout_shopping:'shopping',layout_market:'market',landmark_library:'libraryOutside',layout_lighthouse:'lighthouseOutside',landmark_liuli:'towerOutside',base_office:'baseOutside',shrine_residence:'shrineOutside',layout_treehouse:'treehouseOutside'};return authored[o.id]||(o.id==='layout_villa'?'villaOutside':o.templateId==='layout_island_pier'?'pierOutside':o.templateId==='layout_island_cave'?'caveOutside':o.templateId==='scenic_sakura'||o.templateId==='scenic_cliff'?'forestOutside':o.templateId==='layout_island_house'?'townHouse':o.templateId==='layout_island_station'?'townStation':o.templateId==='layout_island_restaurant'?'townRestaurant':o.templateId==='layout_island_park'?'townPark':undefined);}
  async prepareAboWalk(){this.pumpAboOutdoor(true);requestAboBeach(this.environment,this.controls.target,true,true);await Promise.allSettled([...this.aboOutdoorLoads,this.environment.userData.aboBeachPromise,this.environment.userData.customBushesPromise,this.environment.userData.farmSheepPromise,this.dockBoats?.ready]);}
- private pumpAboOutdoor(all=false){if(!this.controls||this.disposed)return;const close=this.camera instanceof T.OrthographicCamera?this.camera.zoom>1.15:this.camera.position.distanceTo(this.controls.target)<230;if(!close&&!all)return;for(const o of this.project.objects){const kind=this.outdoorKind(o),node=this.node(o.id);if(!kind||!node||this.aboOutdoorTemplates.has(kind)||this.aboOutdoorPending.has(kind)||this.aboOutdoorFailures.has(kind))continue;node.updateWorldMatrix(true,false);const position=node.getWorldPosition(new T.Vector3());if(!all&&Math.hypot(position.x-this.controls.target.x,position.z-this.controls.target.z)>85)continue;this.aboOutdoorPending.add(kind);this.aboOutdoorLoads.push(loadAboTrial(kind,this.aboOutdoorAbort.signal).then(group=>{if(this.aboOutdoorAbort.signal.aborted){disposeAboTrial(group);return;}if(!group.children.length){this.aboOutdoorFailures.add(kind);return;}this.aboOutdoorTemplates.set(kind,group);this.attachAboOutdoor();this.invalidateShadows();this.requestRender();}).catch(error=>{if(!this.aboOutdoorAbort.signal.aborted){this.aboOutdoorFailures.add(kind);console.warn('室外模型加载失败',kind,error);}}).finally(()=>{this.aboOutdoorPending.delete(kind);}));}}
+ private pumpAboOutdoor(all=false){if(!this.controls||this.disposed)return;const close=this.camera instanceof T.OrthographicCamera?this.camera.zoom>1.85:this.camera.position.distanceTo(this.controls.target)<230;if(!close&&!all)return;for(const o of this.project.objects){const kind=this.outdoorKind(o),node=this.node(o.id);if(!kind||!node||this.aboOutdoorTemplates.has(kind)||this.aboOutdoorPending.has(kind)||this.aboOutdoorFailures.has(kind))continue;node.updateWorldMatrix(true,false);const position=node.getWorldPosition(new T.Vector3());if(!all&&Math.hypot(position.x-this.controls.target.x,position.z-this.controls.target.z)>85)continue;this.aboOutdoorPending.add(kind);this.aboOutdoorLoads.push(loadAboTrial(kind,this.aboOutdoorAbort.signal).then(group=>{if(this.aboOutdoorAbort.signal.aborted){disposeAboTrial(group);return;}if(!group.children.length){this.aboOutdoorFailures.add(kind);return;}this.aboOutdoorTemplates.set(kind,group);this.attachAboOutdoor();this.invalidateShadows();this.requestRender();}).catch(error=>{if(!this.aboOutdoorAbort.signal.aborted){this.aboOutdoorFailures.add(kind);console.warn('室外模型加载失败',kind,error);}}).finally(()=>{this.aboOutdoorPending.delete(kind);}));}}
  syncAssetMasks(){const farm=this.node('scenic_farm'),farmAssets=farm?.getObjectByName('abo-outdoor-scenic_farm');if(farm&&farmAssets?.userData.customFarmCrops)hideOldFarmCrops(farm); const node=this.node('landmark_library'),clone=this.aboOutdoorClones.get('landmark_library');if(!node||!clone||clone.children.filter(n=>String(n.userData.aboSlot).startsWith('libraryGarden')).length!==2)return;node.traverse(n=>{if(n instanceof T.Mesh&&((n.name.includes('landmark_library_04_')&&n.name.includes('638666'))||(n.material instanceof T.MeshStandardMaterial&&n.material.color.getHexString()==='638666')))n.visible=false;});}
  private attachAboOutdoor(){const wanted=new Set<string>();for(const o of this.project.objects){const kind=this.outdoorKind(o);if(!kind)continue;const template=this.aboOutdoorTemplates.get(kind),node=this.node(o.id);if(!template||!node)continue;wanted.add(o.id);let clone=this.aboOutdoorClones.get(o.id);if(!clone){clone=template.clone(true);clone.name='abo-outdoor-'+o.id;clone.traverse(n=>n.userData.objectId=o.id);this.aboOutdoorClones.set(o.id,clone);}node.add(clone);for(const item of clone.children){const slot=String(item.userData.aboSlot||'');if(slot.startsWith('townGarden'))item.position.set(-o.params.width*.36+Number(slot.slice(-1))*.65,.02,o.params.depth*.43);if(slot.startsWith('libraryGarden'))item.position.set((slot.endsWith('0')?-1:1)*o.params.width*.42,1.1,Math.min(o.params.width,o.params.depth)*.25);}if(kind==='townRestaurant'&&clone.children.filter(n=>String(n.userData.aboAsset).includes('B07TLDNPXW')).length===2&&clone.children.filter(n=>String(n.userData.aboAsset).includes('B0857JQ3BZ')).length===4){const old=node.getObjectByName('town-original-dining');if(old)old.visible=false;}if(clone.children.filter(n=>String(n.userData.aboSlot).startsWith('townGarden')).length===3){const old=node.getObjectByName('town-original-planters');if(old)old.visible=false;}clone.updateWorldMatrix(true,true);for(const item of clone.children){if(/\/(log|tree_stump_01|mushroom_redGroup)\.glb/.test(String(item.userData.aboAsset))){const at=item.getWorldPosition(new T.Vector3());at.y=sampleHeight(this.project.terrain,at.x,at.z)+.025;item.position.copy(clone.worldToLocal(at));}}if(kind==='townPark'){const old=node.getObjectByName('town-park-bench-original');if(old)old.visible=false;}if(kind==='farm'&&clone.userData.customFarmCrops)hideOldFarmCrops(node);if(kind==='villaOutside'){const flowers=node.getObjectByName('villa-original-flowers');if(flowers&&clone.children.some(n=>n.userData.aboSlot==='villaFlowers'))flowers.visible=false;}}for(const [id,clone] of this.aboOutdoorClones)if(!wanted.has(id)){clone.removeFromParent();this.aboOutdoorClones.delete(id);}this.syncAssetMasks();}
  markerBounds(m:Marker){const id=markerTargetId(this.project,m),node=this.node(id||null);if(!node)return null;node.updateWorldMatrix(true,true);const bounds=new T.Box3().setFromObject(node);return bounds.isEmpty()?null:bounds;}
@@ -98,24 +188,49 @@ export class SceneController {
  syncRegions(){this.clearRegions();for(const r of this.project.regions){if(!r.visible)continue;const points:T.Vector3[]=[];r.points.forEach((a,i)=>{const b=r.points[(i+1)%r.points.length],steps=Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/3);for(let j=0;j<steps;j++){const x=a[0]+(b[0]-a[0])*j/steps,z=a[1]+(b[1]-a[1])*j/steps;points.push(new T.Vector3(x,sampleHeight(this.project.terrain,x,z)+.6,z));}});const line=new T.LineLoop(new T.BufferGeometry().setFromPoints(points),new T.LineBasicMaterial({color:r.color,depthTest:false}));line.renderOrder=5;this.regions.add(line);}this.requestRender();}
  previewTerrain(t:Terrain){this.invalidateShadows();updateTerrainHeights(this.terrain.geometry,t);for(const mesh of this.objects.children){const o=this.project.objects.find(o=>o.id===mesh.userData.objectId);if(o?.snapToGround)mesh.position.y=sampleHeight(t,mesh.position.x,mesh.position.z);}this.requestRender();}
  setProject(p:Project){const terrainChanged=JSON.stringify([p.terrain,p.environment])!==JSON.stringify([this.project.terrain,this.project.environment]),labelsChanged=terrainChanged||JSON.stringify(p.markers)!==JSON.stringify(this.project.markers)||p.settings.labels!==this.project.settings.labels,regionsChanged=terrainChanged||JSON.stringify(p.regions)!==JSON.stringify(this.project.regions);this.project=p;if(terrainChanged){this.terrain.geometry.dispose();this.terrain.geometry=prepareTerrainUv(terrainGeometry(p.terrain,!!p.environment));}this.syncObjects();this.syncEnvironment();this.sakura?.sync();if(labelsChanged)this.syncLabels();this.updateLabelPositions();if(regionsChanged)this.syncRegions();this.setQuality(p.settings.quality);this.requestRender();}
- preset(name:'all'|'top'){this.overview=name==='all';this.controls.target.set(0,0,0);this.camera.position.set(...(name==='top'?[0,350,.01]:[0,265,340]) as [number,number,number]);this.camera.zoom=320/this.project.terrain.size;this.camera.updateProjectionMatrix();this.controls.update();this.updateMeteorView();this.requestRender();}
- toggleProjection(){const pos=this.camera.position.clone(),target=this.controls.target.clone();this.controls.dispose();this.camera=this.camera instanceof T.OrthographicCamera?new T.PerspectiveCamera(45,1,.1,2000):new T.OrthographicCamera(-180,180,180,-180,.1,2000);this.camera.position.copy(pos);this.controls=this.newControls();this.controls.target.copy(target);this.controls.update();this.resizeViewport();}
+ preset(name:'all'|'top'){cancelAnimationFrame(this.cameraFlight);this.seaRetreat=0;this.overview=name==='all';this.fittedPreset=name;this.controls.target.set(5,8,0);this.camera.position.set(...(name==='top'?[5,390,.01]:[-140,245,350]) as [number,number,number]);this.camera.zoom=1;this.controls.update();this.fitIsland();this.camera.updateProjectionMatrix();this.updateMeteorView();this.requestRender();}
+ toggleProjection(){
+  cancelAnimationFrame(this.cameraFlight);
+  const old=this.camera, target=this.controls.target.clone(), eye=this.logicalEye();
+  const distance=eye.distanceTo(target), direction=old.getWorldDirection(new T.Vector3());
+  const halfSpan=old instanceof T.OrthographicCamera?(old.top-old.bottom)/(2*old.zoom):distance*Math.tan(T.MathUtils.degToRad(old.getEffectiveFOV()/2));
+  this.seaRetreat=0;this.controls.dispose();
+  const w=Math.max(1,this.host.clientWidth),h=Math.max(1,this.host.clientHeight),aspect=w/h;
+  if(old instanceof T.OrthographicCamera){
+   const camera=new T.PerspectiveCamera(45,aspect,.1,defaultFarPlane),tan=Math.tan(T.MathUtils.degToRad(camera.fov/2));
+   const radius=this.fittedPreset?distance:T.MathUtils.clamp(halfSpan/tan,30,defaultOrbitLimit);
+   camera.position.copy(target).addScaledVector(direction,-radius);camera.zoom=radius*tan/Math.max(halfSpan,.001);this.camera=camera;
+  }else{
+   const extent=Math.max(180,170/aspect),camera=new T.OrthographicCamera(-extent*aspect,extent*aspect,extent,-extent,.1,defaultFarPlane);
+   camera.position.copy(eye);camera.zoom=extent/Math.max(halfSpan,.001);this.camera=camera;
+  }
+  const nextEye=this.camera.position.clone();
+  this.controls=this.newControls();this.controls.target.copy(target);this.camera.position.copy(nextEye);this.controls.update();this.resizeViewport();
+ }
  focusObject(id:string){const node=this.node(id);if(!node)return;node.updateWorldMatrix(true,true);const bounds=new T.Box3().setFromObject(node);this.focus((bounds.isEmpty()?node.getWorldPosition(new T.Vector3()):bounds.getCenter(new T.Vector3())).toArray());}
  /** Frame the compound from its authored front, with room for roof and surroundings. */
  showFeihua(){const node=this.node('feihua_group');if(!node)return;node.updateWorldMatrix(true,true);const box=new T.Box3().setFromObject(node);if(box.isEmpty())return;
-  const center=box.getCenter(new T.Vector3()),size=box.getSize(new T.Vector3());this.overview=false;this.atmosphere?.meteors.setOverview(false);
+  const center=box.getCenter(new T.Vector3()),size=box.getSize(new T.Vector3());this.seaRetreat=0;this.fittedPreset=null;this.overview=false;this.atmosphere?.meteors.setOverview(false);
   const direction=new T.Vector3(.48,0,1).transformDirection(node.matrixWorld);direction.y=Math.hypot(direction.x,direction.z);direction.normalize();
   this.controls.target.copy(center);this.camera.position.copy(center).addScaledVector(direction,Math.max(size.length()*2,80));
   const aspect=Math.max(.2,this.host.clientWidth/Math.max(1,this.host.clientHeight)),span=Math.max(size.x*1.35/aspect,(size.y+Math.hypot(size.x,size.z)*.7)*1.3,50);
   if(this.camera instanceof T.OrthographicCamera)this.camera.zoom=Math.min(8,(this.camera.top-this.camera.bottom)/span);else {this.camera.zoom=1;this.camera.position.copy(center).addScaledVector(direction,span/(2*Math.tan(T.MathUtils.degToRad(this.camera.fov/2)))*1.25);}
   this.camera.updateProjectionMatrix();this.controls.update();this.requestRender();}
- focus(position:number[]){this.overview=false;this.atmosphere?.meteors.setOverview(false);this.controls.target.fromArray(position);this.camera.position.copy(this.controls.target).add(new T.Vector3(65,80,90));this.camera.zoom=this.camera instanceof T.OrthographicCamera?2.5:1;this.camera.updateProjectionMatrix();this.controls.update();this.requestRender();}
+ focus(position:number[]){
+  cancelAnimationFrame(this.cameraFlight);this.fittedPreset=null;this.overview=false;this.atmosphere?.meteors.setOverview(false);
+  const fromTarget=this.controls.target.clone(),fromPosition=this.logicalEye(),fromZoom=this.camera.zoom;
+  const target=new T.Vector3().fromArray(position),destination=target.clone().add(new T.Vector3(-55,72,95));
+  const endZoom=this.camera instanceof T.OrthographicCamera?Math.max(2.7,Math.min(4.5,this.host.clientWidth/420)):1;
+  const duration=matchMedia('(prefers-reduced-motion: reduce)').matches?0:650,start=performance.now();
+  const step=(now:number)=>{if(this.disposed)return;const t=duration?Math.min(1,(now-start)/duration):1,ease=t*t*(3-2*t);this.seaRetreat=0;this.controls.target.lerpVectors(fromTarget,target,ease);this.camera.position.lerpVectors(fromPosition,destination,ease);this.camera.zoom=T.MathUtils.lerp(fromZoom,endZoom,ease);this.camera.updateProjectionMatrix();this.controls.update();this.requestRender();if(t<1)this.cameraFlight=requestAnimationFrame(step);};
+  this.cameraFlight=requestAnimationFrame(step);
+ }
  showShrineSample(){const group=this.node('shrine_group');if(!group)return;group.updateWorldMatrix(true,true);this.restoreView({id:'shrine-sample',name:'神社样板',position:group.localToWorld(new T.Vector3(65,30,65)).toArray(),target:group.localToWorld(new T.Vector3(16,3,-8)).toArray(),zoom:6,perspective:false});}
- getView(name:string):CameraPreset{return {id:crypto.randomUUID(),name,position:this.camera.position.toArray() as [number,number,number],target:this.controls.target.toArray() as [number,number,number],zoom:this.camera.zoom,perspective:this.camera instanceof T.PerspectiveCamera};}
- restoreView(v:CameraPreset){this.overview=false;this.atmosphere?.meteors.setOverview(false);if(v.perspective!==(this.camera instanceof T.PerspectiveCamera))this.toggleProjection();this.camera.position.fromArray(v.position);this.controls.target.fromArray(v.target);this.camera.zoom=v.zoom;this.camera.updateProjectionMatrix();this.overview=true;this.controls.update();this.updateMeteorView();this.requestRender();}
+ getView(name:string):CameraPreset{return {id:crypto.randomUUID(),name,position:this.logicalEye().toArray() as [number,number,number],target:this.controls.target.toArray() as [number,number,number],zoom:this.camera.zoom,perspective:this.camera instanceof T.PerspectiveCamera};}
+ restoreView(v:CameraPreset){cancelAnimationFrame(this.cameraFlight);this.fittedPreset=null;this.overview=false;this.atmosphere?.meteors.setOverview(false);if(v.perspective!==(this.camera instanceof T.PerspectiveCamera))this.toggleProjection();this.seaRetreat=0;this.camera.position.fromArray(v.position);this.controls.target.fromArray(v.target);this.camera.zoom=v.zoom;this.camera.updateProjectionMatrix();this.overview=true;this.controls.update();this.updateMeteorView();this.requestRender();}
  setQuality(q:'low'|'standard'){if(this.quality===q)return;this.quality=q;this.lighting.setQuality(q);this.renderer.setPixelRatio(Math.min(devicePixelRatio,q==='low'?1:1.5));this.resizeViewport();}
  capturePNG(longEdge=1920,hideLabels=true,helpers:T.Object3D[]=[]){const ratio=this.host.clientWidth/this.host.clientHeight,w=ratio>=1?longEdge:Math.round(longEdge*ratio),h=ratio>=1?Math.round(longEdge/ratio):longEdge;const pixelRatio=this.renderer.getPixelRatio(),hidden=[...helpers,this.regions,...(hideLabels?[this.labels]:[])],states=hidden.map(n=>n.visible);try{hidden.forEach(n=>n.visible=false);this.renderer.setPixelRatio(1);this.renderer.setSize(w,h,false);this.scheduler.renderNow();return this.renderer.domElement.toDataURL('image/png');}finally{hidden.forEach((n,i)=>n.visible=states[i]);this.renderer.setPixelRatio(pixelRatio);this.resizeViewport();}}
- dispose(){this.disposed=true;this.sakura?.dispose();this.dockBoats?.dispose();this.proceduralWalls?.dispose();this.aboOutdoorAbort.abort();this.aboOutdoorClones.forEach(group=>group.removeFromParent());this.aboOutdoorClones.clear();this.aboOutdoorTemplates.forEach(disposeAboTrial);this.aboOutdoorTemplates.clear();this.removeDiagnostics?.();this.refinement.dispose();this.water.dispose();this.terrainFinish.dispose();this.atmosphere.dispose();this.scheduler.dispose();this.lighting.dispose();this.resize.disconnect();this.intersection.disconnect();document.removeEventListener('visibilitychange',this.updateVisibility);this.controls.dispose();disposeEnvironment(this.environment);this.clearLabels();this.clearRegions();this.scene.traverse(n=>{if(n instanceof T.Mesh&&!n.userData.objectId){n.geometry.dispose();if(Array.isArray(n.material))n.material.forEach(m=>m.dispose());else n.material.dispose();}});disposeObjectInstances(this.objects);disposeObjectCaches();this.renderer.dispose();this.renderer.domElement.remove();}
+ dispose(){cancelAnimationFrame(this.cameraFlight);this.disposed=true;this.sakura?.dispose();this.dockBoats?.dispose();this.proceduralWalls?.dispose();this.aboOutdoorAbort.abort();this.aboOutdoorClones.forEach(group=>group.removeFromParent());this.aboOutdoorClones.clear();this.aboOutdoorTemplates.forEach(disposeAboTrial);this.aboOutdoorTemplates.clear();this.removeDiagnostics?.();this.refinement.dispose();this.water.dispose();this.terrainFinish.dispose();this.atmosphere.dispose();this.scheduler.dispose();this.lighting.dispose();this.resize.disconnect();this.intersection.disconnect();document.removeEventListener('visibilitychange',this.updateVisibility);this.controls.dispose();disposeEnvironment(this.environment);this.clearLabels();this.clearRegions();this.scene.traverse(n=>{if(n instanceof T.Mesh&&!n.userData.objectId){n.geometry.dispose();if(Array.isArray(n.material))n.material.forEach(m=>m.dispose());else n.material.dispose();}});disposeObjectInstances(this.objects);disposeObjectCaches();this.renderer.dispose();this.renderer.domElement.remove();}
 }
 
 

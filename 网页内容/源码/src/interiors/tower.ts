@@ -1,6 +1,7 @@
 import {modernMaterials} from './modern-materials';
 import {teaService,stationery,wallPanels} from './furnishing-details';
 import {dressShelf} from './shelf-details';
+import {addReceptionWorkstations} from './reception-workstations';
 import * as T from 'three';
 import {roomKit,type V,type RoomView} from './room-kit';
 
@@ -145,7 +146,7 @@ export function makeTowerInterior(floor:TowerFloor='lobby'){
  if(lobby){
   // Reception to the right, seating to the left, sculpture in the glazed atrium.
   b.box([5.2,1,-3.1],[8,1.8,1.8],white);disc(1.2,1,-3.1,.9,1.8,white);disc(9.2,1,-3.1,.9,1.8,white);b.box([5.2,1.94,-3.1],[8.4,.13,2],ivory);light([5.2,.23,-2.17],[8,.07,.04]);
-  for(const x of [3,6.5]){b.box([x,2.25,-3.2],[1.15,.65,.08],ink);b.box([x,1.98,-2.65],[.85,.04,.3],silver);}text('受付  /  RECEPTION',[8.5,2.2,-2.05],1.2,.4);
+  text('受付  /  RECEPTION',[8.5,2.2,-2.05],1.2,.4);
   b.box([4.2,6.5,-9.8],[9.5,8.3,.3],ivory);crest(4.2,8.2,-9.59,2.4);text('为了更加闪耀的世界',[4.2,5.8,-9.56],6.4,.7);text('FOR A BRIGHTER HUMANITY',[4.2,5.1,-9.54],6.3,.45);
   for(const x of [-8,-2]){sofa(x,5,4);table(x,7.1);plant(x-2,0,4,1.5);}
   sofa(-8,-3,4,white,Math.PI/2);table(-5.8,-3);
@@ -314,8 +315,9 @@ export function makeTowerInterior(floor:TowerFloor='lobby'){
   {id:'overview',label:'楼层剖面',position:[w*1.1,h*1.6,d*1.4],target:[0,h*.2,0],cutaway:true},
  ];
  const room=k.finish({w,h,d},views),dispose=room.dispose;
+ const disposeWorkstations=lobby?addReceptionWorkstations(room,cache):undefined;
  room.root.name='琉璃塔 · '+TOWER_FLOORS.find(f=>f.id===floor)!.label;
- room.dispose=()=>{finishes.dispose();textures.forEach(t=>t.dispose());labelMaterials.forEach(m=>m.dispose());dispose();};
+ room.dispose=()=>{disposeWorkstations?.();finishes.dispose();textures.forEach(t=>t.dispose());labelMaterials.forEach(m=>m.dispose());dispose();};
  return room;
 }
 

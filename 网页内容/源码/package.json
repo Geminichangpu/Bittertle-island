@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --host 127.0.0.1",
-    "build": "tsc --noEmit && vite build",
+    "dev": "node scripts/project-entry.mjs dev",
+    "build": "node scripts/project-entry.mjs build",
     "check:editor": "node scripts/check-editor-build.mjs",
     "build:local-viewer": "node scripts/build-local-viewer.mjs",
     "build:viewer": "node scripts/build-viewer.mjs",
@@ -14,7 +14,11 @@
     "test:editor": "node scripts/editor-test.mjs",
     "test:terrain": "node scripts/terrain-test.mjs",
     "test:output": "node scripts/output-test.mjs",
-    "test:reference": "node scripts/reference-test.mjs"
+    "test:reference": "node scripts/reference-test.mjs",
+    "dev:editor": "vite --host 127.0.0.1",
+    "build:editor": "tsc --noEmit && vite build",
+    "dev:natural": "node scripts/prepare-natural.mjs && vite --host 127.0.0.1 --mode viewer",
+    "build:natural": "node scripts/build-natural-site.mjs"
   },
   "dependencies": {
     "dexie": "^4.2.0",
